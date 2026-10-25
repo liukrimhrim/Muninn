@@ -81,8 +81,11 @@ class Provider(Protocol):
 
 OUTPUTS: dict[str, type[BaseModel]] = {
     content.DRAFT_PROTOCOL["name"]: content.DraftOutline,
+    content.TEACH_PROTOCOL["name"]: content.TeachingDraft,
+    content.VARIANT_PROTOCOL["name"]: content.VariantDraft,
     evidence.ASSESS_PROTOCOL["name"]: evidence.AssessmentOutput,
 }
+AUTHORING_FOR_CONCERN = ("teaching_intervention", "exercise_variant")
 
 
 # --- operation records -------------------------------------------------------------
@@ -408,6 +411,9 @@ class App:
     def _inputs_current(self, tx: Tx, op: OperationP) -> bool:
         if _group_accepted(tx, op.request_group):
             return False  # another try already produced the accepted result
+        if op.intent in AUTHORING_FOR_CONCERN:
+            concern = practice.concern_view(tx, op.inputs[0].id)
+            return bool(concern["ref"]["revision"] == op.inputs[0].revision)
         if op.purpose == "draft_material":
             source = op.inputs[0]
             latest = content.current_definition(tx, "source", source.id)
@@ -427,6 +433,10 @@ class App:
         assessor = op.model.model_copy(
             update={"name": result.model, "version": result.model}
         ).model_dump()
+        if op.intent == "teaching_intervention":
+            return [self._accept_teaching(tx, operation, op, result)]
+        if op.intent == "exercise_variant":
+            return [_accept_variant(tx, operation, op, result)]
         if op.purpose == "draft_material":
             draft = content.DraftOutline.model_validate(result.output.model_dump())
             source = op.inputs[0].model_dump()
@@ -449,10 +459,45 @@ class App:
         accepted = evidence.accept_assessment(
             tx, attempt=attempt, out=out, assessor=assessor, raw_response=result.raw
         )
+        question = None
+        if out.question and practice.wants_question(
+            tx, attempt=attempt, out=out, results=accepted["labels"]
+        ):
+            exercise = content.definition(tx, evidence.attempt_view(tx, attempt)["exercise"])
+            question = content.accept_question(
+                tx,
+                prompt=out.question.prompt,
+                criteria=evidence.question_criteria(exercise, out.question),
+                reference_response=out.question.reference_response,
+                expected_seconds=out.question.expected_seconds,
+                basis=exercise["ref"],
+                authoring=operation,
+                protocol=evidence.ASSESS_PROTOCOL,
+            )
         practice.reconcile(
-            tx, attempt=attempt, assessment=accepted["assessment"], results=accepted["labels"]
+            tx,
+            attempt=attempt,
+            assessment=accepted["assessment"],
+            results=accepted["labels"],
+            out=out,
+            question=question,
         )
-        return [accepted["assessment"]]
+        return [accepted["assessment"], *([question] if question else [])]
+
+    def _accept_teaching(
+        self, tx: Tx, operation: JSON, op: OperationP, result: ProviderResult
+    ) -> JSON:
+        ctx = op.input_snapshot["context"]
+        return content.accept_teaching(
+            tx,
+            draft=content.TeachingDraft.model_validate(result.output.model_dump()),
+            prior=ctx["prior"],
+            concern=ctx["concern"],
+            scope=ctx["scope"],
+            source=ctx["source"],
+            supporting_claims=ctx["supporting_claims"],
+            authoring=operation,
+        )
 
     def retry_operation(self, request_id: str, operation_id: str) -> JSON:
         """Explicitly retry a failed, interrupted or refused operation in its request group."""
@@ -550,21 +595,160 @@ class App:
         return self.store.run(request_id, "start_session", {"curriculum": curriculum_id}, fn).result
 
     def next_exercise(self, request_id: str, *, session_id: str) -> JSON:
-        """Resume the session's open draft, or deliver the next exercise as a new draft."""
+        """Take the session's next step: resume, ask, teach, verify, or a new exercise.
+
+        Teaching and fresh variants are authored before delivery: when none is ready,
+        this saves a pending authoring operation (``operation``) for ``run_operation``.
+        """
 
         def fn(tx: Tx) -> JSON:
-            reserved = practice.open_offer(tx, session_id)
-            if reserved is not None:
-                return {"attempt": reserved["attempt"], "offer": reserved["ref"], "resumed": True}
-            exercise = practice.choose_exercise(tx, session_id=session_id)
-            if exercise is None:
-                return {"attempt": None, "offer": None, "resumed": False}
+            step = practice.next_step(tx, session_id)
+            nothing: JSON = {"attempt": None, "offer": None, "resumed": False}
+            kind = step["kind"]
+            if kind == "resume":
+                attempt = evidence.attempt_view(tx, step["offer"]["attempt"])
+                return {
+                    **nothing,
+                    "kind": _attempt_kind(attempt),
+                    "attempt": step["offer"]["attempt"],
+                    "offer": step["offer"]["ref"],
+                    "resumed": True,
+                }
+            if kind in ("none", "stopped", "pending", "study"):
+                return {**nothing, **step}
+            if kind in ("teach", "verify"):
+                serve = self._teach if kind == "teach" else self._verify
+                return {
+                    **nothing,
+                    "concern": step["concern"],
+                    **serve(tx, session_id, step["concern"]),
+                }
             session = practice.session_view(tx, session_id)
+            exercise = step["exercise"]
+            if kind == "ask":
+                return {**nothing, **_ask(tx, session, exercise, step["concern"])}
             attempt = evidence.start_attempt(tx, session=session["ref"], exercise=exercise["ref"])
             offer = practice.deliver(tx, session_id=session_id, exercise=exercise, attempt=attempt)
-            return {"attempt": attempt, "offer": offer, "resumed": False}
+            return {**nothing, "kind": "exercise", "attempt": attempt, "offer": offer}
 
         return self.store.run(request_id, "next_exercise", {"session": session_id}, fn).result
+
+    def _teach(self, tx: Tx, session_id: str, concern: JSON) -> JSON:
+        """Deliver accepted teaching for this concern revision, or author it first."""
+        for taught in content.teachings(tx):
+            if taught["concern"] != concern["ref"]:
+                continue
+            study = next(
+                (s for s in evidence.studies(tx) if s["teaching"]["id"] == taught["ref"]["id"]),
+                None,
+            )
+            if study is None:
+                session = practice.session_view(tx, session_id)["ref"]
+                return {
+                    "kind": "study",
+                    "study": evidence.start_study(
+                        tx, session=session, teaching=taught, concern=concern["ref"]
+                    ),
+                }
+            return {"kind": "study", "study": study["ref"]}
+        return self._authoring(tx, "teaching_intervention", concern, _teaching_packet)
+
+    def _authoring(
+        self,
+        tx: Tx,
+        intent: Literal["teaching_intervention", "exercise_variant"],
+        concern: JSON,
+        packet: Callable[[Tx, JSON], tuple[ModelRequest, JSON]],
+    ) -> JSON:
+        """Report the authoring request for this exact concern revision, saving it if new.
+
+        After two refused tries (or a failure) it is not ready; only an explicit retry
+        or a changed concern makes a new request.
+        """
+        ops = [
+            o for o in _operations(tx) if o["intent"] == intent and o["inputs"][0] == concern["ref"]
+        ]
+        if ops:
+            latest = ops[-1]
+            live = latest["status"] in ("pending", "running")
+            return {"kind": "preparing" if live else "not_ready", "operation": _op_state(latest)}
+        request, context = packet(tx, concern)
+        saved = self._new_operation(
+            tx,
+            purpose="draft_material",
+            intent=intent,
+            inputs=[concern["ref"]],
+            request=request,
+            context=context,
+        )
+        return {"kind": "preparing", "operation": _op_state(tx.at(saved, by=OWNER).view)}
+
+    def complete_study(
+        self, request_id: str, *, study_id: str, base: int, client_at: str | None
+    ) -> JSON:
+        """Record that the learner worked through the teaching; repair moves to a fresh check."""
+
+        def fn(tx: Tx) -> JSON:
+            before = evidence.study_view(tx, study_id)
+            if before["status"] == "completed":
+                return {"study": before["ref"]}
+            done = evidence.complete_study(
+                tx, study_id=study_id, base=base, raw_client_at=client_at
+            )
+            if before["concern"]:
+                practice.after_study(tx, study=evidence.study_view(tx, study_id))
+            return {"study": done}
+
+        inputs = {"study": study_id, "base": base}
+        return self.store.run(request_id, "complete_study", inputs, fn).result
+
+    def pause_concern(self, request_id: str, *, concern_id: str, base: int) -> JSON:
+        """Pause a concern at the learner's request; its evidence and counts are kept."""
+        return self.store.run(
+            request_id,
+            "pause_concern",
+            {"concern": concern_id, "base": base},
+            lambda tx: {"concern": practice.pause_concern(tx, concern_id=concern_id, base=base)},
+        ).result
+
+    def _verify(self, tx: Tx, session_id: str, concern: JSON) -> JSON:
+        """Deliver the accepted fresh variant bound to this repair cycle, or author it."""
+        accepted = [
+            o
+            for o in _operations(tx)
+            if o["intent"] == "exercise_variant"
+            and o["inputs"][0] == concern["ref"]
+            and o["acceptance"] == "accepted"
+        ]
+        if not accepted:
+            return self._authoring(tx, "exercise_variant", concern, _variant_packet)
+        exercise = content.definition(tx, accepted[-1]["outputs"][0])
+        cycle = concern["cycles"][-1]
+        session = practice.session_view(tx, session_id)
+        attempt = evidence.start_attempt(
+            tx,
+            session=session["ref"],
+            exercise=exercise["ref"],
+            purpose="verification",
+            concern=concern["ref"],
+            follows=concern["origin"],
+            verification_of={
+                "concern": concern["ref"],
+                "cycle_id": cycle["id"],
+                "studies": cycle["studies"],
+                "scope": concern["scope"],
+            },
+        )
+        offer = practice.deliver(
+            tx,
+            session_id=session_id,
+            exercise=exercise,
+            attempt=attempt,
+            role="extra",
+            reason="a fresh check of the repaired part after completed teaching",
+            policy=practice.REPAIR_POLICY,
+        )
+        return {"kind": "verification", "attempt": attempt, "offer": offer}
 
     def save_draft(self, request_id: str, *, attempt_id: str, base: int, response: str) -> JSON:
         """Save the learner's unfinished answer."""
@@ -723,6 +907,133 @@ class App:
         return restore_library(path, text, clock=clock, validate=validate_library)
 
 
+# --- diagnosis and repair: parts of the commands above ------------------------------
+
+
+def _ask(tx: Tx, session: JSON, exercise: JSON, concern: JSON) -> JSON:
+    """Deliver a concern's clarification question as an extra, focused draft."""
+    attempt = evidence.start_attempt(
+        tx,
+        session=session["ref"],
+        exercise=exercise["ref"],
+        purpose="clarification",
+        concern=concern["ref"],
+        follows=concern["origin"],
+    )
+    offer = practice.deliver(
+        tx,
+        session_id=session["ref"]["id"],
+        exercise=exercise,
+        attempt=attempt,
+        role="extra",
+        reason="a clarification question whose answer changes the help",
+        policy=practice.REPAIR_POLICY,
+    )
+    return {"kind": "clarification", "attempt": attempt, "offer": offer}
+
+
+def _concern_evidence(tx: Tx, concern: JSON) -> list[str]:
+    """List the learner's own answers behind a concern, criterion by criterion."""
+    lines: list[str] = []
+    for basis in concern["basis"]:
+        assessment = evidence.assessment_view(tx, basis)
+        attempt = evidence.attempt_view(tx, assessment["attempt"])
+        exercise = content.definition(tx, attempt["exercise"])
+        requirement = {c["id"]: c["requirement"] for c in exercise["criteria"]}
+        lines += [f"Task: {exercise['prompt']}", f"Answer: {attempt['response']}"]
+        lines += [
+            f"- {requirement[r['criterion_id']]}: {r['outcome'].replace('_', ' ')}. {r['reason']}"
+            for r in assessment["results"]
+        ]
+    return lines
+
+
+def _teaching_packet(tx: Tx, concern: JSON) -> tuple[ModelRequest, JSON]:
+    """Gather the bounded teaching packet for a concern (lifecycle section 3)."""
+    targets: list[JSON] = []
+    claims: list[JSON] = []
+    source: JSON | None = None
+    for s in concern["scope"]:
+        target = content.definition(tx, s["target"])
+        knowledge = [content.definition(tx, k) for k in target["content"]]
+        claims += target["content"]
+        # ponytail: one source per curriculum today; gather several when reuse links sources.
+        source = source or knowledge[0]["sources"][0]["source"]
+        targets.append(
+            {
+                "action": target["action"],
+                "mode": target["mode"],
+                "requirements": [
+                    r["statement"]
+                    for r in target["evidence_requirements"]
+                    if r["id"] in s["requirement_ids"]
+                ],
+                "knowledge": [k["statement"] for k in knowledge],
+            }
+        )
+    assert source is not None  # noqa: S101 - accepted knowledge always quotes a source
+    hypotheses = {h["key"]: f"{h['cause']} (help: {h['practice']})" for h in concern["hypotheses"]}
+    failed = {
+        s["id"] for c in concern["cycles"] if c["outcome"] == "unsuccessful" for s in c["studies"]
+    }
+    studied = {s["teaching"]["id"]: s["ref"]["id"] for s in evidence.studies(tx)}
+    prior = [
+        {
+            "approach": t["approach"],
+            "content": t["content"],
+            "unsuccessful": studied.get(t["ref"]["id"]) in failed,
+        }
+        for t in content.teachings(tx)
+        if t["concern"] and t["concern"]["id"] == concern["ref"]["id"]
+    ]
+    text = content.definition(tx, source)
+    request = content.teaching_request(
+        source_title=text["title"],
+        source_text=text["text"],
+        targets=targets,
+        evidence=_concern_evidence(tx, concern),
+        focus=hypotheses[concern["focus"]] if concern["help"] == "supported" else None,
+        alternatives=list(hypotheses.values()) if concern["help"] == "uncertain" else [],
+        prior=prior,
+    )
+    context = {
+        "concern": concern["ref"],
+        "scope": concern["scope"],
+        "source": source,
+        "supporting_claims": claims,
+        "prior": [p for p in prior if p["unsuccessful"]],
+    }
+    return request, context
+
+
+def _variant_packet(tx: Tx, concern: JSON) -> tuple[ModelRequest, JSON]:
+    """Gather what the variant request needs: the earlier task and the teaching given."""
+    basis = evidence.attempt_view(tx, concern["origin"])["exercise"]
+    studies = {s["ref"]["id"]: s["content"] for s in evidence.studies(tx)}
+    request = content.variant_request(
+        tx,
+        basis=basis,
+        scope=concern["scope"],
+        teaching=[studies[s["id"]] for s in concern["cycles"][-1]["studies"]],
+    )
+    return request, {"concern": concern["ref"], "basis": basis}
+
+
+def _accept_variant(tx: Tx, operation: JSON, op: OperationP, result: ProviderResult) -> JSON:
+    return content.accept_variant(
+        tx,
+        draft=content.VariantDraft.model_validate(result.output.model_dump()),
+        basis=op.input_snapshot["context"]["basis"],
+        authoring=operation,
+    )
+
+
+def _attempt_kind(attempt: JSON) -> str:
+    return {"clarification": "clarification", "verification": "verification"}.get(
+        attempt["purpose"], "exercise"
+    )
+
+
 # --- the selected provider: Anthropic --------------------------------------------------
 
 
@@ -847,7 +1158,7 @@ def home_view(tx: Tx) -> JSON:
     accepted_groups = {o["request_group"] for o in _operations(tx) if o["acceptance"] == "accepted"}
     latest_by_group: dict[str, JSON] = {}
     for o in _operations(tx):
-        if o["purpose"] == "draft_material" and o["request_group"] not in accepted_groups:
+        if o["intent"] == "initial_outline" and o["request_group"] not in accepted_groups:
             latest_by_group[o["request_group"]] = o
     drafting = [
         {"source": content.definition(tx, o["inputs"][0])["title"], "operation": _op_state(o)}
@@ -986,11 +1297,11 @@ def _session_attempts(tx: Tx, session_id: str) -> list[JSON]:
 def practice_view(tx: Tx, session_id: str) -> JSON:
     """Return the session's current exercise, draft, help and assessment state."""
     session = practice.session_view(tx, session_id)
-    reserved = practice.open_offer(tx, session_id)
+    shown = practice.open_offer(tx, session_id) or practice.waiting_offer(tx, session_id)
     attempts = _session_attempts(tx, session_id)
     current = (
-        evidence.attempt_view(tx, attempt_id=reserved["attempt"]["id"])
-        if reserved
+        evidence.attempt_view(tx, attempt_id=shown["attempt"]["id"])
+        if shown
         else (attempts[-1] if attempts else None)
     )
     view: JSON = {"session": session, "attempt": None}
@@ -1004,6 +1315,7 @@ def practice_view(tx: Tx, session_id: str) -> JSON:
         }
         view["attempt"] = {
             "ref": current["ref"],
+            "purpose": current["purpose"],
             "status": current["status"],
             "response": current["response"],
             "prompt": exercise["prompt"],
@@ -1024,11 +1336,17 @@ def feedback_view(tx: Tx, attempt_id: str) -> JSON:
     assessment = evidence.assessment_for(tx, attempt_id)
     results = {r["criterion_id"]: r for r in assessment["results"]} if assessment else {}
     help_by_criterion = evidence.criterion_help(tx, attempt)
+    misread: set[str] = (
+        set(assessment["interpretation_criteria"])
+        if assessment and (assessment["interpretation"] == "supported_misread")
+        else set()
+    )
     return {
         "attempt": {
             "ref": attempt["ref"],
             "response": attempt["response"],
             "status": attempt["status"],
+            "purpose": attempt["purpose"],
         },
         "session": attempt["session"],
         "prompt": exercise["prompt"],
@@ -1042,6 +1360,7 @@ def feedback_view(tx: Tx, attempt_id: str) -> JSON:
                 else [],
                 "reason": results[c["id"]]["reason"] if c["id"] in results else None,
                 "help": help_by_criterion.get(c["id"]),
+                "misread": c["id"] in misread,
             }
             for c in exercise["criteria"]
         ],
@@ -1056,6 +1375,25 @@ def feedback_view(tx: Tx, attempt_id: str) -> JSON:
             for t in exercise["targets"]
         ],
         "assessment": _assessing(tx, attempt_id),
+        "concern": practice.concern_for(tx, assessment["ref"]["id"]) if assessment else None,
+    }
+
+
+def study_page_view(tx: Tx, study_id: str) -> JSON:
+    """Return delivered teaching with its approach and what it is about."""
+    study = evidence.study_view(tx, study_id)
+    teaching = content.definition(tx, study["teaching"])
+    concern = practice.concern_at(tx, teaching["concern"]) if teaching["concern"] else None
+    return {
+        "ref": study["ref"],
+        "session": study["session"],
+        "status": study["status"],
+        "content": study["content"],
+        "approach": teaching["approach"],
+        "derivation": teaching["derivation"],
+        "quotes": [p["quote"] for p in teaching["sources"]],
+        "targets": [content.definition(tx, t)["action"] for t in study["targets"]],
+        "uncertain": bool(concern and concern["help"] == "uncertain"),
     }
 
 
@@ -1064,14 +1402,16 @@ def summary_view(tx: Tx, session_id: str) -> JSON:
     session = practice.session_view(tx, session_id)
     targets: dict[str, JSON] = {}
     pending = 0
-    for attempt in _session_attempts(tx, session_id):
+    attempts = _session_attempts(tx, session_id)
+    session_attempts = {a["ref"]["id"] for a in attempts}
+    for attempt in attempts:
         exercise = content.definition(tx, attempt["exercise"])
         graded = evidence.assessment_for(tx, attempt["ref"]["id"]) is not None
         if attempt["status"] == "submitted" and not graded:
             pending += 1
         for t in exercise["targets"]:
             result = (
-                evidence.target_evidence(tx, t, attempt_id=attempt["ref"]["id"])
+                evidence.target_evidence(tx, t, attempt_ids=session_attempts)
                 if graded
                 else evidence.pending_evidence()
             )
@@ -1083,10 +1423,31 @@ def summary_view(tx: Tx, session_id: str) -> JSON:
                 "attempt": attempt["ref"]["id"],
             }
     elapsed_ms = measurement.elapsed_ms(session["started_at"], session["ended_at"] or tx.now)
+    assessed = [g for a in attempts if (g := evidence.assessment_for(tx, a["ref"]["id"]))]
+    concerns = {
+        c["ref"]["id"]: c for g in assessed if (c := practice.concern_for(tx, g["ref"]["id"]))
+    }
+    help_given = [
+        {
+            "approach": content.definition(tx, s["teaching"])["approach"],
+            "status": s["status"],
+            "targets": [content.definition(tx, t)["action"] for t in s["targets"]],
+        }
+        for s in evidence.studies(tx)
+        if s["session"]["id"] == session_id
+    ]
     return {
         "session": session,
         "headline": "Practiced today; later recall not checked yet.",
         "targets": list(targets.values()),
+        "help": help_given,
+        "clarifications": sum(
+            len(content.definition(tx, a["exercise"])["criteria"])
+            for a in attempts
+            if a["purpose"] == "clarification"
+        ),
+        "clarification_limit": practice.DIAGNOSTIC_LIMIT,
+        "concerns": list(concerns.values()),
         "pending_assessments": pending,
         "next_check": _due(tx, [t["ref"] for t in targets.values()]),
         "effort": measurement.ledger(

@@ -2,7 +2,7 @@ import pytest
 
 from muninn.content import DraftOutline
 from muninn.evidence import AssessmentOutput, check_assessment, project, qualify
-from tests.drafts import assessment, outline
+from tests.drafts import CONNECTION_ERROR, TWO_CAUSES, assessment, hypothesis, outline, question
 
 ANSWER = "It has to be sorted. Each comparison throws away half, so about log2(n) steps."
 
@@ -99,18 +99,53 @@ def test_an_assessment_that_breaks_the_protocol_is_refused(raw, expected):
     assert any(expected in e for e in errors), errors
 
 
-def test_remedial_practice_must_target_an_observed_error():
+def v2_errors(outcomes=CONNECTION_ERROR, **extra):
     raw = assessment(
-        {"c1": "demonstrated", "c2": "not_shown", "c3": "demonstrated"}, QUOTES | {"c2": []}
+        outcomes,
+        {k: QUOTES[k] for k, v in outcomes.items() if v in ("demonstrated", "error")},
+        **extra,
     )
-    raw["next"] = {
-        "kind": "practice",
-        "criterion_keys": ["c2"],
-        "text": "Practice halving.",
-        "reason": "gap",
-    }
-    errors = check_assessment(AssessmentOutput.model_validate(raw), ["c1", "c2", "c3"], ANSWER)
-    assert any("no observed error" in e for e in errors), errors
+    return check_assessment(AssessmentOutput.model_validate(raw), ["c1", "c2", "c3"], ANSWER)
+
+
+def test_competing_hypotheses_and_a_discriminating_question_are_valid():
+    asked = question(["c3"], demonstrated=("teach", "h2"), error=("teach", "h1"))
+    assert v2_errors(hypotheses=TWO_CAUSES, question=asked) == []
+
+
+@pytest.mark.parametrize(
+    ("extra", "expected"),
+    [
+        ({"misread": ["c1"]}, "misread c1 must be judged error"),
+        ({"hypotheses": [hypothesis("h1", ["c1"], "x")]}, "explains c1, which was demonstrated"),
+        ({"hypotheses": [hypothesis("h1", ["c9"], "x")]}, "unknown criterion c9"),
+        ({"question": question(["c1"])}, "asks again about c1, which was demonstrated"),
+        ({"question": question(["c3"], error=("resolve", None))}, "error branch must teach"),
+        (
+            {"question": question(["c3"], inconclusive=("teach", "h1"))},
+            "inconclusive branch must stay uncertain",
+        ),
+        ({"question": question(["c3"], error=("teach", "h7"))}, "unknown hypothesis h7"),
+    ],
+    ids=[
+        "misread-not-error",
+        "explains-success",
+        "explains-unknown",
+        "asks-about-success",
+        "error-resolves",
+        "inconclusive-teaches",
+        "unknown-hypothesis",
+    ],
+)
+def test_a_diagnosis_that_breaks_the_protocol_is_refused(extra, expected):
+    errors = v2_errors(**extra)
+    assert any(expected in e for e in errors), errors
+
+
+def test_a_misread_needs_sound_reasoning_elsewhere_in_the_answer():
+    outcomes = {"c1": "not_shown", "c2": "not_shown", "c3": "error"}
+    errors = v2_errors(outcomes, misread=["c3"])
+    assert any("no demonstrated part" in e for e in errors), errors
 
 
 def labels(out, assisted=(), unconfirmed=()):
@@ -141,3 +176,42 @@ def test_not_shown_or_cannot_judge_is_unresolved_never_an_error():
 def test_a_connection_error_keeps_the_demonstrated_part():
     out = output({"c1": "demonstrated", "c2": "demonstrated", "c3": "error"})
     assert labels(out) == ("independent", "error")
+
+
+def test_a_supported_misread_is_not_counted_as_an_error():
+    observations = project(
+        EXERCISE, output(CONNECTION_ERROR), assisted=set(), unconfirmed=set(), misread={"c3"}
+    )
+    t2 = qualify(T2_REQUIREMENTS, observations["t2"])
+    assert t2.label == "unresolved"
+    assert "misread" in t2.reasons[0]
+    assert [o["misread"] for o in observations["t2"]] == [False, True]
+
+
+def scoped(outcomes, assisted=(), unconfirmed=(), misread=()):
+    from muninn.evidence import scope_outcome
+
+    projected = project(
+        EXERCISE,
+        output(outcomes),
+        assisted=set(assisted),
+        unconfirmed=set(unconfirmed),
+        misread=set(misread),
+    )
+    observations = [{**o, "target_id": t} for t, obs in projected.items() for o in obs]
+    t2_r2 = [{"target": {"kind": "target", "id": "t2", "revision": 1}, "requirement_ids": ["r2"]}]
+    return scope_outcome(observations, t2_r2), scope_outcome(observations)
+
+
+def test_a_scoped_outcome_looks_only_at_the_repaired_requirement():
+    assert scoped(CONNECTION_ERROR) == ("error", "error")
+    assert scoped({"c1": "error", "c2": "demonstrated", "c3": "demonstrated"}) == (
+        "demonstrated",
+        "error",
+    )
+    assert scoped(CONNECTION_ERROR | {"c3": "demonstrated"}, assisted={"c3"})[0] == "helped"
+    assert scoped(CONNECTION_ERROR | {"c3": "demonstrated"}, unconfirmed={"c3"})[0] == (
+        "inconclusive"
+    )
+    assert scoped(CONNECTION_ERROR, misread={"c3"})[0] == "inconclusive"
+    assert scoped(CONNECTION_ERROR | {"c3": "not_shown"})[0] == "inconclusive"

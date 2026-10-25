@@ -78,3 +78,93 @@ def test_source_text_reaches_the_model_only_as_delimited_data():
     assert attacked.system == plain.system  # instructions never move into the system prompt
     assert f"<source>\n{hostile}\n</source>" in attacked.user
     assert "no purpose was given" in attacked.user  # absent inputs are stated as absent
+
+
+def teaching_checks(draft=None, prior=()):
+    from muninn.content import TeachingDraft, check_teaching
+    from tests.drafts import teaching
+
+    return check_teaching(TeachingDraft.model_validate(draft or teaching()), SOURCE, list(prior))
+
+
+def failed(checks):
+    return [c["name"] for c in checks if c["result"] != "pass"]
+
+
+def test_teaching_grounded_in_the_source_passes_its_checks():
+    assert failed(teaching_checks()) == []
+
+
+def test_teaching_must_be_supported_by_the_source_or_an_explicit_derivation():
+    from tests.drafts import teaching
+
+    assert failed(teaching_checks(teaching(quotes=["Binary search is magic."]))) == [
+        "source support"
+    ]
+    unsupported = teaching(quotes=[]) | {"derivation": None}
+    assert failed(teaching_checks(unsupported)) == ["source support"]
+    assert failed(teaching_checks(teaching(quotes=[]))) == []  # the derivation supports it
+
+
+def test_after_an_unsuccessful_cycle_the_teaching_approach_must_change():
+    from tests.drafts import teaching
+
+    prior = [{"approach": "Worked example: reverse the halving sequence", "content": "x"}]
+    assert failed(teaching_checks(prior=prior)) == ["changed approach"]
+    assert failed(teaching_checks(teaching(approach="contrast with a near miss"), prior)) == []
+
+
+VARIANT_TARGETS = {
+    "T1": {
+        "action": "State the requirement",
+        "mode": "recall",
+        "requirements": [{"id": "r1", "statement": "sorted"}],
+    },
+    "T2": {
+        "action": "Explain log2(n)",
+        "mode": "explain",
+        "requirements": [{"id": "r1", "statement": "halves"}, {"id": "r2", "statement": "log2"}],
+    },
+}
+COVERAGE = {("T1", "r1"), ("T2", "r1"), ("T2", "r2")}
+ORIGINAL = "What must be true of an array before you can binary-search it?"
+
+
+def variant_errors(mutate=lambda d: None):
+    from muninn.content import VariantDraft, check_variant
+    from tests.drafts import variant
+
+    draft = variant()
+    mutate(draft)
+    return check_variant(
+        VariantDraft.model_validate(draft),
+        targets=VARIANT_TARGETS,
+        coverage=COVERAGE,
+        previous_prompts=[ORIGINAL],
+    )
+
+
+def test_a_fresh_instance_with_the_same_coverage_passes():
+    assert variant_errors() == []
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected"),
+    [
+        (lambda d: d["criteria"].pop(), "does not cover"),
+        (
+            lambda d: d["criteria"][0]["covers"].append(
+                {"target_key": "T9", "requirement_keys": ["r1"]}
+            ),
+            "unknown target T9",
+        ),
+        (lambda d: d.update(prompt=ORIGINAL.upper()), "repeats an earlier prompt"),
+        (lambda d: d.update(variation_kind="surface"), "needs a new instance"),
+        (lambda d: d.update(old_answer_insufficient=" "), "why the earlier answer"),
+        (lambda d: d.update(prompt=d["prompt"] + " " + d["reference_response"]), "gives away"),
+    ],
+    ids=["missing-coverage", "unknown-target", "repeated", "surface", "no-freshness", "leak"],
+)
+def test_a_variant_that_is_not_a_fresh_comparable_task_is_refused(mutate, expected):
+    errors = variant_errors(mutate)
+    assert any(expected in e for e in errors), errors

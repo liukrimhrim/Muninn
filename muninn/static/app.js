@@ -29,6 +29,40 @@ const NEED = {
   clarify: "Needs clarifying",
   held: "On hold",
 };
+const PURPOSE = {
+  initial: "Practice — answer in your own words. Help is always available and is recorded.",
+  clarification: "One question to tell which help fits. Your answer changes what comes next; it is not a test.",
+  verification: "A fresh version of the task, to check what you just worked through. Answer in your own words.",
+};
+const capital = (s) => (s ? s[0].toUpperCase() + s.slice(1) : "");
+
+// What a learning concern means for the learner right now (server state, plain words).
+function concernNote(c) {
+  if (!c) return "";
+  const causes = c.hypotheses.map((h) => h.practice);
+  const focus = c.hypotheses.find((h) => h.key === c.focus);
+  if (c.status === "resolved") return `${capital(c.resolution_reason)}.`;
+  if (c.status === "paused") {
+    if (c.still_uncertain) {
+      return c.kind === "uncertainty"
+        ? "Still uncertain: these answers don't settle it. Nothing was recorded as a mistake."
+        : "Still uncertain which help fits. The earlier mistake stays recorded; nothing more is asked automatically.";
+    }
+    return "Paused. Its evidence is kept.";
+  }
+  return {
+    diagnosis: `One short question will show which help fits${causes.length ? `: ${causes.join(", or ")}` : ""}.`,
+    repair: {
+      supported: `Next: a short explanation — ${focus?.practice}.`,
+      uncertain: "Next: a worked explanation, offered as support while the cause is still uncertain.",
+      direct: "Next: a short explanation of the part that went wrong.",
+    }[c.help],
+    verification: "Next: a fresh check of what you worked through.",
+    later_check: "Shown with help on the fresh check. An independent check later will tell more; no more teaching now.",
+    assessment_review: "The fresh check didn't show the repaired part either way. No new teaching starts automatically; you can pause this.",
+    content_review: "These two approaches have not resolved this yet. Review the explanation or the assessment, revisit a prerequisite, or pause.",
+  }[c.route] || "";
+}
 
 async function api(path, body, requestId) {
   const options = body === undefined ? {} : {
@@ -54,6 +88,7 @@ const fmtMs = (ms) => {
   return s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${s % 60} s`;
 };
 const tag = (cls, text) => `<span class="tag ${esc(cls)}">${esc(text)}</span>`;
+const go = (hash) => { if (location.hash === hash) route(); else location.hash = hash; };
 
 // --- timer: foreground spans, durations from the monotonic clock --------------------
 
@@ -139,7 +174,8 @@ async function route() {
   try {
     if (page === "c") await outlinePage(id);
     else if (page === "s" && sub === "summary") await summaryPage(id);
-    else if (page === "s") await practicePage(id, sub === "next");
+    else if (page === "s" && sub === "next") await nextStep(id);
+    else if (page === "s") await practicePage(id);
     else if (page === "a") await feedbackPage(id);
     else await homePage();
   } catch (e) {
@@ -320,20 +356,83 @@ function editOutline(o) {
 
 // --- practice -------------------------------------------------------------------------
 
-async function practicePage(sessionId, wantNext) {
-  let p = await api(`/sessions/${sessionId}`);
-  if (!p.attempt || (wantNext && p.attempt.status === "submitted" && p.attempt.feedback_ready)) {
-    const next = await api(`/sessions/${sessionId}/next`, {});
-    if (!next.attempt) {
-      view.innerHTML = `<h1>Nothing more to practice right now</h1>
-        <p>Every exercise in this curriculum has an answer. Later checks appear when they are due.</p>
-        <button type="button" id="finish">See this session's summary</button>`;
-      document.getElementById("finish").addEventListener("click", () => finish(p.session));
-      timer.set("progress_inspection", { session: p.session.ref, enrollment: p.session.enrollments[0] });
-      return;
-    }
-    p = await api(`/sessions/${sessionId}`);
+// The session's next step: the server decides; this page shows it.
+async function nextStep(sessionId) {
+  const p = await api(`/sessions/${sessionId}`);
+  const step = await api(`/sessions/${sessionId}/next`, {});
+  const ctx = { session: p.session.ref, enrollment: p.session.enrollments[0], context: [] };
+  const finishButton = '<button type="button" class="secondary" id="finish">Finish session</button>';
+  const onFinish = () => document.getElementById("finish")?.addEventListener("click", () => finish(p.session));
+  const c = step.concern;
+  if (["exercise", "clarification", "verification", "pending"].includes(step.kind)) return go(`#/s/${sessionId}`);
+  if (step.kind === "study") return studyPage(p.session, step.study.id);
+  if (step.kind === "preparing") {
+    view.innerHTML = `<h1>${c?.route === "verification" ? "Preparing a fresh question…" : "Preparing a short explanation…"}</h1>
+      <p class="status">It is written for what your answer showed and checked before you see it.</p>`;
+    timer.set("blocked_wait", { ...ctx, context: c ? [c.ref] : [] });
+    const poll = setTimeout(route, 2000);
+    leave = () => clearTimeout(poll);
+    return;
   }
+  if (step.kind === "not_ready") {
+    const what = c?.route === "verification" ? "fresh question" : "explanation";
+    view.innerHTML = `<h1>This ${what} isn't ready</h1>
+      <p>${esc(step.operation.reason || "The model did not answer.")}</p><p class="muted">Nothing you did was lost.</p>
+      <div class="row"><button type="button" id="retry">Try again</button>
+        <button type="button" class="secondary" id="skip">Skip it for now</button>${finishButton}</div>`;
+    timer.set("progress_inspection", ctx);
+    document.getElementById("retry").addEventListener("click", async () => {
+      await api(`/operations/${step.operation.id}/retry`, {});
+      route();
+    });
+    document.getElementById("skip").addEventListener("click", async () => {
+      await api(`/concerns/${c.ref.id}/pause`, { base: c.ref.revision });
+      route();
+    });
+    return onFinish();
+  }
+  if (step.kind === "stopped") {
+    view.innerHTML = `<h1>Let's stop repairing this automatically</h1>
+      <div class="card">${esc(concernNote(c))}</div>
+      <p class="muted small">Your answers, the explanations and the time spent are all kept.</p>
+      <div class="row"><button type="button" id="pause">Pause it and continue</button>${finishButton}</div>`;
+    timer.set("progress_inspection", ctx);
+    document.getElementById("pause").addEventListener("click", async () => {
+      await api(`/concerns/${c.ref.id}/pause`, { base: c.ref.revision });
+      route();
+    });
+    return onFinish();
+  }
+  view.innerHTML = `<h1>Nothing more to practice right now</h1>
+    <p>Every exercise in this curriculum has an answer. Later checks appear when they are due.</p>
+    <button type="button" id="finish">See this session's summary</button>`;
+  timer.set("progress_inspection", ctx);
+  onFinish();
+}
+
+async function studyPage(session, studyId) {
+  const s = await api(`/studies/${studyId}`);
+  view.innerHTML = `
+    <p class="small muted">Focused help${s.uncertain ? ", offered as support while the cause is still uncertain" : ""}.
+      Working through it is recorded as study, not as a test.</p>
+    <h1>${esc(s.targets.join("; "))}</h1>
+    <div class="card"><p class="teaching">${esc(s.content)}</p>
+      ${s.derivation ? `<p class="small"><strong>Why:</strong> ${esc(s.derivation)}</p>` : ""}
+      ${s.quotes.map((q) => `<blockquote>${esc(q)}</blockquote>`).join("")}
+      <div class="small muted">Approach: ${esc(s.approach)}</div></div>
+    <div class="row"><button type="button" id="done">I've worked through this</button>
+      <button type="button" class="secondary" id="stop">Stop for now</button></div>`;
+  timer.set("study", { session: session.ref, enrollment: session.enrollments[0], context: [s.ref] });
+  document.getElementById("done").addEventListener("click", async () => {
+    await api(`/studies/${studyId}/complete`, { base: s.ref.revision, client_at: new Date().toISOString() });
+    route();
+  });
+  document.getElementById("stop").addEventListener("click", () => finish(session));
+}
+
+async function practicePage(sessionId) {
+  const p = await api(`/sessions/${sessionId}`);
+  if (!p.attempt) return go(`#/s/${sessionId}/next`);
   const a = p.attempt;
   const ctx = { session: p.session.ref, enrollment: p.session.enrollments[0], context: [a.ref] };
   if (a.status === "submitted") return waitForFeedback(sessionId, a, ctx);
@@ -342,7 +441,7 @@ async function practicePage(sessionId, wantNext) {
   const restored = backup && backup !== a.response;
   let base = a.ref.revision;
   view.innerHTML = `
-    <p class="small muted">Practice — answer in your own words. Help is always available and is recorded.</p>
+    <p class="small muted">${esc(PURPOSE[a.purpose] || PURPOSE.initial)}</p>
     <h1>${esc(a.prompt)}</h1>
     <label for="answer">Your answer</label>
     <textarea id="answer" class="answer">${esc(restored ? backup : a.response)}</textarea>
@@ -352,7 +451,7 @@ async function practicePage(sessionId, wantNext) {
       : `<button type="button" class="secondary" data-hint="${esc(h.id)}">Show hint ${i + 1}</button> `).join("")}</div>
     <div class="row"><button type="button" id="submit">Submit answer</button>
       <button type="button" class="secondary" id="stop">Stop for now</button></div>`;
-  timer.set("answer", ctx);
+  timer.set(a.purpose === "clarification" ? "diagnosis" : "answer", ctx);
   const box = document.getElementById("answer");
   const status = document.getElementById("draft-status");
   let saving = Promise.resolve();
@@ -443,23 +542,27 @@ async function feedbackPage(attemptId) {
   const f = await api(`/attempts/${attemptId}`);
   await api(`/attempts/${attemptId}/feedback-viewed`, {});
   const quotes = f.criteria.flatMap((c) => c.quotes);
+  const misread = f.criteria.some((c) => c.misread);
+  const note = concernNote(f.concern);
   view.innerHTML = `
-    <h1>Feedback</h1>
+    <h1>${f.attempt.purpose === "clarification" ? "What your answer showed" : "Feedback"}</h1>
     <p class="muted">${esc(f.prompt)}</p>
     <div class="card"><strong>Your answer</strong><p>${highlight(f.attempt.response, quotes)}</p></div>
     <div class="card"><p>${esc(f.explanation)}</p></div>
+    ${misread ? '<div class="card"><strong>This looks like a misread of the task, not a gap in what you know.</strong> Nothing more to practise here; it is not counted as a mistake.</div>' : ""}
+    ${note ? `<div class="card"><strong>What happens next.</strong> ${esc(note)}</div>` : ""}
     <h2>Each part of the answer</h2>
     ${f.criteria.map((c) => `<div class="card">
-        ${tag(c.outcome, OUTCOME[c.outcome])}${c.help === "shown" ? tag("helped", "hint used") : c.help === "unconfirmed" ? tag("unresolved", "hint sent, display not confirmed") : ""} ${esc(c.requirement)}
+        ${tag(c.outcome, OUTCOME[c.outcome])}${c.misread ? tag("unresolved", "probably a misread") : ""}${c.help === "shown" ? tag("helped", "hint used") : c.help === "unconfirmed" ? tag("unresolved", "hint sent, display not confirmed") : ""} ${esc(c.requirement)}
         ${c.quotes.map((q) => `<blockquote>${esc(q)}</blockquote>`).join("")}
         <div class="small muted">${esc(c.reason)}</div></div>`).join("")}
-    <h2>What this shows</h2>
+    <h2>${f.attempt.purpose === "clarification" ? "Where things stand (a focused question does not change this)" : "What this shows"}</h2>
     <ul class="plain">${f.targets.map((t) => `<li>${tag(t.label, LABEL[t.label])} ${esc(t.action)}
       <div class="small muted">${esc(t.reasons.join("; "))}</div></li>`).join("")}</ul>
     <details><summary>Show the reference answer</summary><div class="card">${esc(f.reference_response)}</div>
       <p class="small muted">Seeing this answer counts as practice, not as a later check.</p></details>
     <p class="small muted">Judged by ${esc(f.assessor?.name)} under protocol ${esc(f.assessor?.protocol_version)}.</p>
-    <div class="row"><button type="button" id="next">Next exercise</button>
+    <div class="row"><button type="button" id="next">Continue</button>
       <button type="button" class="secondary" id="finish">Finish session</button></div>`;
   const session = await api(`/sessions/${f.session.id}`);
   timer.set("feedback", { session: f.session, enrollment: session.session.enrollments[0], context: [f.attempt.ref] });
@@ -489,6 +592,11 @@ async function summaryPage(sessionId) {
       <div class="small muted">${esc(t.reasons.join("; "))} · <a href="#/a/${esc(t.attempt)}">see the answer and feedback</a></div></li>`).join("")
       || '<li class="muted">No answers in this session.</li>'}</ul>
     ${s.pending_assessments ? `<p>${s.pending_assessments} answer(s) not graded yet.</p>` : ""}
+    ${s.help.length ? `<h2>Help</h2><ul class="plain">${s.help.map((h) => `<li class="card">${esc(capital(h.approach))}
+      <div class="small muted">${esc(h.targets.join("; "))} · ${h.status === "completed" ? "worked through" : "started, not finished"}</div></li>`).join("")}</ul>` : ""}
+    ${s.concerns.length || s.clarifications ? `<h2>Follow-up</h2>
+      <p class="small muted">Clarifying requests used this session: ${s.clarifications} of at most ${s.clarification_limit}.</p>
+      <ul class="plain">${s.concerns.map((c) => `<li class="card">${esc(concernNote(c))}</li>`).join("")}</ul>` : ""}
     <p>Next check: ${esc(fmtTime(s.next_check))}</p>
     <h2>Time</h2>
     <dl class="time">

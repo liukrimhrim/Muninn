@@ -16,6 +16,8 @@ from muninn import content
 from muninn.library import JSON, ModelRequest, Record, validate_payloads
 
 if TYPE_CHECKING:
+    from collections.abc import Collection, Mapping
+
     from muninn.library import Tx
 
 OWNER = "evidence"
@@ -53,6 +55,15 @@ class AssistanceP(_Strict):
     study: content.RefP | None
 
 
+class VerificationP(_Strict):
+    """The completed teaching a fresh check verifies (one repair cycle)."""
+
+    concern: content.RefP
+    cycle_id: str
+    studies: list[content.RefP]
+    scope: list[content.CoverageP]
+
+
 class AttemptP(_Strict):
     """One encounter with one exercise revision."""
 
@@ -65,6 +76,24 @@ class AttemptP(_Strict):
     submitted_at: str | None
     assistance: list[AssistanceP]
     status: Literal["draft", "submitted"]
+    time_evidence: list[TimeEvidenceP]
+    concern: content.RefP | None = None
+    verification_of: VerificationP | None = None
+
+
+class StudyP(_Strict):
+    """Delivered teaching; ``completed`` only by the learner's explicit action."""
+
+    session: content.RefP
+    targets: list[content.RefP]
+    scope: list[content.CoverageP]
+    kind: Literal["initial", "repair"]
+    teaching: content.RefP
+    concern: content.RefP | None
+    content: str
+    status: Literal["started", "completed"]
+    started_at: str
+    completed_at: str | None
     time_evidence: list[TimeEvidenceP]
 
 
@@ -119,6 +148,7 @@ class ObservationP(_Strict):
     requirement_ids: list[str]
     outcome: Outcome
     assisted: bool | None
+    misread: bool = False
 
 
 class ProjectionP(_Strict):
@@ -155,6 +185,7 @@ class ExposureP(_Strict):
 
 PAYLOADS: dict[str, type[BaseModel]] = {
     "attempt": AttemptP,
+    "study": StudyP,
     "assessment": AssessmentP,
     "projection": ProjectionP,
     "exposure": ExposureP,
@@ -178,24 +209,58 @@ class AssessObservation(_Strict):
     reason: str
 
 
-class AssessNext(_Strict):
-    """The assessor's proposed next step; kept as provenance, never auto-delivered."""
+class AssessHypothesis(_Strict):
+    """One plausible explanation of criteria the answer did not demonstrate."""
 
-    kind: Literal["stop", "clarify", "follow_up", "practice", "fresh_check"]
+    key: str
     criterion_keys: list[str]
-    text: str
-    reason: str
+    cause: str
+    practice: str
+
+
+class AssessBranch(_Strict):
+    """What one kind of answer to the proposed question would change."""
+
+    outcome: Literal["demonstrated", "error", "inconclusive"]
+    next: Literal["resolve", "teach", "still_uncertain"]
+    hypothesis_key: str | None
+    why: str
+
+
+class AssessQuestionCriterion(_Strict):
+    """A criterion of the proposed question, re-observing one original criterion."""
+
+    key: str
+    requirement: str
+    about_criterion_key: str
+
+
+class AssessQuestion(_Strict):
+    """A proposed clarification question with its branches written before asking."""
+
+    prompt: str
+    criteria: list[AssessQuestionCriterion]
+    reference_response: str
+    expected_seconds: int
+    branches: list[AssessBranch]
 
 
 class AssessmentOutput(_Strict):
     """The structured output of the assess-answer protocol."""
 
     observations: list[AssessObservation]
+    misread_criterion_keys: list[str]
+    hypotheses: list[AssessHypothesis]
+    question: AssessQuestion | None
     explanation: str
-    next: AssessNext
 
 
-ASSESS_PROTOCOL: JSON = {"name": "assess-answer", "version": 1, "parameters": {}}
+ASSESS_PROTOCOL: JSON = {"name": "assess-answer", "version": 2, "parameters": {}}
+BRANCH_NEXT = {
+    "demonstrated": {"resolve", "teach"},
+    "error": {"teach"},
+    "inconclusive": {"still_uncertain"},
+}
 
 ASSESS_SYSTEM = """\
 You assess one learner's written answer against a fixed rubric.
@@ -220,11 +285,27 @@ Help listed as shown during this answer helped this answer; it does not disappea
 the answer is correct. Preserve demonstrated parts when another part fails; a \
 whole-task failure alone cannot identify which part failed.
 
+A misread is a small mismatch with the task (for example answering a nearby question) \
+when the rest of the answer shows the relevant reasoning. Judge it error, list it in \
+misread_criterion_keys, and say briefly in the explanation what the task asked. Do not \
+call an explicit wrong rule a misread.
+
+For criteria not demonstrated, list the plausible causes as hypotheses: what could \
+explain the answer, and what practice each would call for. Several causes may fit; do \
+not claim one the answer does not support. A missing explanation is not evidence of \
+inability.
+
+Propose a question only when its possible answers would change what help is useful. \
+Write its branches before asking: a demonstrated answer resolves the concern or points \
+to one hypothesis to teach, an error points to the hypothesis to teach, an inconclusive \
+answer leaves it still uncertain. Each question criterion re-observes one original \
+criterion (about_criterion_key) that was not demonstrated. Never ask merely to fill \
+every criterion; leave question null when the answer already shows what help fits, or \
+when nothing needs asking.
+
 The explanation is feedback for the learner: plain, specific, about what the answer \
-showed and what it missed, citing the rubric. Propose a next step: remedial practice \
-may target only criteria with an observed error; a missing answer is not an error. A \
-correct answer can stop here even though later recall is untested. Do not ask another \
-question merely to fill every criterion.
+showed and what it missed, citing the rubric. A correct answer can stop here even \
+though later recall is untested.
 """
 
 
@@ -277,23 +358,75 @@ def check_assessment(out: AssessmentOutput, criterion_ids: list[str], response: 
         ]
     if not out.explanation.strip():
         errors.append("the assessment has no explanation for the learner")
-    erred = {o.criterion_key for o in out.observations if o.outcome == "error"}
-    if out.next.kind == "practice":
-        errors += [
-            f"practice proposed for {c}, which has no observed error"
-            for c in out.next.criterion_keys
-            if c not in erred
-        ]
+    return errors + _check_diagnosis(out)
+
+
+def _check_diagnosis(out: AssessmentOutput) -> list[str]:
+    """Check the misread claim, the hypotheses and the proposed question."""
+    outcome = {o.criterion_key: o.outcome for o in out.observations}
+    errors = [
+        f"misread {c} must be judged error"
+        for c in out.misread_criterion_keys
+        if outcome.get(c) != "error"
+    ]
+    if out.misread_criterion_keys and "demonstrated" not in outcome.values():
+        errors.append("a misread needs sound reasoning, but the answer has no demonstrated part")
+    for h in out.hypotheses:
+        if not h.cause.strip() or not h.practice.strip() or not h.criterion_keys:
+            errors.append(f"hypothesis {h.key} needs criteria, a cause and a practice")
+        errors += [e for c in h.criterion_keys if (e := _unshown(c, f"{h.key} explains", outcome))]
+    if out.question is not None:
+        errors += _check_question(out.question, {h.key for h in out.hypotheses}, outcome)
+    return errors
+
+
+def _unshown(criterion: str, verb: str, outcome: Mapping[str, str]) -> str | None:
+    """Refuse a reference to an unknown or already demonstrated criterion."""
+    if criterion not in outcome:
+        return f"{verb} unknown criterion {criterion}"
+    if outcome[criterion] == "demonstrated":
+        return f"{verb} {criterion}, which was demonstrated"
+    return None
+
+
+def _check_question(
+    q: AssessQuestion, hypotheses: set[str], outcome: Mapping[str, str]
+) -> list[str]:
+    """Check a proposed question and that its branches were written by the rules."""
+    errors: list[str] = []
+    if not q.prompt.strip() or not q.reference_response.strip() or not q.criteria:
+        errors.append("the question needs a prompt, criteria and a reference response")
+    if q.expected_seconds <= 0:
+        errors.append("the question has no expected time")
+    errors += [
+        e
+        for c in q.criteria
+        if (e := _unshown(c.about_criterion_key, "the question asks again about", outcome))
+    ]
+    if sorted(b.outcome for b in q.branches) != sorted(BRANCH_NEXT):
+        errors.append("the question needs exactly one branch per outcome")
+    rule = {"error": "must teach", "inconclusive": "must stay uncertain"}
+    for b in q.branches:
+        if b.next not in BRANCH_NEXT[b.outcome]:
+            errors.append(f"the {b.outcome} branch {rule.get(b.outcome, 'must resolve or teach')}")
+        if b.next == "teach" and b.hypothesis_key not in hypotheses:
+            errors.append(f"the {b.outcome} branch teaches unknown hypothesis {b.hypothesis_key}")
     return errors
 
 
 def project(
-    exercise: JSON, out: AssessmentOutput, *, assisted: set[str], unconfirmed: set[str]
+    exercise: JSON,
+    out: AssessmentOutput,
+    *,
+    assisted: set[str],
+    unconfirmed: set[str],
+    misread: Collection[str] = (),
 ) -> dict[str, list[JSON]]:
     """Map criterion outcomes onto each covered target, with its help status.
 
     ``assisted`` holds criteria with acknowledged help; ``unconfirmed`` holds criteria
-    whose hint was sent but whose display was never acknowledged (help unknown).
+    whose hint was sent but whose display was never acknowledged (help unknown);
+    ``misread`` holds errors the assessment supports as a misread of the task.
     """
     outcomes = {o.criterion_key: o.outcome for o in out.observations}
     by_target: dict[str, list[JSON]] = {}
@@ -307,6 +440,7 @@ def project(
                     "requirement_ids": cov["requirement_ids"],
                     "outcome": outcomes[cid],
                     "assisted": help_status,
+                    "misread": cid in misread,
                 }
             )
     return by_target
@@ -327,7 +461,7 @@ def qualify(requirement_ids: list[str], observations: list[JSON]) -> Qualified:
     A target is demonstrated only when every requirement is demonstrated. Any help on
     those criteria, or help that may have been seen, makes it helped, not independent.
     """
-    errors = [o for o in observations if o["outcome"] == "error"]
+    errors = [o for o in observations if supported_error(o)]
     if errors:
         reasons = [f"error on {o['criterion_id']}" for o in errors]
         if any(o["assisted"] is not False for o in errors):
@@ -340,7 +474,12 @@ def qualify(requirement_ids: list[str], observations: list[JSON]) -> Qualified:
         unresolved = [o for o in observations if o["outcome"] != "demonstrated"]
         return Qualified(
             "unresolved",
-            [f"{o['criterion_id']} {o['outcome'].replace('_', ' ')}" for o in unresolved]
+            [
+                f"{o['criterion_id']} likely a misread of the task, not counted as a mistake"
+                if o.get("misread")
+                else f"{o['criterion_id']} {o['outcome'].replace('_', ' ')}"
+                for o in unresolved
+            ]
             or [f"requirement {rid} not covered" for rid in missing],
         )
     if any(o["assisted"] is True for o in demonstrated):
@@ -367,13 +506,24 @@ def _exact(at: str, field: str, raw_client_at: str | None, why: str) -> TimeEvid
     )
 
 
-def start_attempt(tx: Tx, *, session: JSON, exercise: JSON) -> JSON:
+def start_attempt(  # noqa: PLR0913 - one keyword per binding
+    tx: Tx,
+    *,
+    session: JSON,
+    exercise: JSON,
+    purpose: Literal["initial", "clarification", "verification"] = "initial",
+    concern: JSON | None = None,
+    follows: JSON | None = None,
+    verification_of: JSON | None = None,
+) -> JSON:
     """Create the bound draft for a delivered exercise."""
     payload = AttemptP(
         session=content.RefP(**session),
         exercise=content.RefP(**exercise),
-        follows=None,
-        purpose="initial",
+        follows=content.RefP(**follows) if follows else None,
+        purpose=purpose,
+        concern=content.RefP(**concern) if concern else None,
+        verification_of=VerificationP.model_validate(verification_of) if verification_of else None,
         response="",
         started_at=tx.now,
         submitted_at=None,
@@ -566,14 +716,17 @@ def accept_assessment(
         for o in out.observations
     ]
     unresolved = [o.criterion_key for o in out.observations if o.outcome == "cannot_judge"]
+    misread = out.misread_criterion_keys
     assessment = tx.put(
         "assessment",
         AssessmentP(
             attempt=content.RefP(**attempt),
             assessor=AssessorP(**assessor),
             results=results,
-            interpretation="unresolved" if unresolved else "ordinary",
-            interpretation_criteria=unresolved,
+            interpretation="supported_misread"
+            if misread
+            else ("unresolved" if unresolved else "ordinary"),
+            interpretation_criteria=misread or unresolved,
             interpretation_basis=[],
             explanation=out.explanation,
             raw_response=raw_response,
@@ -585,7 +738,7 @@ def accept_assessment(
     assisted, unconfirmed = _help_status(tx, view)
     labels: dict[str, JSON] = {}
     for target_id, observations in project(
-        exercise, out, assisted=assisted, unconfirmed=unconfirmed
+        exercise, out, assisted=assisted, unconfirmed=unconfirmed, misread=set(misread)
     ).items():
         target = next(t for t in exercise["targets"] if t["id"] == target_id)
         definition = content.definition(tx, target)
@@ -637,6 +790,95 @@ def _append_projection(
     tx.put("projection", payload.model_dump(), by=OWNER, id=existing.id, base=existing.revision)
 
 
+def start_study(tx: Tx, *, session: JSON, teaching: JSON, concern: JSON | None) -> JSON:
+    """Deliver an accepted teaching definition; its exact text is the study's content."""
+    study = StudyP(
+        session=content.RefP(**session),
+        targets=[content.RefP(**t) for t in teaching["targets"]],
+        scope=[content.CoverageP.model_validate(s) for s in teaching["scope"]],
+        kind="repair",
+        teaching=content.RefP(**teaching["ref"]),
+        concern=content.RefP(**concern) if concern else None,
+        content=teaching["content"],
+        status="started",
+        started_at=tx.now,
+        completed_at=None,
+        time_evidence=[_exact(tx.now, "started_at", None, "store time when the teaching was sent")],
+    )
+    return tx.put("study", study.model_dump(), by=OWNER)
+
+
+def complete_study(tx: Tx, *, study_id: str, base: int, raw_client_at: str | None) -> JSON:
+    """Record the learner's explicit completion of a delivered teaching."""
+    record = tx.require("study", study_id, by=OWNER)
+    study = StudyP.model_validate(record.payload)
+    if study.status == "completed":
+        return record.ref
+    done = study.model_copy(
+        update={
+            "status": "completed",
+            "completed_at": tx.now,
+            "time_evidence": [
+                *study.time_evidence,
+                _exact(tx.now, "completed_at", raw_client_at, "store time of the completion"),
+            ],
+        }
+    )
+    return tx.put("study", done.model_dump(), by=OWNER, id=study_id, base=base)
+
+
+def study_view(tx: Tx, study_id: str) -> JSON:
+    """Return a study's current revision."""
+    return tx.require("study", study_id, by=OWNER).view
+
+
+def studies(tx: Tx) -> list[JSON]:
+    """Return every study's current revision, oldest first."""
+    return [r.view for r in tx.current("study", by=OWNER)]
+
+
+def question_criteria(exercise: JSON, question: AssessQuestion) -> list[JSON]:
+    """Give each question criterion the coverage of the original criterion it re-observes."""
+    covers = {c["id"]: c["covers"] for c in exercise["criteria"]}
+    return [
+        {"id": f"c{n}", "requirement": c.requirement, "covers": covers[c.about_criterion_key]}
+        for n, c in enumerate(question.criteria, 1)
+    ]
+
+
+def scope_outcome(
+    observations: list[JSON], scope: list[JSON] | None = None
+) -> Literal["demonstrated", "helped", "error", "inconclusive"]:
+    """Summarize what one answer showed about a scope (default: everything it observed).
+
+    Each scoped target is qualified like any answer (``qualify``): every requirement
+    demonstrated, help makes it helped, a misread is not an error, and missing or
+    unjudgeable evidence is inconclusive, never a failure.
+    """
+    by_target: dict[str, list[JSON]] = {}
+    for o in observations:
+        by_target.setdefault(o["target_id"], []).append(o)
+    wanted = (
+        {s["target"]["id"]: set(s["requirement_ids"]) for s in scope}
+        if scope
+        else {t: {r for o in obs for r in o["requirement_ids"]} for t, obs in by_target.items()}
+    )
+    labels = {
+        qualify(
+            sorted(requirements),
+            [o for o in by_target.get(t, []) if requirements & set(o["requirement_ids"])],
+        ).label
+        for t, requirements in wanted.items()
+    }
+    if "error" in labels:
+        return "error"
+    if labels and labels <= {"independent"}:
+        return "demonstrated"
+    if labels and labels <= {"independent", "helped"}:
+        return "helped"
+    return "inconclusive"
+
+
 def record_feedback_view(tx: Tx, *, attempt_id: str) -> JSON:
     """Record that feedback, including the reference answer, was presented."""
     view = attempt_view(tx, attempt_id=attempt_id)
@@ -655,6 +897,11 @@ def record_feedback_view(tx: Tx, *, attempt_id: str) -> JSON:
 
 
 # --- read views ------------------------------------------------------------------
+
+
+def assessment_view(tx: Tx, exact: JSON) -> JSON:
+    """Return an exact assessment revision."""
+    return tx.at(exact, by=OWNER).view
 
 
 def assessment_for(tx: Tx, attempt_id: str) -> JSON | None:
@@ -679,11 +926,15 @@ def attempts(tx: Tx) -> list[JSON]:
     return [r.view for r in tx.current("attempt", by=OWNER)]
 
 
-def target_evidence(tx: Tx, target: JSON, *, attempt_id: str | None = None) -> JSON:
+def target_evidence(tx: Tx, target: JSON, *, attempt_ids: set[str] | None = None) -> JSON:
     """Return a target's qualified label and the observations behind it.
 
-    By default the label comes from the latest assessed answer; with ``attempt_id`` it
-    comes from that answer only, so an old summary keeps its own result.
+    Each requirement keeps its latest usable observation (demonstrated or a supported
+    error), so a focused follow-up that shows nothing cannot hide an earlier result. A
+    whole-target demonstration still needs one answer that shows every requirement.
+    Clarification answers stay in the projection but never set the label: a focused
+    question cues its answer. With ``attempt_ids`` only those answers count, so an old
+    summary keeps its own result.
     """
     projection = next(
         (
@@ -694,16 +945,39 @@ def target_evidence(tx: Tx, target: JSON, *, attempt_id: str | None = None) -> J
         None,
     )
     observations: list[JSON] = projection.payload["observations"] if projection else []
-    if attempt_id is not None:
-        observations = [o for o in observations if o["attempt"]["id"] == attempt_id]
+    clarification_ids = {
+        r.id for r in tx.current("attempt", by=OWNER) if r.payload["purpose"] == "clarification"
+    }
+    observations = [
+        o
+        for o in observations
+        if o["attempt"]["id"] not in clarification_ids
+        and (attempt_ids is None or o["attempt"]["id"] in attempt_ids)
+    ]
     if not observations:
         return {"label": "untested", "reasons": ["no assessed answer yet"], "observations": []}
-    latest = observations[-1]["assessment"]["id"]
-    current = [o for o in observations if o["assessment"]["id"] == latest]
+    latest: dict[str, JSON] = {}
+    for o in observations:
+        for rid in o["requirement_ids"]:
+            if usable(o) or rid not in latest or not usable(latest[rid]):
+                latest[rid] = o
+    current = list({id(o): o for o in latest.values()}.values())
     definition = content.current_definition(tx, "target", target["id"])
     requirement_ids = [r["id"] for r in definition["evidence_requirements"]] if definition else []
     q = qualify(requirement_ids, current)
+    if q.label in ("independent", "helped") and len({o["attempt"]["id"] for o in current}) > 1:
+        q = Qualified("unresolved", ["shown in parts across answers; one whole check is still due"])
     return {"label": q.label, "reasons": q.reasons, "observations": current}
+
+
+def supported_error(o: JSON) -> bool:
+    """Tell whether an observation is a supported error (a supported misread is not)."""
+    return o["outcome"] == "error" and not o.get("misread")
+
+
+def usable(o: JSON) -> bool:
+    """Tell whether an observation is usable evidence: demonstrated or a supported error."""
+    return o["outcome"] == "demonstrated" or supported_error(o)
 
 
 def pending_evidence() -> JSON:

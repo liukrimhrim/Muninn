@@ -1,12 +1,12 @@
 # Muninn
 
-A local web app for memorization-oriented learning: paste material, get a source-linked outline and exercises, answer in your own words, and get criterion-by-criterion feedback that separates independent, helped and unsettled evidence. Built from the design in this repository; start with [START-HERE.md](START-HERE.md).
+A local web app for memorization-oriented learning: paste material, get a source-linked outline and exercises, answer in your own words, and get criterion-by-criterion feedback that separates independent, helped and unsettled evidence. When an answer shows a gap, the app asks a question only if its answer changes the help, teaches the supported gap, and checks it with a fresh version of the task. Built from the design in this repository; start with [START-HERE.md](START-HERE.md).
 
-**Status:** build slice 1 of 5 ("one saved learning encounter", [issue](.scratch/first-build/issues/01-one-saved-learning-encounter.md)). Diagnosis/repair, corrections, FSRS reviews and qualification on fresh material come in later slices.
+**Status:** build slice 2 of 5 ([one saved learning encounter](.scratch/first-build/issues/01-one-saved-learning-encounter.md), [diagnose and repair](.scratch/first-build/issues/02-diagnose-and-repair.md)). Corrections, FSRS reviews and qualification on fresh material come in later slices.
 
 ## Run it
 
-Needs [uv](https://docs.astral.sh/uv/) and an Anthropic API key. Drafting and assessment send your source text and answers to the Anthropic API (`claude-opus-5-5`); everything else stays in a local SQLite file under `data/`.
+Needs [uv](https://docs.astral.sh/uv/) and an Anthropic API key. Drafting, assessment and authoring of teaching and fresh questions send your source text and answers to the Anthropic API (`claude-opus-5-5`); everything else stays in a local SQLite file under `data/`.
 
 ```sh
 export ANTHROPIC_API_KEY=...

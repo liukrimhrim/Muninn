@@ -3,8 +3,10 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from fastapi.testclient import TestClient
 
 from muninn.library import Store
+from muninn.web import create_app
 from muninn.workflows import OUTPUTS, App, ProviderError, ProviderResult
 
 
@@ -82,3 +84,33 @@ def make_app(tmp_path, clock):
 
 def timeout():
     return ProviderError(kind="timeout", detail="no response in time")
+
+
+HEADERS = {"x-muninn-protocol": "1"}
+
+
+class Browser:
+    def __init__(self, data_dir, provider, clock):
+        self.client = TestClient(create_app(data_dir, provider=provider, clock=clock))
+
+    def get(self, path):
+        response = self.client.get(f"/api{path}")
+        assert response.status_code == 200, response.text
+        return response.json()
+
+    def post(self, path, request_id=None, expect=200, **body):
+        response = self.client.post(
+            f"/api{path}",
+            json={"request_id": request_id or str(uuid.uuid4()), **body},
+            headers=HEADERS,
+        )
+        assert response.status_code == expect, response.text
+        return response.json()
+
+
+@pytest.fixture
+def browser(tmp_path, clock):
+    def open_browser(*script, provider=None):
+        return Browser(tmp_path / "data", provider or ScriptedProvider(*script), clock)
+
+    return open_browser

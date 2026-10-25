@@ -2,11 +2,7 @@
 
 import uuid
 
-import pytest
-from fastapi.testclient import TestClient
-
-from muninn.web import create_app
-from tests.conftest import FailIfCalled, ScriptedProvider, timeout
+from tests.conftest import FailIfCalled, timeout
 from tests.drafts import SOURCE, assessment, outline
 
 ANSWER = "It must be sorted. Each comparison throws away half, so it takes about log2(n) steps."
@@ -14,34 +10,6 @@ GRADED = assessment(
     {"c1": "demonstrated", "c2": "demonstrated", "c3": "error"},
     {"c1": ["It must be sorted."], "c2": ["throws away half"], "c3": ["about log2(n) steps"]},
 )
-HEADERS = {"x-muninn-protocol": "1"}
-
-
-class Browser:
-    def __init__(self, data_dir, provider, clock):
-        self.client = TestClient(create_app(data_dir, provider=provider, clock=clock))
-
-    def get(self, path):
-        response = self.client.get(f"/api{path}")
-        assert response.status_code == 200, response.text
-        return response.json()
-
-    def post(self, path, request_id=None, expect=200, **body):
-        response = self.client.post(
-            f"/api{path}",
-            json={"request_id": request_id or str(uuid.uuid4()), **body},
-            headers=HEADERS,
-        )
-        assert response.status_code == expect, response.text
-        return response.json()
-
-
-@pytest.fixture
-def browser(tmp_path, clock):
-    def open_browser(*script, provider=None):
-        return Browser(tmp_path / "data", provider or ScriptedProvider(*script), clock)
-
-    return open_browser
 
 
 def learn(b):
@@ -217,4 +185,16 @@ def test_a_span_from_another_library_is_refused_without_blocking_the_batch(brows
     foreign = span({"id": "no-such-run"}, None, "authoring", (1, 2), ordinal=2)
     result = b.post("/spans", spans=[good, foreign])
     assert result["rejected"] == [foreign["id"]]
+    assert b.get("/home")["effort"]["total_ms"] == 60_000
+
+
+def test_a_malformed_span_is_refused_without_blocking_the_batch(browser):
+    b = browser(outline())
+    run = b.post("/timer", document_run_id="tab-1")["run"]
+    good = span(run, None, "authoring", (0, 1), ordinal=1)
+    bad = span(run, None, "blocked_wait", (1, 2), ordinal=2) | {
+        "context": [{"id": "op-1", "status": "pending"}]  # not an exact reference
+    }
+    result = b.post("/spans", spans=[good, bad])
+    assert result["rejected"] == [bad["id"]]
     assert b.get("/home")["effort"]["total_ms"] == 60_000

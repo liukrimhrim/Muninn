@@ -11,7 +11,7 @@ from __future__ import annotations
 from itertools import pairwise
 from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from muninn import content, practice
 from muninn.library import JSON, Conflict, Record, parse_utc, utc, validate_payloads
@@ -227,7 +227,8 @@ def record_span(tx: Tx, *, activation_id: str, span: JSON) -> JSON | None:
 
     A span from a run that no longer holds the timer is kept as stale and never
     counted. A wall-clock jump keeps the duration but leaves the span unplaced. A span
-    naming no run of this library is refused (``None``).
+    naming no run of this library, or malformed, is refused (``None``) without
+    blocking the rest of its batch.
     """
     existing = tx.get("activity_span", span["id"], by=OWNER)
     if existing is not None:
@@ -249,7 +250,19 @@ def record_span(tx: Tx, *, activation_id: str, span: JSON) -> JSON | None:
     )
     if not placed:
         reasons.append("the wall clock disagreed with the elapsed time")
-    payload = SpanP(
+    try:
+        payload = _span_payload(span, run, placed=placed, fresh=fresh, reasons=reasons)
+    except ValidationError:
+        return None  # malformed (for example a context that is not an exact ref): refused
+    return tx.put("activity_span", payload.model_dump(), by=OWNER, id=span["id"])
+
+
+def _span_payload(
+    span: JSON, run: Record, *, placed: bool, fresh: bool, reasons: list[str]
+) -> SpanP:
+    start, end = span["monotonic_start_ms"], span["monotonic_end_ms"]
+    wall_start, wall_end = span.get("raw_wall_start"), span.get("raw_wall_end")
+    return SpanP(
         session=_maybe_ref(span.get("session")),
         enrollment=_maybe_ref(span.get("enrollment")),
         context=[Ref(**c) for c in span.get("context", [])],
@@ -273,7 +286,6 @@ def record_span(tx: Tx, *, activation_id: str, span: JSON) -> JSON | None:
         continuity="closed",
         quality_reasons=reasons,
     )
-    return tx.put("activity_span", payload.model_dump(), by=OWNER, id=span["id"])
 
 
 def _maybe_ref(value: Any) -> Ref | None:  # noqa: ANN401 - optional JSON from the browser

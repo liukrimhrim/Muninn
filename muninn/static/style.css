@@ -59,3 +59,4 @@ details > summary { cursor: pointer; color: var(--accent); }
 dl.time { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 1rem; }
 dl.time dt { color: var(--muted); }
 ul.plain { list-style: none; padding: 0; }
+.teaching { white-space: pre-wrap; }

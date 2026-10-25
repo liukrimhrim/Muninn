@@ -73,6 +73,13 @@ class Submission(Cmd):
     client_at: str | None = None
 
 
+class AtRevision(Cmd):
+    """A command on a record at an expected revision."""
+
+    base: int
+    client_at: str | None = None
+
+
 class Ending(Cmd):
     """Why a session ended."""
 
@@ -165,6 +172,10 @@ def create_app(  # noqa: C901 - one route table
     def feedback(attempt_id: str) -> Any:  # noqa: ANN401
         return read(workflows.feedback_view, attempt_id)
 
+    @api.get("/api/studies/{study_id}")
+    def study(study_id: str) -> Any:  # noqa: ANN401
+        return read(workflows.study_page_view, study_id)
+
     @api.get("/api/operations/{operation_id}")
     def operation(operation_id: str) -> Any:  # noqa: ANN401
         return core.operation(operation_id)
@@ -199,8 +210,21 @@ def create_app(  # noqa: C901 - one route table
         return core.start_session(body.request_id, curriculum_id=curriculum_id)
 
     @api.post("/api/sessions/{session_id}/next")
-    def next_exercise(session_id: str, body: Cmd) -> Any:  # noqa: ANN401
-        return core.next_exercise(body.request_id, session_id=session_id)
+    def next_exercise(session_id: str, body: Cmd, background: BackgroundTasks) -> Any:  # noqa: ANN401
+        result = core.next_exercise(body.request_id, session_id=session_id)
+        if result["kind"] == "preparing" and result["operation"]["status"] == "pending":
+            background.add_task(core.run_operation, result["operation"]["id"])
+        return result
+
+    @api.post("/api/studies/{study_id}/complete")
+    def complete(study_id: str, body: AtRevision) -> Any:  # noqa: ANN401
+        return core.complete_study(
+            body.request_id, study_id=study_id, base=body.base, client_at=body.client_at
+        )
+
+    @api.post("/api/concerns/{concern_id}/pause")
+    def pause(concern_id: str, body: AtRevision) -> Any:  # noqa: ANN401
+        return core.pause_concern(body.request_id, concern_id=concern_id, base=body.base)
 
     @api.post("/api/sessions/{session_id}/end")
     def end(session_id: str, body: Ending) -> Any:  # noqa: ANN401
