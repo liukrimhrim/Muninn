@@ -1,0 +1,15 @@
+{
+  "checks": [
+    {
+      "check": "CLI runs through macOS path alias and rejects changed input before rebinding",
+      "met": true
+    },
+    {
+      "check": "Empty human review file reports zero reviewed, ten pending, accuracy unknown",
+      "met": true
+    }
+  ],
+  "local_file_links_checked": 28,
+  "missing_links": [],
+  "scope": "CLI and artifact consistency only; no human grading or browser interaction."
+}

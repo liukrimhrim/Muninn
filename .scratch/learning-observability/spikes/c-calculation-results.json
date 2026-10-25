@@ -1,0 +1,1203 @@
+{
+  "kind": "authored-model-calculation-probe; not browser or learner verification",
+  "cases": {
+    "progress": {
+      "counts": {
+        "S": 6,
+        "E": 1,
+        "H": 0,
+        "U": 0,
+        "M": 1,
+        "N": 0
+      },
+      "transitions": {
+        "improved": 4,
+        "maintained": 2,
+        "regressed": 0,
+        "persistent": 1,
+        "incomplete": 1
+      },
+      "conditional": 0.8571428571428571,
+      "completion": 0.875,
+      "assessability": 1,
+      "missingBounds": [
+        0.75,
+        0.875
+      ],
+      "episodeCount": 4,
+      "minutes": 80,
+      "selected": 8,
+      "excluded": 0,
+      "scenarioFraction": null
+    },
+    "missing": {
+      "counts": {
+        "S": 5,
+        "E": 2,
+        "H": 0,
+        "U": 0,
+        "M": 1,
+        "N": 0
+      },
+      "transitions": {
+        "improved": 3,
+        "maintained": 2,
+        "regressed": 0,
+        "persistent": 2,
+        "incomplete": 1
+      },
+      "conditional": 0.7142857142857143,
+      "completion": 0.875,
+      "assessability": 1,
+      "missingBounds": [
+        0.625,
+        0.75
+      ],
+      "episodeCount": 4,
+      "minutes": 40,
+      "selected": 8,
+      "excluded": 0,
+      "scenarioFraction": null
+    },
+    "maintenance": {
+      "counts": {
+        "S": 5,
+        "E": 2,
+        "H": 0,
+        "U": 0,
+        "M": 1,
+        "N": 0
+      },
+      "transitions": {
+        "improved": 0,
+        "maintained": 5,
+        "regressed": 0,
+        "persistent": 2,
+        "incomplete": 1
+      },
+      "conditional": 0.7142857142857143,
+      "completion": 0.875,
+      "assessability": 1,
+      "missingBounds": [
+        0.625,
+        0.75
+      ],
+      "episodeCount": 4,
+      "minutes": 40,
+      "selected": 8,
+      "excluded": 0,
+      "scenarioFraction": null
+    },
+    "mix": {
+      "counts": {
+        "S": 5,
+        "E": 2,
+        "H": 0,
+        "U": 0,
+        "M": 1,
+        "N": 0
+      },
+      "transitions": {
+        "improved": 3,
+        "maintained": 2,
+        "regressed": 0,
+        "persistent": 2,
+        "incomplete": 1
+      },
+      "conditional": 0.7142857142857143,
+      "completion": 0.875,
+      "assessability": 1,
+      "missingBounds": [
+        0.625,
+        0.75
+      ],
+      "episodeCount": 4,
+      "minutes": 40,
+      "selected": 8,
+      "excluded": 0,
+      "scenarioFraction": null
+    },
+    "cost": {
+      "counts": {
+        "S": 5,
+        "E": 2,
+        "H": 0,
+        "U": 0,
+        "M": 1,
+        "N": 0
+      },
+      "transitions": {
+        "improved": 3,
+        "maintained": 2,
+        "regressed": 0,
+        "persistent": 2,
+        "incomplete": 1
+      },
+      "conditional": 0.7142857142857143,
+      "completion": 0.875,
+      "assessability": 1,
+      "missingBounds": [
+        0.625,
+        0.75
+      ],
+      "episodeCount": 4,
+      "minutes": 40,
+      "selected": 8,
+      "excluded": 0,
+      "scenarioFraction": null
+    },
+    "correction": {
+      "counts": {
+        "S": 5,
+        "E": 2,
+        "H": 0,
+        "U": 0,
+        "M": 1,
+        "N": 0
+      },
+      "transitions": {
+        "improved": 3,
+        "maintained": 2,
+        "regressed": 0,
+        "persistent": 2,
+        "incomplete": 1
+      },
+      "conditional": 0.7142857142857143,
+      "completion": 0.875,
+      "assessability": 1,
+      "missingBounds": [
+        0.625,
+        0.75
+      ],
+      "episodeCount": 4,
+      "minutes": 40,
+      "selected": 8,
+      "excluded": 0,
+      "scenarioFraction": null
+    },
+    "help": {
+      "counts": {
+        "S": 3,
+        "E": 2,
+        "H": 1,
+        "U": 1,
+        "M": 1,
+        "N": 0
+      },
+      "transitions": {
+        "improved": 2,
+        "maintained": 1,
+        "regressed": 0,
+        "persistent": 2,
+        "incomplete": 3
+      },
+      "conditional": 0.6,
+      "completion": 0.875,
+      "assessability": 0.8571428571428571,
+      "missingBounds": null,
+      "episodeCount": 4,
+      "minutes": 40,
+      "selected": 8,
+      "excluded": 0,
+      "scenarioFraction": null
+    },
+    "early": {
+      "counts": {
+        "S": 0,
+        "E": 0,
+        "H": 0,
+        "U": 0,
+        "M": 0,
+        "N": 8
+      },
+      "transitions": {
+        "improved": 0,
+        "maintained": 0,
+        "regressed": 0,
+        "persistent": 0,
+        "incomplete": 8
+      },
+      "conditional": null,
+      "completion": null,
+      "assessability": null,
+      "missingBounds": null,
+      "episodeCount": 0,
+      "minutes": 6,
+      "selected": 8,
+      "excluded": 0,
+      "scenarioFraction": null
+    }
+  },
+  "firstWeek": {
+    "counts": {
+      "S": 5,
+      "E": 2,
+      "H": 0,
+      "U": 0,
+      "M": 1,
+      "N": 0
+    },
+    "transitions": {
+      "improved": 3,
+      "maintained": 2,
+      "regressed": 0,
+      "persistent": 2,
+      "incomplete": 1
+    },
+    "conditional": 0.7142857142857143,
+    "completion": 0.875,
+    "assessability": 1,
+    "missingBounds": [
+      0.625,
+      0.75
+    ],
+    "episodeCount": 4,
+    "minutes": 40,
+    "selected": 8,
+    "excluded": 0,
+    "scenarioFraction": null
+  },
+  "filtered": {
+    "counts": {
+      "S": 5,
+      "E": 1,
+      "H": 0,
+      "U": 0,
+      "M": 0,
+      "N": 0
+    },
+    "transitions": {
+      "improved": 3,
+      "maintained": 2,
+      "regressed": 0,
+      "persistent": 1,
+      "incomplete": 0
+    },
+    "conditional": 0.8333333333333334,
+    "completion": 1,
+    "assessability": 1,
+    "missingBounds": [
+      0.8333333333333334,
+      0.8333333333333334
+    ],
+    "episodeCount": 3,
+    "minutes": 40,
+    "selected": 6,
+    "excluded": 2,
+    "scenarioFraction": null
+  },
+  "whatIf": {
+    "counts": {
+      "S": 5,
+      "E": 2,
+      "H": 0,
+      "U": 0,
+      "M": 1,
+      "N": 0
+    },
+    "transitions": {
+      "improved": 3,
+      "maintained": 2,
+      "regressed": 0,
+      "persistent": 2,
+      "incomplete": 1
+    },
+    "conditional": 0.7142857142857143,
+    "completion": 0.875,
+    "assessability": 1,
+    "missingBounds": [
+      0.625,
+      0.75
+    ],
+    "episodeCount": 4,
+    "minutes": 40,
+    "selected": 8,
+    "excluded": 0,
+    "scenarioFraction": 0.75
+  },
+  "highlightLeavesStatisticsUnchanged": true,
+  "costScopes": [
+    {
+      "a": 40,
+      "b": 32,
+      "aFull": 40,
+      "bFull": 32,
+      "aAnswer": 12,
+      "bAnswer": 20,
+      "delta": 8,
+      "meaning": "B took eight fewer recorded minutes in this made-up example.",
+      "outcomeComparison": "Both examples have 5 correct answers, 2 incorrect and 1 missing after seven days. Equal counts alone do not prove the methods work equally well.",
+      "adoption": "This example does not tell us which method to use. That needs a fair comparison of later learning results and all the time spent."
+    },
+    {
+      "a": 12,
+      "b": 20,
+      "aFull": 40,
+      "bFull": 32,
+      "aAnswer": 12,
+      "bAnswer": 20,
+      "delta": -8,
+      "meaning": "A took eight fewer answering minutes, but this leaves out 28 other minutes for A and 12 for B.",
+      "outcomeComparison": "Both examples have 5 correct answers, 2 incorrect and 1 missing after seven days. Equal counts alone do not prove the methods work equally well.",
+      "adoption": "This example does not tell us which method to use. That needs a fair comparison of later learning results and all the time spent."
+    }
+  ],
+  "unplacedCost": {
+    "a": 27,
+    "b": 32,
+    "aFull": 27,
+    "bFull": 32,
+    "aAnswer": 12,
+    "bAnswer": 20,
+    "delta": -5,
+    "meaning": "We cannot yet tell which took less total time. If more than five of A’s extra minutes were separate work, B took less.",
+    "outcomeComparison": "Both examples have 5 correct answers, 2 incorrect and 1 missing after seven days. Equal counts alone do not prove the methods work equally well.",
+    "adoption": "This example does not tell us which method to use. That needs a fair comparison of later learning results and all the time spent."
+  },
+  "mismatchedHorizon": {
+    "a": 40,
+    "b": 32,
+    "aFull": 40,
+    "bFull": 32,
+    "aAnswer": 12,
+    "bAnswer": 20,
+    "delta": 8,
+    "meaning": "B took eight fewer recorded minutes in this made-up example.",
+    "outcomeComparison": "The results cannot be compared fairly: A was checked seven days later, B only one day later.",
+    "adoption": "This example does not tell us which method to use. That needs a fair comparison of later learning results and all the time spent."
+  },
+  "otherCurricula": [
+    {
+      "curriculum": "grammar",
+      "counts": {
+        "S": 3,
+        "E": 0,
+        "H": 0,
+        "U": 0,
+        "M": 1,
+        "N": 0
+      },
+      "transitions": {
+        "improved": 1,
+        "maintained": 2,
+        "regressed": 0,
+        "persistent": 0,
+        "incomplete": 1
+      },
+      "conditional": 1,
+      "completion": 0.75,
+      "assessability": 1,
+      "missingBounds": [
+        0.75,
+        1
+      ],
+      "episodeCount": 3,
+      "minutes": 80,
+      "selected": 4,
+      "excluded": 0,
+      "scenarioFraction": null
+    },
+    {
+      "curriculum": "operations",
+      "counts": {
+        "S": 3,
+        "E": 0,
+        "H": 0,
+        "U": 0,
+        "M": 1,
+        "N": 0
+      },
+      "transitions": {
+        "improved": 1,
+        "maintained": 2,
+        "regressed": 0,
+        "persistent": 0,
+        "incomplete": 1
+      },
+      "conditional": 1,
+      "completion": 0.75,
+      "assessability": 1,
+      "missingBounds": [
+        0.75,
+        1
+      ],
+      "episodeCount": 3,
+      "minutes": 80,
+      "selected": 4,
+      "excluded": 0,
+      "scenarioFraction": null
+    }
+  ],
+  "correction": {
+    "before": {
+      "improved": 3,
+      "maintained": 2,
+      "regressed": 0,
+      "persistent": 2,
+      "incomplete": 1
+    },
+    "after": {
+      "improved": 2,
+      "maintained": 3,
+      "regressed": 0,
+      "persistent": 2,
+      "incomplete": 1
+    },
+    "oldUnchanged": true,
+    "originalHasFutureRevisions": false
+  },
+  "earlyContainsFutureEvidence": false,
+  "trend": {
+    "full": {
+      "targets": 8,
+      "points": [
+        {
+          "key": "baseline",
+          "date": "2026-10-01T12:00:00Z",
+          "label": "Oct 1",
+          "counts": {
+            "S": 2,
+            "E": 6,
+            "H": 0,
+            "U": 0,
+            "M": 0,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.baseline@1",
+            "assessment:ordinary.search.2.baseline@1",
+            "assessment:ordinary.search.3.baseline@1",
+            "assessment:ordinary.search.4.baseline@1",
+            "assessment:ordinary.search.5.baseline@1",
+            "assessment:ordinary.search.6.baseline@1",
+            "assessment:ordinary.search.7.baseline@1",
+            "assessment:ordinary.search.8.baseline@1"
+          ]
+        },
+        {
+          "key": "week1",
+          "date": "2026-10-08T12:00:00Z",
+          "label": "Oct 8",
+          "sequence": 30,
+          "counts": {
+            "S": 5,
+            "E": 2,
+            "H": 0,
+            "U": 0,
+            "M": 1,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.week1@1",
+            "assessment:ordinary.search.2.week1@1",
+            "assessment:ordinary.search.3.week1@1",
+            "assessment:ordinary.search.4.week1@1",
+            "assessment:ordinary.search.5.week1@1",
+            "assessment:ordinary.search.6.week1@1",
+            "assessment:ordinary.search.7.week1@1"
+          ]
+        },
+        {
+          "key": "week2",
+          "date": "2026-10-15T12:00:00Z",
+          "label": "Oct 15",
+          "sequence": 180,
+          "counts": {
+            "S": 4,
+            "E": 3,
+            "H": 0,
+            "U": 0,
+            "M": 1,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.week2@1",
+            "assessment:ordinary.search.2.week2@1",
+            "assessment:ordinary.search.3.week2@1",
+            "assessment:ordinary.search.4.week2@1",
+            "assessment:ordinary.search.5.week2@1",
+            "assessment:ordinary.search.6.week2@1",
+            "assessment:ordinary.search.7.week2@1"
+          ]
+        },
+        {
+          "key": "week3",
+          "date": "2026-10-22T12:00:00Z",
+          "label": "Oct 22",
+          "sequence": 230,
+          "counts": {
+            "S": 6,
+            "E": 1,
+            "H": 0,
+            "U": 0,
+            "M": 1,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.week3@1",
+            "assessment:ordinary.search.2.week3@1",
+            "assessment:ordinary.search.3.week3@1",
+            "assessment:ordinary.search.4.week3@1",
+            "assessment:ordinary.search.5.week3@1",
+            "assessment:ordinary.search.6.week3@1",
+            "assessment:ordinary.search.7.week3@1"
+          ]
+        }
+      ]
+    },
+    "filtered": {
+      "targets": 6,
+      "points": [
+        {
+          "key": "baseline",
+          "date": "2026-10-01T12:00:00Z",
+          "label": "Oct 1",
+          "counts": {
+            "S": 2,
+            "E": 4,
+            "H": 0,
+            "U": 0,
+            "M": 0,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.baseline@1",
+            "assessment:ordinary.search.2.baseline@1",
+            "assessment:ordinary.search.3.baseline@1",
+            "assessment:ordinary.search.4.baseline@1",
+            "assessment:ordinary.search.5.baseline@1",
+            "assessment:ordinary.search.6.baseline@1"
+          ]
+        },
+        {
+          "key": "week1",
+          "date": "2026-10-08T12:00:00Z",
+          "label": "Oct 8",
+          "sequence": 30,
+          "counts": {
+            "S": 5,
+            "E": 1,
+            "H": 0,
+            "U": 0,
+            "M": 0,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.week1@1",
+            "assessment:ordinary.search.2.week1@1",
+            "assessment:ordinary.search.3.week1@1",
+            "assessment:ordinary.search.4.week1@1",
+            "assessment:ordinary.search.5.week1@1",
+            "assessment:ordinary.search.6.week1@1"
+          ]
+        },
+        {
+          "key": "week2",
+          "date": "2026-10-15T12:00:00Z",
+          "label": "Oct 15",
+          "sequence": 180,
+          "counts": {
+            "S": 4,
+            "E": 2,
+            "H": 0,
+            "U": 0,
+            "M": 0,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.week2@1",
+            "assessment:ordinary.search.2.week2@1",
+            "assessment:ordinary.search.3.week2@1",
+            "assessment:ordinary.search.4.week2@1",
+            "assessment:ordinary.search.5.week2@1",
+            "assessment:ordinary.search.6.week2@1"
+          ]
+        },
+        {
+          "key": "week3",
+          "date": "2026-10-22T12:00:00Z",
+          "label": "Oct 22",
+          "sequence": 230,
+          "counts": {
+            "S": 6,
+            "E": 0,
+            "H": 0,
+            "U": 0,
+            "M": 0,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.week3@1",
+            "assessment:ordinary.search.2.week3@1",
+            "assessment:ordinary.search.3.week3@1",
+            "assessment:ordinary.search.4.week3@1",
+            "assessment:ordinary.search.5.week3@1",
+            "assessment:ordinary.search.6.week3@1"
+          ]
+        }
+      ]
+    },
+    "early": {
+      "targets": 8,
+      "points": [
+        {
+          "key": "baseline",
+          "date": "2026-10-01T12:00:00Z",
+          "label": "Oct 1",
+          "counts": {
+            "S": 2,
+            "E": 6,
+            "H": 0,
+            "U": 0,
+            "M": 0,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.baseline@1",
+            "assessment:ordinary.search.2.baseline@1",
+            "assessment:ordinary.search.3.baseline@1",
+            "assessment:ordinary.search.4.baseline@1",
+            "assessment:ordinary.search.5.baseline@1",
+            "assessment:ordinary.search.6.baseline@1",
+            "assessment:ordinary.search.7.baseline@1",
+            "assessment:ordinary.search.8.baseline@1"
+          ]
+        }
+      ]
+    },
+    "original": {
+      "targets": 8,
+      "points": [
+        {
+          "key": "baseline",
+          "date": "2026-10-01T12:00:00Z",
+          "label": "Oct 1",
+          "counts": {
+            "S": 2,
+            "E": 6,
+            "H": 0,
+            "U": 0,
+            "M": 0,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.baseline@1",
+            "assessment:ordinary.search.2.baseline@1",
+            "assessment:ordinary.search.3.baseline@1",
+            "assessment:ordinary.search.4.baseline@1",
+            "assessment:ordinary.search.5.baseline@1",
+            "assessment:ordinary.search.6.baseline@1",
+            "assessment:ordinary.search.7.baseline@1",
+            "assessment:ordinary.search.8.baseline@1"
+          ]
+        },
+        {
+          "key": "week1",
+          "date": "2026-10-08T12:00:00Z",
+          "label": "Oct 8",
+          "sequence": 30,
+          "counts": {
+            "S": 5,
+            "E": 2,
+            "H": 0,
+            "U": 0,
+            "M": 1,
+            "N": 0
+          },
+          "evidence": [
+            "assessment:ordinary.search.1.week1@1",
+            "assessment:ordinary.search.2.week1@1",
+            "assessment:ordinary.search.3.week1@1",
+            "assessment:ordinary.search.4.week1@1",
+            "assessment:ordinary.search.5.week1@1",
+            "assessment:ordinary.search.6.week1@1",
+            "assessment:ordinary.search.7.week1@1"
+          ]
+        }
+      ]
+    },
+    "dateSelections": [
+      {
+        "date": "Oct 8",
+        "counts": {
+          "S": 5,
+          "E": 2,
+          "H": 0,
+          "U": 0,
+          "M": 1,
+          "N": 0
+        },
+        "transitions": {
+          "improved": 3,
+          "maintained": 2,
+          "regressed": 0,
+          "persistent": 2,
+          "incomplete": 1
+        },
+        "conditional": 0.7142857142857143,
+        "completion": 0.875,
+        "assessability": 1,
+        "missingBounds": [
+          0.625,
+          0.75
+        ],
+        "episodeCount": 4,
+        "minutes": 40,
+        "selected": 8,
+        "excluded": 0,
+        "scenarioFraction": null
+      },
+      {
+        "date": "Oct 15",
+        "counts": {
+          "S": 4,
+          "E": 3,
+          "H": 0,
+          "U": 0,
+          "M": 1,
+          "N": 0
+        },
+        "transitions": {
+          "improved": 2,
+          "maintained": 2,
+          "regressed": 0,
+          "persistent": 3,
+          "incomplete": 1
+        },
+        "conditional": 0.5714285714285714,
+        "completion": 0.875,
+        "assessability": 1,
+        "missingBounds": [
+          0.5,
+          0.625
+        ],
+        "episodeCount": 4,
+        "minutes": 62,
+        "selected": 8,
+        "excluded": 0,
+        "scenarioFraction": null
+      },
+      {
+        "date": "Oct 22",
+        "counts": {
+          "S": 6,
+          "E": 1,
+          "H": 0,
+          "U": 0,
+          "M": 1,
+          "N": 0
+        },
+        "transitions": {
+          "improved": 4,
+          "maintained": 2,
+          "regressed": 0,
+          "persistent": 1,
+          "incomplete": 1
+        },
+        "conditional": 0.8571428571428571,
+        "completion": 0.875,
+        "assessability": 1,
+        "missingBounds": [
+          0.75,
+          0.875
+        ],
+        "episodeCount": 4,
+        "minutes": 80,
+        "selected": 8,
+        "excluded": 0,
+        "scenarioFraction": null
+      }
+    ],
+    "savedOriginalDates": [
+      "Oct 1",
+      "Oct 8"
+    ],
+    "savedOriginalCorrectCounts": [
+      2,
+      5
+    ],
+    "correctedCorrectCounts": [
+      3,
+      5
+    ]
+  },
+  "weakUnits": {
+    "latest": {
+      "through": "2026-10-22T12:00:00Z",
+      "flagged": [
+        {
+          "id": "search.7",
+          "name": "Boundary handling",
+          "rank": 1,
+          "tied": false,
+          "status": "Repeated difficulty",
+          "reason": "Incorrect on Oct 22; incorrect at the last 4 checks.",
+          "dates": [
+            "Oct 1",
+            "Oct 8",
+            "Oct 15",
+            "Oct 22"
+          ]
+        },
+        {
+          "id": "search.4",
+          "name": "Depth versus total work",
+          "rank": 2,
+          "tied": true,
+          "status": "Just recovered",
+          "reason": "Correct at the last 1 check; last incorrect on Oct 15.",
+          "dates": [
+            "Oct 1",
+            "Oct 8",
+            "Oct 15",
+            "Oct 22"
+          ]
+        },
+        {
+          "id": "search.5",
+          "name": "Stopping condition",
+          "rank": 2,
+          "tied": true,
+          "status": "Just recovered",
+          "reason": "Correct at the last 1 check; last incorrect on Oct 15.",
+          "dates": [
+            "Oct 1",
+            "Oct 8",
+            "Oct 15",
+            "Oct 22"
+          ]
+        },
+        {
+          "id": "search.6",
+          "name": "Choosing a search strategy",
+          "rank": 4,
+          "tied": false,
+          "status": "Improving",
+          "reason": "Correct at the last 2 checks; last incorrect on Oct 8.",
+          "dates": [
+            "Oct 1",
+            "Oct 8",
+            "Oct 15",
+            "Oct 22"
+          ]
+        },
+        {
+          "id": "search.3",
+          "name": "Work across branches",
+          "rank": 5,
+          "tied": false,
+          "status": "Holding up recently",
+          "reason": "Correct at the last 3 checks; last incorrect on Oct 1.",
+          "dates": [
+            "Oct 1",
+            "Oct 8",
+            "Oct 15",
+            "Oct 22"
+          ]
+        }
+      ],
+      "needsCheck": [
+        {
+          "id": "search.8",
+          "reason": "No answer on Oct 22. Last graded answer without help: incorrect on Oct 1."
+        }
+      ],
+      "tiedBeyondLimit": []
+    },
+    "selectedFirstWeek": {
+      "through": "2026-10-08T12:00:00Z",
+      "flagged": [
+        {
+          "id": "search.7",
+          "name": "Boundary handling",
+          "rank": 1,
+          "tied": true,
+          "status": "Repeated difficulty",
+          "reason": "Incorrect on Oct 8; incorrect at the last 2 checks.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        },
+        {
+          "id": "search.6",
+          "name": "Choosing a search strategy",
+          "rank": 1,
+          "tied": true,
+          "status": "Repeated difficulty",
+          "reason": "Incorrect on Oct 8; incorrect at the last 2 checks.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        },
+        {
+          "id": "search.4",
+          "name": "Depth versus total work",
+          "rank": 3,
+          "tied": true,
+          "status": "Just recovered",
+          "reason": "Correct at the last 1 check; last incorrect on Oct 1.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        },
+        {
+          "id": "search.5",
+          "name": "Stopping condition",
+          "rank": 3,
+          "tied": true,
+          "status": "Just recovered",
+          "reason": "Correct at the last 1 check; last incorrect on Oct 1.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        },
+        {
+          "id": "search.3",
+          "name": "Work across branches",
+          "rank": 3,
+          "tied": true,
+          "status": "Just recovered",
+          "reason": "Correct at the last 1 check; last incorrect on Oct 1.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        }
+      ],
+      "needsCheck": [
+        {
+          "id": "search.8",
+          "reason": "No answer on Oct 8. Last graded answer without help: incorrect on Oct 1."
+        }
+      ],
+      "tiedBeyondLimit": []
+    },
+    "corrected": {
+      "through": "2026-10-08T12:00:00Z",
+      "flagged": [
+        {
+          "id": "search.7",
+          "name": "Boundary handling",
+          "rank": 1,
+          "tied": true,
+          "status": "Repeated difficulty",
+          "reason": "Incorrect on Oct 8; incorrect at the last 2 checks.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        },
+        {
+          "id": "search.6",
+          "name": "Choosing a search strategy",
+          "rank": 1,
+          "tied": true,
+          "status": "Repeated difficulty",
+          "reason": "Incorrect on Oct 8; incorrect at the last 2 checks.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        },
+        {
+          "id": "search.4",
+          "name": "Depth versus total work",
+          "rank": 3,
+          "tied": true,
+          "status": "Just recovered",
+          "reason": "Correct at the last 1 check; last incorrect on Oct 1.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        },
+        {
+          "id": "search.5",
+          "name": "Stopping condition",
+          "rank": 3,
+          "tied": true,
+          "status": "Just recovered",
+          "reason": "Correct at the last 1 check; last incorrect on Oct 1.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        }
+      ],
+      "needsCheck": [
+        {
+          "id": "search.8",
+          "reason": "No answer on Oct 8. Last graded answer without help: incorrect on Oct 1."
+        }
+      ],
+      "tiedBeyondLimit": []
+    },
+    "helped": {
+      "through": "2026-10-08T12:00:00Z",
+      "flagged": [
+        {
+          "id": "search.7",
+          "name": "Boundary handling",
+          "rank": 1,
+          "tied": true,
+          "status": "Repeated difficulty",
+          "reason": "Incorrect on Oct 8; incorrect at the last 2 checks.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        },
+        {
+          "id": "search.6",
+          "name": "Choosing a search strategy",
+          "rank": 1,
+          "tied": true,
+          "status": "Repeated difficulty",
+          "reason": "Incorrect on Oct 8; incorrect at the last 2 checks.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        },
+        {
+          "id": "search.4",
+          "name": "Depth versus total work",
+          "rank": 3,
+          "tied": true,
+          "status": "Just recovered",
+          "reason": "Correct at the last 1 check; last incorrect on Oct 1.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        },
+        {
+          "id": "search.5",
+          "name": "Stopping condition",
+          "rank": 3,
+          "tied": true,
+          "status": "Just recovered",
+          "reason": "Correct at the last 1 check; last incorrect on Oct 1.",
+          "dates": [
+            "Oct 1",
+            "Oct 8"
+          ]
+        }
+      ],
+      "needsCheck": [
+        {
+          "id": "search.2",
+          "reason": "Answered with help on Oct 8. Last graded answer without help: correct on Oct 1."
+        },
+        {
+          "id": "search.3",
+          "reason": "Not graded yet on Oct 8. Last graded answer without help: incorrect on Oct 1."
+        },
+        {
+          "id": "search.8",
+          "reason": "No answer on Oct 8. Last graded answer without help: incorrect on Oct 1."
+        }
+      ],
+      "tiedBeyondLimit": []
+    },
+    "early": {
+      "through": "2026-10-04T12:00:00Z",
+      "flagged": [
+        {
+          "id": "search.7",
+          "name": "Boundary handling",
+          "rank": 1,
+          "tied": true,
+          "status": "Mistake on latest check",
+          "reason": "Incorrect on Oct 1; one incorrect check in the current run.",
+          "dates": [
+            "Oct 1"
+          ]
+        },
+        {
+          "id": "search.6",
+          "name": "Choosing a search strategy",
+          "rank": 1,
+          "tied": true,
+          "status": "Mistake on latest check",
+          "reason": "Incorrect on Oct 1; one incorrect check in the current run.",
+          "dates": [
+            "Oct 1"
+          ]
+        },
+        {
+          "id": "search.4",
+          "name": "Depth versus total work",
+          "rank": 1,
+          "tied": true,
+          "status": "Mistake on latest check",
+          "reason": "Incorrect on Oct 1; one incorrect check in the current run.",
+          "dates": [
+            "Oct 1"
+          ]
+        },
+        {
+          "id": "search.8",
+          "name": "Ordering assumptions",
+          "rank": 1,
+          "tied": true,
+          "status": "Mistake on latest check",
+          "reason": "Incorrect on Oct 1; one incorrect check in the current run.",
+          "dates": [
+            "Oct 1"
+          ]
+        },
+        {
+          "id": "search.5",
+          "name": "Stopping condition",
+          "rank": 1,
+          "tied": true,
+          "status": "Mistake on latest check",
+          "reason": "Incorrect on Oct 1; one incorrect check in the current run.",
+          "dates": [
+            "Oct 1"
+          ]
+        }
+      ],
+      "needsCheck": [],
+      "tiedBeyondLimit": [
+        {
+          "id": "search.3",
+          "name": "Work across branches"
+        }
+      ]
+    },
+    "filtered": {
+      "through": "2026-10-22T12:00:00Z",
+      "flagged": [
+        {
+          "id": "search.7",
+          "name": "Boundary handling",
+          "rank": 1,
+          "tied": false,
+          "status": "Repeated difficulty",
+          "reason": "Incorrect on Oct 22; incorrect at the last 4 checks.",
+          "dates": [
+            "Oct 1",
+            "Oct 8",
+            "Oct 15",
+            "Oct 22"
+          ]
+        }
+      ],
+      "needsCheck": [
+        {
+          "id": "search.8",
+          "reason": "No answer on Oct 22. Last graded answer without help: incorrect on Oct 1."
+        }
+      ],
+      "tiedBeyondLimit": []
+    },
+    "unaffectedByWhatIf": true,
+    "unaffectedByHighlight": true
+  }
+}

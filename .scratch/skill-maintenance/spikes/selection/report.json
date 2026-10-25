@@ -1,0 +1,647 @@
+{
+  "scope": "Authored selection/coverage experiment through the existing assessment bridge and planner. Costs are illustrative; no measured learning benefit, retention, calibrated inference or live review omissions.",
+  "hashes": {
+    "selector.mjs": "69a7c971d722709103294890673a4fe8bd732e067f402065f47ffbaa70ec61f4",
+    "examples.mjs": "0b5fa0d05d5904886697de3c0e8927de5876099e310bed9f6a4c9847638d2302",
+    "replay.mjs": "82a45278b175f647b53a03bf676df2da8fb31a500a1cc5bbf315fbc1ea8cb602",
+    "shell.html": "96983567a43a0e1c0fea978f6fd3fb99baf6cfeb2c2bc9211fb4328eae16d469",
+    "../representation/examples.mjs": "91e66db6ff4e725845259d35865169ac40510e506734f4fb6178be5a84ec3f9e",
+    "../answer-intake/bridge.mjs": "3f09515edd8a84050db0f25945c1804aa22c00829691d8c466ebb3468f02c534",
+    "../assessment-trial/trial.mjs": "11d4de23d61a87f315c52219256007b4b44b0aa3c148ffb51217086d1832fed9",
+    "../next-session.html": "7d39db55bae6404708d7f56e1398139e45e45a37b5d1a0243dcdb1065493a6b9"
+  },
+  "baseline": {
+    "source": "Original conversation lines 1274–1279; assistant-authored example",
+    "firstFit": [
+      "Q1",
+      "Q2",
+      "Q3"
+    ],
+    "seconds": 420,
+    "alternative": [
+      "Q3",
+      "Q4"
+    ],
+    "alternativeSeconds": 360
+  },
+  "checks": [
+    {
+      "name": "Real planner baseline chooses Q1 Q2 Q3 costing seven authored minutes",
+      "met": true
+    },
+    {
+      "name": "Selection finds Q3 Q4 at six minutes with full overlapping coverage",
+      "met": true
+    },
+    {
+      "name": "Selecting a plan neither spends time nor creates evidence",
+      "met": true
+    },
+    {
+      "name": "Observed Q3 then Q4 completes the session with exactly six minutes charged",
+      "met": true
+    },
+    {
+      "name": "A partial combined answer selects only the unshown connection next",
+      "met": true
+    },
+    {
+      "name": "A missing criterion never becomes a complete capability or an observed failure",
+      "met": true
+    },
+    {
+      "name": "A later integration error changes selection from broad checking to focused practice",
+      "met": true
+    },
+    {
+      "name": "Only the observed connection error receives corrective practice",
+      "met": true
+    },
+    {
+      "name": "Focused practice is followed by a fresh integrated check without claiming delay",
+      "met": true
+    },
+    {
+      "name": "Wrong and correct clarifications lead to different teaching actions",
+      "met": true
+    },
+    {
+      "name": "An inconclusive clarification preserves review without inventing command failure",
+      "met": true
+    },
+    {
+      "name": "A cheaper question whose branches all prescribe the same help is rejected",
+      "met": true
+    },
+    {
+      "name": "Diagnosis is skipped when a substantive follow-up would not fit",
+      "met": true
+    },
+    {
+      "name": "Diagnostic reservation includes a fresh check after the repair branch",
+      "met": true
+    },
+    {
+      "name": "Unrelated useful work cannot clear an unaffordable diagnostic concern",
+      "met": true
+    },
+    {
+      "name": "The provisional diagnostic prompt limit is enforced without changing evidence",
+      "met": true
+    },
+    {
+      "name": "Cheap recognition cannot substitute for an unaided recall contract",
+      "met": true
+    },
+    {
+      "name": "One fact needs one recall prompt without a multi-part procedure",
+      "met": true
+    },
+    {
+      "name": "Repeating a completed answer charges no extra time and adds no evidence",
+      "met": true
+    },
+    {
+      "name": "Replaying an earlier answer after practice preserves its original phase",
+      "met": true
+    },
+    {
+      "name": "A conflicting duration on duplicate delivery is refused",
+      "met": true
+    },
+    {
+      "name": "Actual time overruns are retained and prevent another task",
+      "met": true
+    },
+    {
+      "name": "Setup and feedback count even when answering alone would fit",
+      "met": true
+    },
+    {
+      "name": "A hint keeps targets pending after a successful larger answer",
+      "met": true
+    },
+    {
+      "name": "An answer to a different task cannot be charged as the chosen cheap task",
+      "met": true
+    },
+    {
+      "name": "Retained capability-version drift stops selection for explicit review",
+      "met": true
+    },
+    {
+      "name": "Reordered contract properties remain compatible with the real bridge",
+      "met": true
+    },
+    {
+      "name": "A failed whole task retains its unresolved concern even after target checks were complete",
+      "met": true
+    },
+    {
+      "name": "An unlocalized failed task is not bypassed with ordinary target practice",
+      "met": true
+    },
+    {
+      "name": "An insufficient budget retains all unobserved targets instead of grading them weak",
+      "met": true
+    },
+    {
+      "name": "The same prompt is not repeated after missing evidence",
+      "met": true
+    }
+  ],
+  "traces": {
+    "coverage": {
+      "description": "Watch two overlapping exercises cover the pending targets within six illustrative minutes.",
+      "trace": [
+        {
+          "action": "Q3",
+          "kind": "check",
+          "reason": "Choose an affordable set of exercises for the pending targets, then reassess after the next answer. Expected coverage is not observed coverage.",
+          "remaining": 360,
+          "assumedSeconds": 120,
+          "outcome": "correct"
+        },
+        {
+          "action": "Q4",
+          "kind": "check",
+          "reason": "Choose an affordable set of exercises for the pending targets, then reassess after the next answer. Expected coverage is not observed coverage.",
+          "remaining": 240,
+          "assumedSeconds": 240,
+          "outcome": "correct"
+        }
+      ],
+      "spentSeconds": 360,
+      "final": {
+        "remaining": 0,
+        "spent": 360,
+        "needs": {
+          "plan": {
+            "now": [],
+            "later": [],
+            "perTarget": {
+              "A": "No extra separate drill for this result.",
+              "B": "No extra separate drill for this result.",
+              "C": "No extra separate drill for this result.",
+              "D": "No extra separate drill for this result.",
+              "E": "No extra separate drill for this result."
+            },
+            "note": "The observed targets need no extra drills in this hypothetical session. Real retention is still untested."
+          },
+          "review": [],
+          "diagnose": [],
+          "practice": [],
+          "check": [],
+          "questions": [],
+          "taskConcern": null
+        },
+        "declined": [
+          {
+            "id": "Q1",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "Q2",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "Q3",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          },
+          {
+            "id": "Q4",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          }
+        ],
+        "unresolved": [],
+        "kind": "stop",
+        "reason": "The checks for this illustrative session are complete. Future retention remains untested."
+      },
+      "retainedLaterTargets": []
+    },
+    "clarification": {
+      "description": "A wrong clarification leads to command practice and then a fresh combined check. A correct clarification takes a different route.",
+      "trace": [
+        {
+          "action": "ops.clarify",
+          "kind": "diagnose",
+          "reason": "Resolve a supported concern whose answers change the next teaching action; reserve follow-up time, including a check after corrective practice.",
+          "remaining": 120,
+          "assumedSeconds": 20,
+          "outcome": "error"
+        },
+        {
+          "action": "ops.practice",
+          "kind": "practice",
+          "reason": "Address an observed error; retain successful and unresolved targets.",
+          "remaining": 100,
+          "assumedSeconds": 25,
+          "outcome": "correct"
+        },
+        {
+          "action": "ops.combined",
+          "kind": "check",
+          "reason": "Choose an affordable set of exercises for the pending targets, then reassess after the next answer. Expected coverage is not observed coverage.",
+          "remaining": 75,
+          "assumedSeconds": 60,
+          "outcome": "correct"
+        }
+      ],
+      "spentSeconds": 105,
+      "final": {
+        "remaining": 15,
+        "spent": 105,
+        "needs": {
+          "plan": {
+            "now": [],
+            "later": [
+              {
+                "kind": "combined_check",
+                "group": "ops.incident",
+                "title": "One new troubleshooting incident",
+                "targets": [
+                  "ops.chooseLogs",
+                  "ops.produceLogs",
+                  "ops.function"
+                ],
+                "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+              }
+            ],
+            "perTarget": {
+              "ops.chooseLogs": "Include in the single later check.",
+              "ops.produceLogs": "Include in the single later check.",
+              "ops.function": "Include in the single later check."
+            },
+            "note": "Stop the current drill. The agreed combined check belongs in a later session."
+          },
+          "review": [],
+          "diagnose": [],
+          "practice": [],
+          "check": [],
+          "questions": [],
+          "taskConcern": null
+        },
+        "declined": [
+          {
+            "id": "ops.clarify",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          },
+          {
+            "id": "ops.practice",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          },
+          {
+            "id": "ops.combined",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          },
+          {
+            "id": "ops.command",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "ops.choice",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "ops.verify",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "ops.same-help",
+            "reason": "There is no supported unresolved concern for this question."
+          }
+        ],
+        "unresolved": [],
+        "kind": "stop",
+        "reason": "The checks for this illustrative session are complete. Future retention remains untested."
+      },
+      "retainedLaterTargets": [
+        "ops.chooseLogs",
+        "ops.produceLogs",
+        "ops.function"
+      ]
+    },
+    "tight": {
+      "description": "A useful question can still be unaffordable once its follow-up is included. Keep the command concern unresolved and use time only for eligible work.",
+      "trace": [
+        {
+          "action": "ops.choice",
+          "kind": "check",
+          "reason": "Choose an affordable set of exercises for the pending targets, then reassess after the next answer. Expected coverage is not observed coverage.",
+          "remaining": 40,
+          "assumedSeconds": 35,
+          "outcome": "correct"
+        }
+      ],
+      "spentSeconds": 35,
+      "final": {
+        "remaining": 5,
+        "spent": 35,
+        "needs": {
+          "plan": {
+            "now": [
+              {
+                "kind": "clarify",
+                "targets": [
+                  "ops.produceLogs"
+                ],
+                "text": "Did you intend to inspect application logs, and which subcommand would you use?",
+                "reason": "The command wording needs clarification before choosing corrective practice."
+              }
+            ],
+            "later": [
+              {
+                "kind": "combined_check",
+                "group": "ops.incident",
+                "title": "One new troubleshooting incident",
+                "targets": [
+                  "ops.produceLogs",
+                  "ops.function"
+                ],
+                "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+              }
+            ],
+            "perTarget": {
+              "ops.chooseLogs": "No extra separate drill for this result.",
+              "ops.produceLogs": "Resolve the pending interpretation before choosing corrective practice.",
+              "ops.function": "Include in the single later check."
+            },
+            "note": "Address the specific concern; retain the other observations."
+          },
+          "review": [],
+          "diagnose": [
+            "ops.produceLogs"
+          ],
+          "practice": [],
+          "check": [
+            "ops.function"
+          ],
+          "questions": [
+            {
+              "kind": "clarify",
+              "targets": [
+                "ops.produceLogs"
+              ],
+              "text": "Did you intend to inspect application logs, and which subcommand would you use?",
+              "reason": "The command wording needs clarification before choosing corrective practice."
+            }
+          ],
+          "taskConcern": null
+        },
+        "declined": [
+          {
+            "id": "ops.clarify",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "ops.practice",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "ops.combined",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "ops.command",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "ops.choice",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          },
+          {
+            "id": "ops.verify",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "ops.same-help",
+            "reason": "Every answer would lead to the same teaching action."
+          }
+        ],
+        "unresolved": [
+          "ops.produceLogs",
+          "ops.function"
+        ],
+        "kind": "stop",
+        "reason": "No suitable next action fits the evidence and remaining budget. Retain unresolved needs."
+      },
+      "retainedLaterTargets": [
+        "ops.produceLogs",
+        "ops.function"
+      ]
+    },
+    "repair": {
+      "description": "Practice only the missing connection, then check it in a larger answer. Immediate success does not clear the later retention check.",
+      "trace": [
+        {
+          "action": "math.practice",
+          "kind": "practice",
+          "reason": "Address an observed error; retain successful and unresolved targets.",
+          "remaining": 100,
+          "assumedSeconds": 30,
+          "outcome": "correct"
+        },
+        {
+          "action": "math.combined",
+          "kind": "check",
+          "reason": "Choose an affordable set of exercises for the pending targets, then reassess after the next answer. Expected coverage is not observed coverage.",
+          "remaining": 70,
+          "assumedSeconds": 70,
+          "outcome": "correct"
+        }
+      ],
+      "spentSeconds": 100,
+      "final": {
+        "remaining": 0,
+        "spent": 100,
+        "needs": {
+          "plan": {
+            "now": [],
+            "later": [
+              {
+                "kind": "combined_check",
+                "group": "math.comparison",
+                "title": "One new comparison of branching and work",
+                "targets": [
+                  "math.explain",
+                  "math.work",
+                  "math.integrate"
+                ],
+                "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+              }
+            ],
+            "perTarget": {
+              "math.explain": "Include in the single later check.",
+              "math.work": "Include in the single later check.",
+              "math.integrate": "Include in the single later check."
+            },
+            "note": "Stop the current drill. The agreed combined check belongs in a later session."
+          },
+          "review": [],
+          "diagnose": [],
+          "practice": [],
+          "check": [],
+          "questions": [],
+          "taskConcern": null
+        },
+        "declined": [
+          {
+            "id": "math.practice",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          },
+          {
+            "id": "math.combined",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          },
+          {
+            "id": "math.explain",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "math.work",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "math.integrate",
+            "reason": "The full task cost exceeds the remaining time."
+          }
+        ],
+        "unresolved": [],
+        "kind": "stop",
+        "reason": "The checks for this illustrative session are complete. Future retention remains untested."
+      },
+      "retainedLaterTargets": [
+        "math.explain",
+        "math.work",
+        "math.integrate"
+      ]
+    },
+    "partial": {
+      "description": "A combined answer shows the parts but omits the connection. Recompute and ask only for the missing evidence.",
+      "trace": [
+        {
+          "action": "math.combined",
+          "kind": "check",
+          "reason": "Choose an affordable set of exercises for the pending targets, then reassess after the next answer. Expected coverage is not observed coverage.",
+          "remaining": 110,
+          "assumedSeconds": 70,
+          "outcome": "partial"
+        },
+        {
+          "action": "math.integrate",
+          "kind": "check",
+          "reason": "Choose an affordable set of exercises for the pending targets, then reassess after the next answer. Expected coverage is not observed coverage.",
+          "remaining": 40,
+          "assumedSeconds": 40,
+          "outcome": "correct"
+        }
+      ],
+      "spentSeconds": 110,
+      "final": {
+        "remaining": 0,
+        "spent": 110,
+        "needs": {
+          "plan": {
+            "now": [],
+            "later": [],
+            "perTarget": {
+              "math.explain": "No extra separate drill for this result.",
+              "math.work": "No extra separate drill for this result.",
+              "math.integrate": "No extra separate drill for this result."
+            },
+            "note": "The observed targets need no extra drills in this hypothetical session. Real retention is still untested."
+          },
+          "review": [],
+          "diagnose": [],
+          "practice": [],
+          "check": [],
+          "questions": [],
+          "taskConcern": null
+        },
+        "declined": [
+          {
+            "id": "math.practice",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "math.combined",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          },
+          {
+            "id": "math.explain",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "math.work",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "math.integrate",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          }
+        ],
+        "unresolved": [],
+        "kind": "stop",
+        "reason": "The checks for this illustrative session are complete. Future retention remains untested."
+      },
+      "retainedLaterTargets": []
+    },
+    "fact": {
+      "description": "Use one unaided recall. A cheaper recognition prompt cannot satisfy this recall goal.",
+      "trace": [
+        {
+          "action": "fact.recall",
+          "kind": "check",
+          "reason": "Choose an affordable set of exercises for the pending targets, then reassess after the next answer. Expected coverage is not observed coverage.",
+          "remaining": 10,
+          "assumedSeconds": 10,
+          "outcome": "correct"
+        }
+      ],
+      "spentSeconds": 10,
+      "final": {
+        "remaining": 0,
+        "spent": 10,
+        "needs": {
+          "plan": {
+            "now": [],
+            "later": [],
+            "perTarget": {
+              "fact.recall": "No extra separate drill for this result."
+            },
+            "note": "The observed targets need no extra drills in this hypothetical session. Real retention is still untested."
+          },
+          "review": [],
+          "diagnose": [],
+          "practice": [],
+          "check": [],
+          "questions": [],
+          "taskConcern": null
+        },
+        "declined": [
+          {
+            "id": "fact.recognition",
+            "reason": "The task does not match the required action, mode or conditions."
+          },
+          {
+            "id": "fact.practice",
+            "reason": "The full task cost exceeds the remaining time."
+          },
+          {
+            "id": "fact.recall",
+            "reason": "This prompt was already attempted in this session; use a fresh variant."
+          }
+        ],
+        "unresolved": [],
+        "kind": "stop",
+        "reason": "The checks for this illustrative session are complete. Future retention remains untested."
+      },
+      "retainedLaterTargets": []
+    }
+  },
+  "uiChecks": [
+    "Initial page states the chosen exercise and walkthrough completes the six-minute example",
+    "Partial-answer button changes the real next choice to the missing connection",
+    "Replay and budget controls preserve evidence while recomputing selection"
+  ]
+}

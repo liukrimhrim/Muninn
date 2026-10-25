@@ -1,0 +1,173 @@
+{
+  "scope": "Authored examples through the existing validator, bridge and planner. No new learner or model-service call.",
+  "hashes": {
+    "examples": "91e66db6ff4e725845259d35865169ac40510e506734f4fb6178be5a84ec3f9e",
+    "planner": "0ec071a703715d3bab2c75f49d2d1e10384d6f2890c6212af53cf17730dd22be",
+    "bridge": "1ee672ba99013814d7cebdeb0383055522762be4af73cf9ea6b1352e97e762a5",
+    "validator": "dd8dbe4c98c2e3890e719d192f70cd56ac0950e077ed5553835082e524baec57"
+  },
+  "checks": [
+    {
+      "name": "Useful evidence choice plus wrong command asks for production help only",
+      "met": true
+    },
+    {
+      "name": "Wrong evidence choice plus correct command asks for selection help only",
+      "met": true
+    },
+    {
+      "name": "Several criteria produce one capability observation with all evidence references",
+      "met": true
+    },
+    {
+      "name": "Partial command evidence does not become either a failure or a complete demonstration",
+      "met": true
+    },
+    {
+      "name": "An incidental criterion is retained without becoming a practice target",
+      "met": true
+    },
+    {
+      "name": "Known mathematical parts with wrong combination target integration only",
+      "met": true
+    },
+    {
+      "name": "Later parts alone cannot clear a previously observed integration error",
+      "met": true
+    },
+    {
+      "name": "One criterion reused by two capabilities retains the same evidence reference",
+      "met": true
+    },
+    {
+      "name": "A hint to a shared criterion qualifies both dependent capabilities only",
+      "met": true
+    },
+    {
+      "name": "A command-form hint leaves evidence choice and functional evidence independent",
+      "met": true
+    },
+    {
+      "name": "A reconstruction goal does not silently add fluent-recall observations or drills",
+      "met": true
+    },
+    {
+      "name": "Overlapping practice bundles schedule each pending target once",
+      "met": true
+    },
+    {
+      "name": "Semantic knowledge-group overlap changes no practice evidence or policy",
+      "met": true
+    },
+    {
+      "name": "Clarification maps a criterion to its capability and precedes corrective help",
+      "met": true
+    },
+    {
+      "name": "An unclear reply keeps mapped assessment unresolved without reviving help",
+      "met": true
+    },
+    {
+      "name": "A clear later response resolves mapped clarification and pending checks",
+      "met": true
+    },
+    {
+      "name": "A successful alternate path leaves bypassed targets unobserved without creating errors",
+      "met": true
+    },
+    {
+      "name": "Current correction ends immediate help while preserving a later check",
+      "met": true
+    },
+    {
+      "name": "Simple fact recall works without an integration or relationship requirement",
+      "met": true
+    },
+    {
+      "name": "An exact duplicate answer does not multiply evidence",
+      "met": true
+    },
+    {
+      "name": "A changed interpretation cannot silently replace the same answer ID",
+      "met": true
+    },
+    {
+      "name": "Saved assessments stay bound to their original criteria and coverage",
+      "met": true
+    },
+    {
+      "name": "A current contract version change rejects an old assessment",
+      "met": true
+    },
+    {
+      "name": "Contract wording drift is detected even without a version bump",
+      "met": true
+    },
+    {
+      "name": "Coverage of an unknown capability is rejected",
+      "met": true
+    },
+    {
+      "name": "Missing, repeated, or empty criterion mappings are rejected",
+      "met": true
+    },
+    {
+      "name": "Duplicate coverage cannot emit two observations for one capability",
+      "met": true
+    },
+    {
+      "name": "Help must identify affected rubric criteria in an explicit-coverage packet",
+      "met": true
+    },
+    {
+      "name": "An unmapped incidental criterion cannot become a remedial target",
+      "met": true
+    },
+    {
+      "name": "A new contract cannot reinterpret retained observations during intake",
+      "met": true
+    },
+    {
+      "name": "Direct planning detects a retained contract mismatch before choosing practice",
+      "met": true
+    },
+    {
+      "name": "A new version can start with new evidence without rewriting old history",
+      "met": true
+    },
+    {
+      "name": "Branch comparisons leave their initial evidence unchanged",
+      "met": true
+    },
+    {
+      "name": "Retained explicit evidence is a snapshot even when the caller later edits its packet",
+      "met": true
+    },
+    {
+      "name": "Version drift also blocks unresolved judgments that emitted no knowledge observation",
+      "met": true
+    },
+    {
+      "name": "Evidence references distinguish separate answers within the same attempt",
+      "met": true
+    },
+    {
+      "name": "Page handlers show focused command help then a combined later check",
+      "met": true
+    },
+    {
+      "name": "Mathematical walkthrough exposes integration while retaining separate evidence",
+      "met": true
+    },
+    {
+      "name": "Free play shows a partial answer without manufacturing a complete command observation",
+      "met": true
+    },
+    {
+      "name": "Version-drift walkthrough refuses reuse and reset restores an empty history",
+      "met": true
+    }
+  ],
+  "grading_accuracy": null,
+  "learning_benefit": null
+}

@@ -1,0 +1,89 @@
+# Fresh checks, comparable evidence, and the age of observations
+
+Research date: 2026-10-15. Question: [What supports fresh, comparable checks without confusing recall and transfer?](../issues/15-fresh-exercise-evidence.md). This is a bounded research note and design proposal, not a completed implementation or a claim of learning effectiveness. It extends [learning evidence](learning-evidence.md), [material authoring](../material-workflow.md), [inference](../inference-design.md), the [first-build plan](../first-build-plan.md), and the [C dashboard contract](../../learning-observability/c-dashboard-contract.md).
+
+The central recommendation is to replace an undifferentiated “fresh exercise” flag with separate descriptions of **what changed, what the learner has seen, what action was assessed, and when it happened**. Repeating a fact-recall cue can be exactly right. Changing names can still test only a remembered solution. A demanding new task can be useful without being comparable to yesterday’s task. None of those distinctions supplies an individual forgetting rate.
+
+## What the primary sources establish
+
+The following five sources were inspected as original papers or the issuing organizations’ standard. Source findings are separated from the product proposals below. Passage excerpts are short; locations identify the surrounding methods and limitations.
+
+| Source and inspected location | Source-derived finding | Boundary for this design |
+|---|---|---|
+| [Karpicke & Roediger, 2008, *Science*, pp. 966–968](https://learninglab.psych.purdue.edu/downloads/2008/2008_Karpicke_Roediger_Science.pdf), methods and results, p. 967; passage: “repeated retrieval practice enhanced long-term retention” | College students learned 40 Swahili–English pairs. Repeated testing after a first successful recall produced substantially better recall one week later than removing successfully recalled pairs from testing. The repeated cue and response were the intended association. | Exact-prompt repetition is compatible with useful retrieval practice. This experiment does not establish sentence production, reverse-direction translation, general language ability, or an optimal schedule for our app. One initial correct response was not equivalent to the delayed outcome. |
+| [Butler, 2010, *JEP: Learning, Memory, and Cognition*, pp. 1118–1133](https://andymatuschak.org/files/papers/Butler%20-%202010%20-%20Repeated%20Testing%20Produces%20Superior%20Transfer%20of%20Learning%20Relative%20to%20Repeated.pdf), materials p. 1121, discussion pp. 1124–1125, experiments 2–3; passage: “the correct response remained the same” | The rephrasing manipulation changed question stems while retaining answers. It did not significantly improve outcomes over repeated identical questions in experiments 1a/1b. Other comparisons found retrieval benefits on new inferential questions, including questions requiring application in another domain. | Wording novelty is not evidence of a new application demand. The null rephrasing comparison does not prove that all variation is useless. These studies do not provide an automatic similarity threshold or a universal test of transfer. |
+| [Kang, McDermott & Roediger, 2007, *European Journal of Cognitive Psychology*, pp. 528–558](https://gwern.net/doc/psychology/spaced-repetition/2007-kang.pdf), abstract p. 528, experiments 1–2, general discussion pp. 544–549; passage: “To better equate exposure to test-relevant information” | Initial test format and corrective feedback affected results on a test three days later. Without feedback, multiple-choice practice outperformed short-answer practice; with feedback, short-answer practice produced the best final performance. | Feedback and retrieval format belong in the evidence record. This does not supply a universal ranking of question types, a duration after which answer exposure stops mattering, or proof that merely displaying feedback means it was read. |
+| [Cepeda et al., 2008, *Psychological Science*, pp. 1095–1102](https://labs.biology.ucsd.edu/rifkin/courses/bieb100/f14/Cepeda_et_al_2008_Psychological_Science_Spacing_Effects_in_Learning_A_Temporal_Ridgeline_of_Optimal_Retention.pdf), methods pp. 1096–1097, results/discussion pp. 1098–1100; passage: “the optimal gap increased as test delay increased” | The study varied intervals between fact-learning sessions and later tests. Retention depended jointly on spacing and the later test delay; the best observed spacing was not a universal fixed proportion of the delay. | Age and exposure history matter to interpreting outcomes. This study does not estimate whether this learner remembers this unit today, justify erasing old observations, or establish a 24-hour exposure cooldown. Its group-level findings are not a fitted personal memory model. |
+| [AERA, APA & NCME, *Standards for Educational and Psychological Testing*, 2014](https://www.testingstandards.net/uploads/7/6/6/4/76643089/standards_2014edition.pdf), standards 5.4–5.5, printed p. 103; 5.12–5.13, printed p. 105; passage: “A clear rationale and supporting evidence” | The standards require justification for intended score interpretations and evidence for treating alternate-form scores as interchangeable. Common content specifications alone do not constitute statistical equating. | This is an authoritative measurement standard, not an experiment on our app. We can describe outcomes on reviewed tasks now; we cannot claim equal difficulty or calibrated change merely because two generated questions share a family label. |
+
+Access limits: the previously linked Washington University Kang PDF failed to load; the original published paper was read through the linked mirror. The existing Gick–Holyoak PDF link also failed in this pass and contributes no additional finding here. This is not a systematic review. No reviewed source validates an LLM’s freshness judgment or determines product thresholds.
+
+## Proposed exercise contract: freshness is relative to a purpose
+
+Everything from here onward is **design inference**, offered for integration rather than attributed to a research finding.
+
+At authoring time, declare the target before requesting novelty. For an association such as “mavo → blue,” the same cue and answer are the target. Changing the word or expected translation changes the content being tested. A repeated prompt, with the answer unavailable during response, can therefore be eligible direct recall. Do not demand an explanation or invented application to make a simple fact count.
+
+For a method, relationship, or procedure, classify the relationship to earlier tasks:
+
+- **Repeated item:** the same substantive question. Useful practice or a direct retention check when that is the intended target; no unseen-task claim.
+- **Surface variation:** names, order, or phrasing change, but the prior answer still supplies the substantive response. Record the variation without promoting the result to transfer.
+- **New instance within a family:** the same intended skill and solution method must be applied to new inputs or conditions. Reusing the learned method is desirable; merely reproducing the previous answer should be insufficient.
+- **New demand:** selection among methods, a different representation, an unfamiliar combination, or changed conditions introduces a distinct demand. Map it explicitly; do not silently treat the result as the same difficulty or credit every component.
+
+These categories are not an ordinal sophistication score. Changing two numbers can create a valid new calculation instance; changing a whole story can leave an answer mechanically reusable. A fresh instance may still be poor evidence for the particular relationship that was repaired. The review must name the learner action that distinguishes the candidate from its predecessor.
+
+Before offering an item, check five things: the source supports its claim and conditions; the prompt supplies necessary context; the rubric accepts legitimate solutions; the required action actually elicits the mapped target; and answer-bearing cues do not perform that action for the learner. For a proposed fresh check, also state what prior response cannot simply be copied and why. Unresolved checks hold the item for review, not mark the learner wrong. The system can offer a reviewed repeated practice item with a narrower claim when no suitable new instance exists.
+
+Content review can be assisted, but a generator’s self-declaration that a question is fresh or equal in difficulty is not validation. Freeze the delivered prompt, rubric, mapping, and review rationale. Corrections must preserve what was actually asked. Authoring new items after seeing a learner’s error is appropriate for teaching; it is different from selecting an unseen measured endpoint prospectively.
+
+## Exposure, independence, and delay need separate decisions
+
+Preserve the submitted answer before showing feedback. Record assistance by criterion where possible. Distinguish the normal cue, allowed resources, a hint supplied during the task, prior worked examples, and possible exposure through an evidence drawer. A no-help response is not proof of no earlier exposure. An answer view is possible exposure, not verified reading, completed study, or a successful retrieval.
+
+“Independent” should mean the defined response was produced without prohibited assistance during that attempt. It must not imply no earlier teaching. An immediate check after an explanation can be independently answered and useful for checking repair, while remaining inadequate evidence of delayed retention. An unseen question about recently displayed content likewise does not acquire a long retention interval merely through different wording.
+
+For a delayed endpoint, evaluate its predeclared target, mode, resource policy, timing, and exposure conditions separately from correctness. If the intended outcome is retention without intervening answer exposure, a relevant exposure inside that interval makes the answer ineligible for that claim. Retain the answer and reason; do not manufacture failure or retroactively relax the endpoint. A dashboard that cannot establish timing should show uncertainty rather than assert that exposure was absent.
+
+**Concrete dashboard case:** the learner reads the old solution in the evidence drawer immediately before answering a due question correctly without in-task help. Save both events and the correct independent response, qualified by recent exposure. Do not relabel it as helped solely because of the earlier view. Do not discharge a delayed endpoint whose exposure condition was violated or execute the corresponding seven-day advancement. The original question was still answered; the required delayed evidence remains unfulfilled.
+
+A proposed simple scheduling default is to preserve that outstanding obligation and its original due date, while deferring the next offer until the next study day so the system does not immediately repeat the same check. This is a separate product reminder, not a memory-state reset, a new study event, an FSRS review rating, or a scientifically adequate cooldown. Any replacement measured endpoint needs a prospective assignment and an explicit interval/exposure contract. A newly completed teaching activity may use the existing proposed 24-hour scheduling rule; merely opening a drawer may not impersonate that activity. Later checks still carry their actual delays and intervening exposures.
+
+## Comparability and old evidence
+
+For a descriptive comparison, require an explicit match on target version or accepted compatibility mapping, response mode, allowed help, rubric meaning, and the task conditions relevant to the intended claim. Record the task’s reviewed demands: number of decisions, prerequisite operations, reading burden, numerical complexity, and necessary tool use where applicable. These are inspection dimensions, not a weighted difficulty score.
+
+Use three reasons: **matched by the stated content contract**, **known mismatch**, or **unresolved**. Even the first does not mean statistically equated. Show dated successes/errors within the qualified stream; withhold an overall “ability increased by X” interpretation when new forms or demands can explain the difference. If only part of a larger task is comparable, assess that part through its mapped evidence and retain the limits on the whole-task comparison.
+
+Old success remains “correct without help on [date] under [conditions].” Old error remains “an error was observed on [date], with no qualifying later resolution recorded.” Neither becomes a fact about present performance just because it is the latest entry. Show elapsed time and the planned next check separately. A pending or overdue review is a policy state, not an observed deficit.
+
+Consequently, the C shortlist should describe **recorded errors needing attention**, **recoveries to recheck**, and **knowledge awaiting newer evidence** separately. Do not put an old success into the weakest group by subtracting invented mastery points; do not erase a long-unresolved error through age alone. No calendar boundary can turn an observation into a new failed attempt. Corrections change the effective historical interpretation without moving its occurrence time.
+
+## Fields the design must be able to represent
+
+These extend existing versioned records; they do not call for new storage infrastructure. Reuse existing fields where meanings already match.
+
+| Record | Proposed information |
+|---|---|
+| Exercise definition/review | Exact target/rubric/source versions; family identity; response mode; relevant conditions; criterion mapping; variation category and predecessor refs; changed inputs/demands; copying-risk rationale; reviewed demand profile; reviewer/procedure/version and unresolved issues |
+| Attempt and exposure | Delivered definition; submitted response; occurrence-time quality; scoped in-task assistance; prior exposure refs and time bounds; possible vs learner-confirmed exposure; known app-history scope and outside-history uncertainty |
+| Endpoint resolution | Prospectively assigned attempt; intended delay and exposure policy; observed correctness; separate independence, novelty, comparability and timing decisions; claim eligibility with reasons; no best-retry substitution |
+| Schedule decision | Due obligation; policy/version; event causing transition or deferral; next-offer time separately from original due date; unresolved evidence need; no fabricated learning event |
+| Dashboard/report | Evidence date, evaluation instant and source cutoff; elapsed-time basis; latest compatible observation; historical concern/recovery/check-needed labels; limitations and drilldown refs |
+
+## Eight discriminating design cases
+
+These are proposed acceptance cases, not learner results or executed tests.
+
+| Case | Required distinction and observable behavior |
+|---|---|
+| **F1: exact fact cue** | After learning “mavo → blue,” the same prompt returns a week later. With eligible timing and no relevant help, accept direct recall. Label repeated item; do not require novelty or credit reverse translation. |
+| **F2: mathematical disguise** | A repaired branching-work explanation is repeated with people and file names changed; the old solution remains verbatim sufficient. Classify surface variation. It may practice the explanation, but cannot establish performance on a materially new instance. |
+| **F3: meaningful new numbers** | Halving from 65,536 to 1,024 is followed by halving from 32,768 to 2,048: six reductions versus four. The method is shared, but the previous numerical answer no longer works. Accept a reviewed within-family calculation; demand reasoning separately if that is the target. A misread corrected with valid reasoning is not automatically a relationship gap. |
+| **F4: changed mathematical burden** | The replacement introduces non-power-of-two boundaries and rounding after power-of-two practice. Record the additional demand. Failure does not establish loss of the previously demonstrated logarithmic relationship; do not pool the tasks as equal difficulty. |
+| **F5: language relationship** | Replace “The key to the cabinets is missing” with a new singular-subject/plural-intervening-noun sentence. Ask for the controlling noun and why. A correct verb alone does not demonstrate the explanation target. A reversed-number contrast is an additional reviewed case, not interchangeable evidence by assertion. |
+| **F6: text-described operation** | An operations scenario uses a changed symptom that makes the previous fix inappropriate. Credit justified diagnostic selection under the supplied information. A written command and verification plan demonstrate textual planning, not successful execution in a real environment. |
+| **F7: inspected answer before due check** | Evidence-drawer exposure precedes a correct no-help response. Preserve correctness and exposure independently; withhold the incompatible delayed claim and seven-day advancement. Defer another offer without creating study completion, failure, or a false cooling-off guarantee. |
+| **F8: two old histories** | One unit last succeeded 90 days ago; another last failed 90 days ago. Neither receives a new error today. Display last observations and pending checks; the second retains its unresolved recorded concern. A later grade correction updates that concern at the old event time. |
+
+Remaining work is semantic qualification of generated candidates and evidence that the labels help learners make good decisions. The sources do not choose how many variants are enough, how old a success may be before a reminder, or how to rank heterogeneous units as one mastery scale. The first release can adopt explicit, versioned operating rules and report their consequences without inventing those answers.

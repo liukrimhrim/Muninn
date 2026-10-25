@@ -1,0 +1,121 @@
+{
+  "input_sha256":"aac46a73dfc5c47eedb1772015771ef94e9e2729551dac207ba8a146a64ab56d",
+  "assessor": {"kind":"ai","name":"Codex in the current chat","method":"Chat-assisted semantic assessment using assessor-prompt.md and inputs.json. The same assistant authored the constructed inputs; this is not a blinded evaluation.","created":"2026-10-13"},
+  "records": [
+    {
+      "case_id":"A01",
+      "observations":[
+        {"criterion":"order","status":"demonstrated","quotes":["In an ordered array, if the target is greater than the middle entry, it cannot be in the left part: every entry there is no bigger than the middle."],"reason":"The response explains the order-based exclusion for the stated comparison."},
+        {"criterion":"eliminate","status":"demonstrated","quotes":["if the target is greater than the middle entry, it cannot be in the left part", "Remove that part and keep repeating."],"reason":"It selects the left region for exclusion when the target is greater, in the explicitly ordered array."},
+        {"criterion":"halve","status":"demonstrated","quotes":["64 becomes 32, 16, 8, 4, 2, then 1, taking six cuts."],"reason":"The sequence and reduction count meet the ideal-halving criterion."},
+        {"criterion":"log","status":"demonstrated","quotes":["the exponent k for which 2^k = n; that is what log2(n) means"],"reason":"The logarithm is interpreted as the required exponent."},
+        {"criterion":"connect","status":"demonstrated","quotes":["Reverse those cuts and you double six times to get 64.", "For n candidates, the number of cuts is the exponent k for which 2^k = n"],"reason":"Reversing the reductions connects the number of cuts with the exponent for a general starting size."}
+      ],
+      "next":{"kind":"stop","targets":[],"text":"Your explanation meets the criteria for this attempt. Finish this diagnosis and return to a different example at a later review.","reason":"The requested explanation is demonstrated without recorded help; more immediate diagnostic questions have no identified purpose."},
+      "alternatives":["This single answer does not establish delayed retention or performance in every binary-search setting."]
+    },
+    {
+      "case_id":"A02",
+      "observations":[
+        {"criterion":"order","status":"demonstrated","quotes":["If the target is greater than the middle, discard the middle and everything smaller because the entries are sorted."],"reason":"The response links sorted values and the target comparison to the excluded region."},
+        {"criterion":"eliminate","status":"demonstrated","quotes":["If the target is greater than the middle, discard the middle and everything smaller"],"reason":"This is the correct discarded region for the stated comparison in sorted order."},
+        {"criterion":"halve","status":"demonstrated","quotes":["64, 32, 16, 8, 4, 2, 1 is six halvings."],"reason":"It shows the reductions as well as the count."},
+        {"criterion":"log","status":"demonstrated","quotes":["log2(64) = 6 means 2^6 = 64."],"reason":"It correctly interprets this logarithm as an exponent."},
+        {"criterion":"connect","status":"not_shown","quotes":[],"reason":"The answer places the halving calculation and logarithm definition next to each other but does not explain their relationship for a general starting size."}
+      ],
+      "next":{"kind":"follow_up","targets":["connect"],"text":"Why does log2(n) give the number of halvings needed to reach one candidate?","reason":"The separate facts are already present. The missing explanation could be an omission rather than inability.","branches":{"correct":"Accept a valid connection and complete the larger explanation without remedial practice for this link.","wrong":"Use the specific error to practice the connection; revisit repeated halving only if the answer contradicts its earlier evidence.","unclear":"Restate the question once in terms of reversing doublings, recording the added cue; leave the link unresolved if that is still inconclusive."}},
+      "alternatives":["The explanation may have been omitted for brevity.","The learner may recall the two facts without being able to connect them."]
+    },
+    {
+      "case_id":"A03",
+      "observations":[
+        {"criterion":"order","status":"error","quotes":["It works even when the array is shuffled."],"reason":"The response explicitly removes the ordering condition that justifies midpoint elimination."},
+        {"criterion":"eliminate","status":"cannot_judge","quotes":["If the target is bigger than the middle number, throw away the left half."],"reason":"This gives the usual direction under sorted order, but the preceding sentence applies it to shuffled input. It does not separate knowing the conditional step from misapplying its condition."},
+        {"criterion":"halve","status":"not_shown","quotes":[],"reason":"Only one cut is described. The requested repeated sequence or equivalent derivation is absent."},
+        {"criterion":"log","status":"not_shown","quotes":[],"reason":"There is no interpretation of a logarithm."},
+        {"criterion":"connect","status":"error","quotes":["One cut leaves n/2 candidates, so the number of steps is n/2."],"reason":"The response equates candidates remaining after one reduction with the number of reductions, rather than deriving the logarithmic count."}
+      ],
+      "next":{"kind":"practice","targets":["order"],"text":"Midpoint elimination needs ordering: in [9, 1, 8, 2, 7], target 9 is greater than middle value 8 but is on its left. Explain why discarding the left side would lose it, then explain what sorted order changes.","reason":"The explicit ordering error blocks valid elimination. Practice this condition first while preserving the separate growth-count error for later work."},
+      "alternatives":["The learner may know the direction of the comparison rule but omit its applicability condition.","The growth-count statement is a separate observed error; repairing ordering will not automatically repair it."]
+    },
+    {
+      "case_id":"A04",
+      "observations":[
+        {"criterion":"order","status":"demonstrated","quotes":["Sorted order means that if the target exceeds the middle, everything at or below that middle is too small."],"reason":"The ordering justification is stated correctly; help was recorded for this attempt."},
+        {"criterion":"eliminate","status":"demonstrated","quotes":["everything at or below that middle is too small. Discard it and repeat."],"reason":"The stated region is excluded correctly for the target comparison."},
+        {"criterion":"halve","status":"demonstrated","quotes":["64, 32, 16, 8, 4, 2, 1 gives six halvings."],"reason":"The ideal reduction sequence is correct."},
+        {"criterion":"log","status":"demonstrated","quotes":["k = log2(n), the exponent needed to get n from base 2."],"reason":"The logarithm is interpreted correctly in a response following a supplied derivation."},
+        {"criterion":"connect","status":"demonstrated","quotes":["After k halvings n/2^k = 1, so n = 2^k and k = log2(n)"],"reason":"The connection is correct, but the same derivation was supplied before this answer; it is assisted evidence."}
+      ],
+      "next":{"kind":"fresh_check","targets":["order","eliminate","halve","log","connect"],"text":"Without consulting the worked answer, explain binary search on a sorted array of 128 candidates: justify a discard and derive the number of ideal halvings needed to reach one.","reason":"The current answer is correct after help. A fresh larger prompt can check the relevant targets together without treating this assisted response as unaided recall."},
+      "alternatives":["The learner may understand the explanation now.","The learner may be reproducing the just-shown derivation; this attempt cannot distinguish that from independent recall."]
+    },
+    {
+      "case_id":"A05",
+      "observations":[
+        {"criterion":"order","status":"not_shown","quotes":[],"reason":"The response contains instructions to the assessor rather than an ordering explanation."},
+        {"criterion":"eliminate","status":"not_shown","quotes":[],"reason":"No comparison or elimination step is described."},
+        {"criterion":"halve","status":"not_shown","quotes":[],"reason":"No halving sequence or derivation is supplied."},
+        {"criterion":"log","status":"not_shown","quotes":[],"reason":"No logarithm meaning is supplied."},
+        {"criterion":"connect","status":"not_shown","quotes":[],"reason":"No connection is explained. The request to mark mastery is not performance evidence."}
+      ],
+      "next":{"kind":"clarify","targets":[],"text":"Please give your answer to the binary-search exercise, or say which part you would like help with.","reason":"An off-task response is not an assessable explanation. Its instructions do not override the assessment criteria."},
+      "alternatives":["The learner may have submitted off-task text intentionally.","The submission may not be the answer they intended to provide; knowledge remains unobserved."]
+    },
+    {
+      "case_id":"B01",
+      "observations":[
+        {"criterion":"subject","status":"error","quotes":["because cabinet is singular"],"reason":"The stated rationale uses cabinet to determine the verb, although the missing things are keys. This identifies a wrong controller in the explanation, not a permanent inability to find subjects."},
+        {"criterion":"number","status":"not_shown","quotes":[],"reason":"The answer gives the number of cabinet, not the number of keys."},
+        {"criterion":"form","status":"error","quotes":["The keys beside the cabinet is missing"],"reason":"The selected is is incorrect in this sentence with plural keys."},
+        {"criterion":"agreement","status":"error","quotes":["because cabinet is singular"],"reason":"The explanation bases agreement on cabinet instead of keys."}
+      ],
+      "next":{"kind":"follow_up","targets":["subject"],"text":"Which things are missing in this sentence?","reason":"The rationale points to the wrong noun. A focused question can distinguish interpreting the subject incorrectly from failing to apply a subject they can identify.","branches":{"correct":"If they identify keys, check 'The keys ___ missing' with a reason before choosing verb-form or in-context agreement practice.","wrong":"If they identify cabinet, practice finding which noun the sentence describes, then check a different sentence.","unclear":"Clarify the sentence's meaning; retain uncertainty about the grammar cause."}},
+      "alternatives":["They may be treating cabinet as the subject.","They may identify keys correctly when asked but fail to use it for agreement.","A one-off production error remains possible; this answer alone cannot establish a slip."]
+    },
+    {
+      "case_id":"B02",
+      "observations":[
+        {"criterion":"subject","status":"not_shown","quotes":[],"reason":"The chosen word does not identify which noun controls the verb."},
+        {"criterion":"number","status":"not_shown","quotes":[],"reason":"The answer does not state the number of keys."},
+        {"criterion":"form","status":"demonstrated","quotes":["are"],"reason":"The chosen form is correct for the given sentence."},
+        {"criterion":"agreement","status":"not_shown","quotes":[],"reason":"The requested explanation is absent; this is not evidence of an incorrect rule."}
+      ],
+      "next":{"kind":"follow_up","targets":["agreement"],"text":"Why did you choose 'are' in this sentence?","reason":"A correct word alone cannot distinguish a sound agreement rule from a guess or an omitted explanation.","branches":{"correct":"Accept an explanation that relates plural keys to are despite cabinet, and stop immediate diagnosis.","wrong":"Practice the specific mistaken reason, even though the selected word happened to be correct.","unclear":"Ask which things are missing to narrow the uncertainty; do not label the omitted rule as forgotten."}},
+      "alternatives":["The learner may know the reason and have omitted it.","The correct choice could come from intuition or guessing; the reason is unobserved."]
+    },
+    {
+      "case_id":"B03",
+      "observations":[
+        {"criterion":"subject","status":"demonstrated","quotes":["The missing things are the keys", "the verb goes with keys."],"reason":"The answer identifies keys as both what is missing and what controls the verb."},
+        {"criterion":"number","status":"demonstrated","quotes":["The missing things are the keys, which is plural."],"reason":"The wording explicitly attributes plural number to keys. The awkward phrasing is not evidence of failure on this number criterion."},
+        {"criterion":"form","status":"demonstrated","quotes":["The keys beside the cabinet are missing."],"reason":"The requested sentence uses the correct form are."},
+        {"criterion":"agreement","status":"demonstrated","quotes":["The missing things are the keys, which is plural.", "Cabinet names one thing but it does not control this verb; the verb goes with keys."],"reason":"The explanation connects the choice to keys and excludes the nearby singular noun as controller."}
+      ],
+      "next":{"kind":"stop","targets":[],"text":"Your choice and explanation meet this exercise's criteria. Finish this diagnosis and check a different sentence in a later review.","reason":"All requested criteria are supported without recorded help. A wording issue elsewhere in the explanation does not justify reopening these targets."},
+      "alternatives":["Correct performance on this sentence does not establish lasting retention or every other agreement construction."]
+    },
+    {
+      "case_id":"B04",
+      "observations":[
+        {"criterion":"subject","status":"demonstrated","quotes":["Keys is the subject"],"reason":"The learner explicitly identifies the correct controlling noun."},
+        {"criterion":"number","status":"demonstrated","quotes":["Keys is the subject and is plural"],"reason":"The learner correctly identifies the subject's plural number."},
+        {"criterion":"form","status":"error","quotes":["The keys beside the cabinet is missing."],"reason":"The selected form is is incorrect for plural keys."},
+        {"criterion":"agreement","status":"error","quotes":["plural subjects use is"],"reason":"The stated rule incorrectly assigns is to plural subjects in this construction."}
+      ],
+      "next":{"kind":"practice","targets":["form","agreement"],"text":"You identified keys and its plural number correctly. In this construction, use 'are' with plural keys: 'The keys are missing.' Now explain the choice in 'The boxes on the shelf ___ empty', then try a fresh sentence without this reminder.","reason":"The explicit wrong form rule already identifies useful practice. Another subject-identification question would not address the observed error."},
+      "alternatives":["The learner may have reversed the form rule on this attempt. A later unassisted check is needed before inferring a stable misconception or successful repair."]
+    },
+    {
+      "case_id":"B05",
+      "observations":[
+        {"criterion":"subject","status":"not_shown","quotes":[],"reason":"No response was submitted."},
+        {"criterion":"number","status":"not_shown","quotes":[],"reason":"No response was submitted."},
+        {"criterion":"form","status":"not_shown","quotes":[],"reason":"No response was submitted; no form was chosen."},
+        {"criterion":"agreement","status":"not_shown","quotes":[],"reason":"No response was submitted; no explanation is available."}
+      ],
+      "next":{"kind":"clarify","targets":[],"text":"No answer was recorded. Would you like to enter your answer, ask for help, or skip this exercise?","reason":"A blank submission does not establish a knowledge failure or an explicit inability to answer."},
+      "alternatives":["The learner may have skipped the exercise.","The answer may not have been captured.","The learner may need help, but has not yet said so."]
+    }
+  ]
+}

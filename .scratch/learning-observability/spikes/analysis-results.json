@@ -1,0 +1,145 @@
+{
+  "scope": "All numbers authored. These are calculation/assumption probes, not learner results.",
+  "missing_endpoint": {
+    "success": 5,
+    "error": 2,
+    "missing": 1,
+    "judged_success_fraction": 0.7142857142857143,
+    "completion": 0.875,
+    "possible_all_endpoint_success_fraction": [
+      0.625,
+      0.75
+    ],
+    "interpretation": "Scenario bounds over this fixed set, not a confidence interval or imputation."
+  },
+  "changing_mix": {
+    "early": {
+      "easy": [
+        8,
+        10
+      ],
+      "hard": [
+        18,
+        90
+      ],
+      "pooled": 0.26
+    },
+    "later": {
+      "easy": [
+        63,
+        90
+      ],
+      "hard": [
+        1,
+        10
+      ],
+      "pooled": 0.64
+    },
+    "within_stratum_change": {
+      "easy": -0.1,
+      "hard": -0.1
+    },
+    "interpretation": "Pooled success rises while each stratum worsens. Show the separate strata and their denominators; no weighted utility score or causal adjustment is introduced."
+  },
+  "duplicated_rows": {
+    "distinct_episodes": {
+      "success": 8,
+      "n": 10,
+      "conditional_wilson_95": [
+        0.49016247153664183,
+        0.9433178485456247
+      ]
+    },
+    "ten_copies_per_episode": {
+      "success": 80,
+      "n": 100,
+      "invalid_wilson_95": [
+        0.7111708344068411,
+        0.8666330666689676
+      ]
+    },
+    "interpretation": "Duplicated rows manufacture apparent precision. Even the 10-episode interval requires independent, comparable Bernoulli observations; ordinary adaptive learning history does not establish this."
+  },
+  "matched_randomization": {
+    "independent_randomized_pairs": 4,
+    "family_pair_differences": [
+      0.1,
+      0.2,
+      0.3,
+      0.4
+    ],
+    "equal_pair_mean_difference": 0.25,
+    "assignments": [
+      -0.25,
+      -0.049999999999999996,
+      -0.1,
+      0.1,
+      -0.15,
+      0.05000000000000001,
+      -6.938893903907228e-18,
+      0.2,
+      -0.2,
+      6.938893903907228e-18,
+      -0.05000000000000001,
+      0.15,
+      -0.1,
+      0.1,
+      0.049999999999999996,
+      0.25
+    ],
+    "extreme_assignments_two_sided": 2,
+    "exact_two_sided_p": 0.125,
+    "interpretation": "Conditional calculation for randomized labels within independent matched family pairs, no interference, and a sharp no-effect null. Four favorable differences still give p=0.125. This is not evidence of no effect, an effect interval, a universal sample threshold, or an actual randomized study."
+  },
+  "full_cost": {
+    "A": {
+      "answer_minutes": 12,
+      "other_minutes": 28,
+      "total_minutes": 40
+    },
+    "B": {
+      "answer_minutes": 20,
+      "other_minutes": 12,
+      "total_minutes": 32
+    },
+    "partial_cost_prefers": "A",
+    "full_cost_prefers": "B",
+    "interpretation": "Cost ranking reverses. Efficiency superiority additionally requires comparable retained outcomes and acceptable trade-offs."
+  },
+  "unplaced_cost": {
+    "A_placed_minutes": 27,
+    "A_unplaced_minutes_possible": [
+      0,
+      20
+    ],
+    "B_placed_minutes": 32,
+    "A_possible_total_if_nonoverlapping": [
+      27,
+      47
+    ],
+    "interpretation": "Scenario endpoints require the extra time to be nonoverlapping. Five extra minutes ties B; more reverses the preference. Unplaced time has no known probability distribution; conclusion unresolved."
+  },
+  "paired_change": {
+    "baseline_success": 2,
+    "baseline_error": 6,
+    "later_success": 5,
+    "improved": 3,
+    "maintained": 2,
+    "persistent_gap": 2,
+    "missing_pair": 1,
+    "interpretation": "Five later successes are not five new capabilities. Neither the three changed outcomes nor the two maintained outcomes identify a causal learning effect."
+  },
+  "repeated_peeking": {
+    "model": "20 independent fair coin flips; two-sided exact binomial p <= .05",
+    "all_20_flip_paths": 1048576,
+    "one_fixed_final_look": {
+      "rejecting_paths": 43400,
+      "false_rejection_fraction": 0.04138946533203125
+    },
+    "look_after_every_flip": {
+      "rejecting_paths": 111796,
+      "false_rejection_fraction": 0.10661697387695312
+    },
+    "interpretation": "Exact path counting under an invented null. Repeated fixed-sample tests raise the false-positive probability. This does not calibrate the actual learner data or choose a sequential method."
+  }
+}

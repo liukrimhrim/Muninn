@@ -1,0 +1,344 @@
+{
+  "scope": "Authored synthetic traces; unsupported means not established by the supplied rubric observations. No hidden true ability or learning effect is simulated. The topology-only comparator intentionally ignores evidence boundaries and does not reproduce a named product.",
+  "freshnessDays": 7,
+  "results": [
+    {
+      "name": "Recognition only",
+      "actions": [
+        "recognition"
+      ],
+      "uniqueAttempts": 1,
+      "practiceSeconds": 20,
+      "naiveUnsupportedPasses": [
+        "readiness:explain"
+      ],
+      "naiveUnsupportedFailures": [],
+      "directStatuses": {
+        "context:execute": "Unobserved",
+        "events:recall": "Unobserved",
+        "events:execute": "Unobserved",
+        "readiness:recognize": "Observed pass",
+        "readiness:explain": "Unobserved",
+        "incident:execute": "Unobserved"
+      },
+      "oneMinute": {
+        "exercise": "Optional command-recall preparation",
+        "seconds": 30,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "The required practice does not fit. Preparation cannot satisfy the missing operational evidence; keep a longer session due."
+      },
+      "tenMinutes": {
+        "exercise": "Observed independent scenario",
+        "seconds": 180,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "Collect the missing kind of evidence. Judge each capability separately; graph membership earns no review credit."
+      }
+    },
+    {
+      "name": "Successful final state without trace",
+      "actions": [
+        "outcome"
+      ],
+      "uniqueAttempts": 1,
+      "practiceSeconds": 180,
+      "naiveUnsupportedPasses": [
+        "context:execute",
+        "events:recall",
+        "events:execute",
+        "readiness:recognize",
+        "readiness:explain",
+        "incident:execute"
+      ],
+      "naiveUnsupportedFailures": [],
+      "directStatuses": {
+        "context:execute": "Unobserved",
+        "events:recall": "Unobserved",
+        "events:execute": "Unobserved",
+        "readiness:recognize": "Unobserved",
+        "readiness:explain": "Unobserved",
+        "incident:execute": "Unobserved"
+      },
+      "oneMinute": {
+        "exercise": "Optional command-recall preparation",
+        "seconds": 30,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "The required practice does not fit. Preparation cannot satisfy the missing operational evidence; keep a longer session due."
+      },
+      "tenMinutes": {
+        "exercise": "Observed independent scenario",
+        "seconds": 180,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "Collect the missing kind of evidence. Judge each capability separately; graph membership earns no review credit."
+      }
+    },
+    {
+      "name": "Hinted lab",
+      "actions": [
+        "guided"
+      ],
+      "uniqueAttempts": 1,
+      "practiceSeconds": 180,
+      "naiveUnsupportedPasses": [
+        "context:execute",
+        "events:recall",
+        "events:execute",
+        "readiness:recognize",
+        "readiness:explain",
+        "incident:execute"
+      ],
+      "naiveUnsupportedFailures": [],
+      "directStatuses": {
+        "context:execute": "Assisted only",
+        "events:recall": "Unobserved",
+        "events:execute": "Assisted only",
+        "readiness:recognize": "Unobserved",
+        "readiness:explain": "Unobserved",
+        "incident:execute": "Assisted only"
+      },
+      "oneMinute": {
+        "exercise": "Optional command-recall preparation",
+        "seconds": 30,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "The required practice does not fit. Preparation cannot satisfy the missing operational evidence; keep a longer session due."
+      },
+      "tenMinutes": {
+        "exercise": "Observed independent scenario",
+        "seconds": 180,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "Collect the missing kind of evidence. Judge each capability separately; graph membership earns no review credit."
+      }
+    },
+    {
+      "name": "Independent observed scenario",
+      "actions": [
+        "observed"
+      ],
+      "uniqueAttempts": 1,
+      "practiceSeconds": 180,
+      "naiveUnsupportedPasses": [
+        "events:recall",
+        "readiness:recognize"
+      ],
+      "naiveUnsupportedFailures": [],
+      "directStatuses": {
+        "context:execute": "Observed pass",
+        "events:recall": "Unobserved",
+        "events:execute": "Observed pass",
+        "readiness:recognize": "Unobserved",
+        "readiness:explain": "Observed pass",
+        "incident:execute": "Observed pass"
+      },
+      "oneMinute": {
+        "exercise": null,
+        "seconds": 0,
+        "unmet": [],
+        "reason": "Stop for now. Operational evidence was observed recently; schedule a delayed unseen check. This is not proof of durable competence."
+      },
+      "tenMinutes": {
+        "exercise": null,
+        "seconds": 0,
+        "unmet": [],
+        "reason": "Stop for now. Operational evidence was observed recently; schedule a delayed unseen check. This is not proof of durable competence."
+      }
+    },
+    {
+      "name": "Ambiguous failure",
+      "actions": [
+        "ambiguous"
+      ],
+      "uniqueAttempts": 1,
+      "practiceSeconds": 180,
+      "naiveUnsupportedPasses": [],
+      "naiveUnsupportedFailures": [
+        "context:execute",
+        "events:recall",
+        "events:execute",
+        "readiness:recognize",
+        "readiness:explain",
+        "incident:execute"
+      ],
+      "directStatuses": {
+        "context:execute": "Unobserved",
+        "events:recall": "Unobserved",
+        "events:execute": "Unobserved",
+        "readiness:recognize": "Unobserved",
+        "readiness:explain": "Unobserved",
+        "incident:execute": "Unobserved"
+      },
+      "oneMinute": {
+        "exercise": "Command-recall diagnostic probe",
+        "seconds": 30,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "Use one narrow probe to distinguish a possible cause; do not blame every prerequisite."
+      },
+      "tenMinutes": {
+        "exercise": "Command-recall diagnostic probe",
+        "seconds": 30,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "Use one narrow probe to distinguish a possible cause; do not blame every prerequisite."
+      }
+    },
+    {
+      "name": "Failure then narrow diagnosis",
+      "actions": [
+        "ambiguous",
+        "miss"
+      ],
+      "uniqueAttempts": 2,
+      "practiceSeconds": 210,
+      "naiveUnsupportedPasses": [],
+      "naiveUnsupportedFailures": [
+        "context:execute",
+        "events:execute",
+        "readiness:recognize",
+        "readiness:explain",
+        "incident:execute"
+      ],
+      "directStatuses": {
+        "context:execute": "Unobserved",
+        "events:recall": "Needs practice",
+        "events:execute": "Unobserved",
+        "readiness:recognize": "Unobserved",
+        "readiness:explain": "Unobserved",
+        "incident:execute": "Unobserved"
+      },
+      "oneMinute": {
+        "exercise": null,
+        "seconds": 0,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "No qualifying diagnostic fits. Keep the uncertainty visible and reserve a longer session."
+      },
+      "tenMinutes": {
+        "exercise": "Guided diagnostic lab",
+        "seconds": 180,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "Repair the observed recall weakness and investigate remaining causes. A whole-task failure is still unresolved."
+      }
+    },
+    {
+      "name": "Duplicate observed scenario",
+      "actions": [
+        "observed",
+        "duplicate"
+      ],
+      "uniqueAttempts": 1,
+      "practiceSeconds": 180,
+      "naiveUnsupportedPasses": [
+        "events:recall",
+        "readiness:recognize"
+      ],
+      "naiveUnsupportedFailures": [],
+      "directStatuses": {
+        "context:execute": "Observed pass",
+        "events:recall": "Unobserved",
+        "events:execute": "Observed pass",
+        "readiness:recognize": "Unobserved",
+        "readiness:explain": "Observed pass",
+        "incident:execute": "Observed pass"
+      },
+      "oneMinute": {
+        "exercise": null,
+        "seconds": 0,
+        "unmet": [],
+        "reason": "Stop for now. Operational evidence was observed recently; schedule a delayed unseen check. This is not proof of durable competence."
+      },
+      "tenMinutes": {
+        "exercise": null,
+        "seconds": 0,
+        "unmet": [],
+        "reason": "Stop for now. Operational evidence was observed recently; schedule a delayed unseen check. This is not proof of durable competence."
+      }
+    },
+    {
+      "name": "Observed scenario then eight-day delay",
+      "actions": [
+        "observed",
+        "advance"
+      ],
+      "uniqueAttempts": 1,
+      "practiceSeconds": 180,
+      "naiveUnsupportedPasses": [],
+      "naiveUnsupportedFailures": [],
+      "directStatuses": {
+        "context:execute": "Check again",
+        "events:recall": "Unobserved",
+        "events:execute": "Check again",
+        "readiness:recognize": "Unobserved",
+        "readiness:explain": "Check again",
+        "incident:execute": "Check again"
+      },
+      "oneMinute": {
+        "exercise": "Optional command-recall preparation",
+        "seconds": 30,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "The required practice does not fit. Preparation cannot satisfy the missing operational evidence; keep a longer session due."
+      },
+      "tenMinutes": {
+        "exercise": "Observed independent scenario",
+        "seconds": 180,
+        "unmet": [
+          "context:execute",
+          "events:execute",
+          "readiness:explain",
+          "incident:execute"
+        ],
+        "reason": "Collect the missing kind of evidence. Judge each capability separately; graph membership earns no review credit."
+      }
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Different gaps, one useful exercise — prototype</title>
+<style>
+body{font:16px/1.6 system-ui,sans-serif;max-width:1000px;margin:38px auto;padding:0 22px;color:#203c32;background:#f4f7f5}h1{font-size:34px;line-height:1.15}h2{font-size:23px}h3{font-size:18px}section{background:white;border:1px solid #cddcd3;border-radius:10px;padding:22px;margin:20px 0}button{font:inherit;padding:9px 13px;margin:4px;border:1px solid #8da99b;border-radius:6px;background:white;color:inherit;cursor:pointer}button:hover,button[aria-pressed=true]{background:#e4f0e8}button:disabled{opacity:.45;cursor:default}:focus-visible{outline:3px solid #287b59;outline-offset:3px}blockquote{border-left:3px solid #568b70;padding:8px 18px;margin:12px 0;background:#f4f7f5;white-space:pre-wrap;overflow-wrap:anywhere}li{margin:12px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}.muted{color:#52695e}.notice{padding:12px;background:#e7f0ea;border-radius:6px}.label{font-size:12px;text-transform:uppercase;letter-spacing:.09em}details{margin:14px 0}summary{cursor:pointer}@media(max-width:650px){body{padding:0 12px}section{padding:16px}h1{font-size:28px}}
+</style>
+<body>
+<p class="label">Throwaway logic prototype · invented examples</p>
+<h1>Different gaps, one useful exercise</h1>
+<p>This demo asks whether a larger exercise can reveal a specific gap without restarting everything. Choose a subject, then try sample answers. Watch which knowledge needs help and which targets stay together for a later exercise.</p>
+<p class="notice">You are inspecting the system's decisions. You do not need to answer these exercises. All answers and judgments here are authored examples, not new assessments of you.</p>
+<div id="subjects" aria-label="Example subjects"></div>
+<section><h2 id="goal"></h2><p id="prompt"></p><details><summary>Knowledge connected by this exercise</summary><div id="content"></div><p class="muted">These connections describe meaning. Membership alone gives no evidence of recall.</p></details></section>
+<section aria-live="polite"><h2>What should happen next?</h2><p id="message"></p><div id="decision"></div><h3>Evidence for each learning target</h3><ul id="evidence"></ul></section>
+<section><h2>Guided walkthrough</h2><p id="walk"></p><div id="steps"></div><button id="reset">Reset this example</button></section>
+<section><h2>Try another sample answer</h2><p>These buttons add a sample to the current history. Reset to compare alternatives from an empty history. Adding the identical sample twice adds no evidence.</p><div id="actions"></div></section>
+<section><h2>Latest answer and its assessment</h2><blockquote id="answer"></blockquote><ul id="criteria"></ul><p class="muted">A criterion can contribute to a target without becoming its own study unit. Shared evidence remains shared; multiple labels do not turn one response into independent successes.</p></section>
+<details><summary>Explore a changed definition</summary><p>This changes a capability version in a saved example. The system should refuse to reuse its assessment under that changed definition.</p><button id="version">Try reusing an assessment with a changed definition</button></details>
+<details><summary>Full example and current records</summary><pre id="state"></pre></details>
+<p class="muted">The “later” answers are simulations. No delay, retained learning, automatic semantic grading, or learning benefit is measured. This page keeps state only in memory.</p>
+<script>
+/*MODEL*/
+const $=id=>document.getElementById(id),text=(tag,value)=>{const e=document.createElement(tag);e.textContent=value;return e;};
+const names={operations:'Operations',mathematics:'Mathematics',fact:'One fact'};
+const labels={error:'A specific error',choiceError:'Wrong evidence choice, correct command',partial:'Only part of the command is shown',ambiguous:'Command meaning needs clarification',unclear:'Still cannot clarify',corrected:'Correct after practice',later:'Invented later answer',hinted:'Later answer with a hint',bypass:'Successful alternative path',partsOnly:'Known parts, combination unshown'};
+const statuses={demonstrated:'Shown',error:'Error in this example',not_shown:'Not shown',cannot_judge:'Meaning unresolved'};
+let subject='operations',state,last,step=0,message='';
+const current=()=>EXAMPLES[subject];
+const targetNames=ids=>ids.map(id=>current().data.targets.find(t=>t.id===id)?.label||id).join('; ');
+function apply(key){
+ const r=current().records[key],out=B.connect(current().data,state,r.input,r);
+ if(out.errors.length){message='Rejected: '+out.errors.join(' ');render();return;}
+ state=out.state;last=out;message='Invented answer applied. '+state.events.length+' distinct answers retained.';render();
+}
+function reset(){state=NextSession.empty();last=null;step=0;message='No answers loaded. Start the walkthrough or choose a sample answer.';render();}
+function select(key){subject=key;reset();}
+function render(){
+ const {data,records,walk,note}=current(),plan=NextSession.plan(data,state);
+ $('goal').textContent=data.goal.text;$('prompt').textContent=(last?.event.assessmentRecord||records.error).input.exercise.prompt;$('message').textContent=message;
+ $('subjects').children&&Array.from($('subjects').children).forEach((b,i)=>b.setAttribute('aria-pressed',String(Object.keys(names)[i]===subject)));
+ $('content').replaceChildren(...data.components.map(c=>text('p',c.statement)),...data.knowledgeGroups.map(g=>text('p',g.structure)));
+ $('decision').replaceChildren();
+ if(!state.events.length)$('decision').append(text('p','No learning claim yet.'));
+ else if(!plan.now.length)$('decision').append(text('p','No immediate corrective practice is needed from this evidence.'));
+ for(const a of plan.now){
+  $('decision').append(text('p',`${a.kind==='help'?'Focused practice':a.kind==='review'?'Review the interpretation':'Clarify first'}: ${targetNames(a.targets)}. ${a.text||a.reason||''}`));
+  if(a.kind==='help')for(const id of a.targets)$('decision').append(text('p',data.targets.find(t=>t.id===id).contract.action));
+ }
+ for(const a of plan.later)$('decision').append(text('p',`Later exercise — ${a.title}. Check: ${targetNames(a.targets)}.`));
+ if(state.events.length&&!plan.later.length)$('decision').append(text('p','No pending example check remains. This does not establish retained learning.'));
+ $('evidence').replaceChildren(...data.targets.map(t=>{const s=NextSession.status(state,t.id);return text('li',`${t.label}: ${s.label}. ${s.history.length} observations retained. ${plan.perTarget[t.id]||''}${s.last?.help?' Help context: '+s.last.help:''}`);}));
+ $('answer').textContent=last?.event.quote||'Choose a sample answer to see it here.';
+ $('criteria').replaceChildren();
+ if(last){const {input,assessment}=last.event.assessmentRecord;for(const o of assessment.observations){const targets=input.exercise.coverage.filter(c=>c.criteria.includes(o.criterion)).map(c=>c.target);$('criteria').append(text('li',`${input.exercise.criteria.find(c=>c.id===o.criterion).rule} ${statuses[o.status]}. ${targets.length?'Contributes to: '+targetNames(targets):'Retained for interpretation; no separate study target.'}`));}}
+ $('walk').textContent=note;$('steps').replaceChildren();
+ walk.forEach((key,i)=>{const b=text('button',`${i+1}. ${labels[key]}`);b.disabled=i!==step;b.onclick=()=>{step++;apply(key);};$('steps').append(b);});
+ $('actions').replaceChildren();for(const key of Object.keys(records)){const b=text('button',labels[key]);b.onclick=()=>apply(key);$('actions').append(b);}
+ $('state').textContent=JSON.stringify({example:data,plan,state},null,2);
+}
+for(const [key,label] of Object.entries(names)){const b=text('button',label);b.onclick=()=>select(key);$('subjects').append(b);}
+$('reset').onclick=reset;
+$('version').onclick=()=>{const r=JSON.parse(JSON.stringify(current().records.later));r.input.exercise.coverage[0].contract.version++;const out=B.connect(current().data,state,r.input,r);message=out.errors.length?'Rejected: '+out.errors.join(' '):'Unexpectedly accepted the changed definition.';render();};
+reset();
+</script></body></html>

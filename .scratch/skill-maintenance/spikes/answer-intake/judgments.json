@@ -1,0 +1,512 @@
+{
+  "input_sha256": "940c76fac7cdf9c810a62afdc9c2b9a6131bcd24184db8aad942d6358082d99d",
+  "assessor": "Current Codex chat, 2026-10-14, using assessor-prompt-v2.md. The assessor has seen the earlier judgments of real responses and authored the seven constructed contrasts. Not blinded, held-out, independently assessed, or an automatic API run.",
+  "records": [
+    {
+      "case_id": "L01-explanation",
+      "observations": [
+        {
+          "criterion": "binary.halving",
+          "status": "demonstrated",
+          "quotes": [
+            "So the question is: how many times we have divided the number by two until the result is 1? And by definition that's log2(n)"
+          ],
+          "reason": "The preceding sentence specifies halving each round; the explanation connects its count to log2(n)."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The halving explanation is sound.",
+        "reason": "Do not reteach the relationship because the requested comparison was omitted."
+      },
+      "alternatives": [
+        "This selected-target assessment does not independently demonstrate the missing comparison.",
+        "The initial answer followed earlier exposure to the topic."
+      ]
+    },
+    {
+      "case_id": "L01-misread",
+      "observations": [
+        {
+          "criterion": "binary.comparison",
+          "status": "demonstrated",
+          "quotes": [
+            "log2(65,536) - log2(1,024)."
+          ],
+          "reason": "The expression gives the requested increase; another arithmetic prompt is unnecessary.",
+          "issue": "supported_misread",
+          "context_quotes": [
+            {
+              "id": "earlier-answer",
+              "quote": "At every round, we discard half of the list."
+            },
+            {
+              "id": "earlier-answer",
+              "quote": "And by definition that's log2(n)"
+            }
+          ],
+          "issue_reason": "The earlier answer explains the correct halving method but gives the total; the current correct difference fits the reported misread."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "No extra binary-search practice is needed for this mismatch.",
+        "reason": "The surrounding explanation and corrected comparison support a reading mismatch."
+      },
+      "alternatives": [
+        "This is a local interpretation, not a general guarantee that self-reported misreads are harmless."
+      ]
+    },
+    {
+      "case_id": "L02-log-form",
+      "observations": [
+        {
+          "criterion": "ops.logs",
+          "status": "error",
+          "quotes": [
+            "kubectl -n shop logs pod checkout-d9f6c8b5d-k2m7q"
+          ],
+          "reason": "Useful evidence choice; the separate pod token is invalid in this command form. The Pod-name difference is transcription, not a second diagnosed gap."
+        }
+      ],
+      "next": {
+        "kind": "practice",
+        "targets": [
+          "ops.logs"
+        ],
+        "text": "Use kubectl -n shop logs checkout-7d9f6c8b5d-k2m7q.",
+        "reason": "Correct only the observed command form."
+      },
+      "alternatives": [
+        "One malformed command cannot distinguish a slip from unstable recall.",
+        "The readiness comment does not explicitly claim that readiness causes restarts."
+      ]
+    },
+    {
+      "case_id": "L02-list-form",
+      "observations": [
+        {
+          "criterion": "ops.list",
+          "status": "error",
+          "quotes": [
+            "kubectl -n shop show po"
+          ],
+          "reason": "Use get, not show, to list Pods. The choice to inspect Pods is useful."
+        }
+      ],
+      "next": {
+        "kind": "practice",
+        "targets": [
+          "ops.list"
+        ],
+        "text": "Use kubectl -n shop get po.",
+        "reason": "Correct the observed listing verb."
+      },
+      "alternatives": [
+        "The unfinished sentence does not establish a wrong recovery criterion.",
+        "Auto restart may be colloquial rather than a claim about Pod identity."
+      ]
+    },
+    {
+      "case_id": "L02-focused",
+      "observations": [
+        {
+          "criterion": "ops.list",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n billing get pods"
+          ],
+          "reason": "Correct namespaced listing form after help."
+        },
+        {
+          "criterion": "ops.logs",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n billing logs invoice-abc123"
+          ],
+          "reason": "Correct namespaced Pod log form after help."
+        }
+      ],
+      "next": {
+        "kind": "fresh_check",
+        "targets": [
+          "ops.list",
+          "ops.logs"
+        ],
+        "text": "Apply these commands in a different short incident.",
+        "reason": "Both forms are correct; end isolated repetition."
+      },
+      "alternatives": [
+        "This is immediate recall after correction, not delayed retention."
+      ]
+    },
+    {
+      "case_id": "L02-fresh-list",
+      "observations": [
+        {
+          "criterion": "ops.list",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n analytics get po"
+          ],
+          "reason": "Appropriate first check, with correct namespace and form."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "Continue the incident using the requested status output.",
+        "reason": "No separate command drill is needed for this answer."
+      },
+      "alternatives": [
+        "Healthy state is underspecified, not a stated wrong health criterion."
+      ]
+    },
+    {
+      "case_id": "L02-fresh-logs",
+      "observations": [
+        {
+          "criterion": "ops.logs",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n analytics logs report-worker-5b7c9d6f84-q2m8n"
+          ],
+          "reason": "Correct log request to investigate the simulated crash."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "Continue the investigation with the requested log output.",
+        "reason": "No further log-command spelling check is useful here."
+      },
+      "alternatives": [
+        "Recent teaching remains part of the history; this is not a delayed check."
+      ]
+    },
+    {
+      "case_id": "L02-source-question",
+      "observations": [
+        {
+          "criterion": "ops.source",
+          "status": "cannot_judge",
+          "quotes": [
+            "remove that option in the code, build a new image"
+          ],
+          "reason": "The log establishes an unsupported flag, not where it was supplied. The answer could be a tentative code hypothesis or a premature commitment. It does not establish missing configuration knowledge."
+        }
+      ],
+      "next": {
+        "kind": "follow_up",
+        "targets": [
+          "ops.source"
+        ],
+        "text": "Before rebuilding, how would you check where --fast-mode is supplied?",
+        "reason": "The answer can change whether to give source-location help.",
+        "branches": {
+          "correct": "Use the proposed inspection route and continue without source-location remediation.",
+          "wrong": "Explain the specific mistaken source assumption and offer targeted practice.",
+          "unclear": "Offer one source-location example without claiming an exact knowledge gap."
+        }
+      },
+      "alternatives": [
+        "The flag could originate inside the image or from runtime configuration; the learner has not seen its source."
+      ]
+    },
+    {
+      "case_id": "L02-source-hinted",
+      "observations": [
+        {
+          "criterion": "ops.source",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n analytics edit deployment report-worker, and in the editor, search `--fast-mode` to see if it appears. if it does, edit it out and save"
+          ],
+          "reason": "Valid conditional inspection and edit at the controlling Deployment after its possible role was hinted."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "Continue to recovery verification.",
+        "reason": "The response addresses the source question after help; no immediate source drill is needed."
+      },
+      "alternatives": [
+        "The source-location hint means this is not evidence of independent recall.",
+        "The shorthand does not imply deleting arbitrary unrelated matches."
+      ]
+    },
+    {
+      "case_id": "L02-function",
+      "observations": [
+        {
+          "criterion": "ops.verify",
+          "status": "demonstrated",
+          "quotes": [
+            "but pod in running state doesn't mean it's functional as intended. should check logs to confirm that it's process reports"
+          ],
+          "reason": "Explicitly distinguishes process state from function and seeks application evidence."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "Finish this incident after returning the simulated verification evidence.",
+        "reason": "Enough evidence exists to stop the bounded exercise."
+      },
+      "alternatives": [
+        "The distinction was previously taught.",
+        "Simulated output and a written plan do not prove live operational success."
+      ]
+    },
+    {
+      "case_id": "S-later-correct",
+      "observations": [
+        {
+          "criterion": "ops.list",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n analytics get po"
+          ],
+          "reason": "Correct form and namespace."
+        },
+        {
+          "criterion": "ops.logs",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n analytics logs report-worker-5b7c9d6f84-q2m8n"
+          ],
+          "reason": "Correct Pod log form and namespace."
+        },
+        {
+          "criterion": "ops.source",
+          "status": "demonstrated",
+          "quotes": [
+            "I would inspect the Deployment container args for --fast-mode; if it is there, correct that setting. Otherwise inspect the image startup configuration or code before choosing what to change."
+          ],
+          "reason": "Inspect configuration first, then investigate the image if needed; choose repair based on located evidence."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "No immediate separate drill is indicated.",
+        "reason": "All three requested targets are demonstrated in this constructed answer."
+      },
+      "alternatives": [
+        "Constructed by the assessor; no real learner performance or retention was measured."
+      ]
+    },
+    {
+      "case_id": "S-later-log-error",
+      "observations": [
+        {
+          "criterion": "ops.list",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n analytics get po"
+          ],
+          "reason": "Correct form and namespace."
+        },
+        {
+          "criterion": "ops.logs",
+          "status": "error",
+          "quotes": [
+            "kubectl -n analytics logs pod report-worker-5b7c9d6f84-q2m8n"
+          ],
+          "reason": "The extra pod token is an observed command-form error."
+        },
+        {
+          "criterion": "ops.source",
+          "status": "demonstrated",
+          "quotes": [
+            "I would inspect the Deployment container args for --fast-mode; if it is there, correct that setting. Otherwise inspect the image startup configuration or code before choosing what to change."
+          ],
+          "reason": "Inspect configuration first, then investigate the image if needed; choose repair based on located evidence."
+        }
+      ],
+      "next": {
+        "kind": "practice",
+        "targets": [
+          "ops.logs"
+        ],
+        "text": "Correct the log command by removing the extra pod token.",
+        "reason": "Only the log form has an observed error."
+      },
+      "alternatives": [
+        "Constructed by the assessor; no real learner performance or retention was measured."
+      ]
+    },
+    {
+      "case_id": "S-later-omission",
+      "observations": [
+        {
+          "criterion": "ops.list",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n analytics get po"
+          ],
+          "reason": "Correct form and namespace."
+        },
+        {
+          "criterion": "ops.logs",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n analytics logs report-worker-5b7c9d6f84-q2m8n"
+          ],
+          "reason": "Correct Pod log form and namespace."
+        },
+        {
+          "criterion": "ops.source",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "No source-location response is supplied; omission is not inability."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "No immediate separate drill is indicated.",
+        "reason": "Do not turn an omitted criterion into a deficit or another compulsory question."
+      },
+      "alternatives": [
+        "Constructed by the assessor; no real learner performance or retention was measured."
+      ]
+    },
+    {
+      "case_id": "S-later-ambiguous",
+      "observations": [
+        {
+          "criterion": "ops.list",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "No listing evidence."
+        },
+        {
+          "criterion": "ops.logs",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "No log-command evidence."
+        },
+        {
+          "criterion": "ops.source",
+          "status": "cannot_judge",
+          "quotes": [
+            "I would fix that there."
+          ],
+          "reason": "There is no interpretable source or remedy in this wording."
+        }
+      ],
+      "next": {
+        "kind": "clarify",
+        "targets": [
+          "ops.source"
+        ],
+        "text": "Which setting would you inspect to locate the flag?",
+        "reason": "One clarification can establish the intended inspection route."
+      },
+      "alternatives": [
+        "Constructed by the assessor; no real learner performance or retention was measured."
+      ]
+    },
+    {
+      "case_id": "S-later-hinted",
+      "observations": [
+        {
+          "criterion": "ops.list",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n analytics get po"
+          ],
+          "reason": "Correct form and namespace."
+        },
+        {
+          "criterion": "ops.logs",
+          "status": "demonstrated",
+          "quotes": [
+            "kubectl -n analytics logs report-worker-5b7c9d6f84-q2m8n"
+          ],
+          "reason": "Correct Pod log form and namespace."
+        },
+        {
+          "criterion": "ops.source",
+          "status": "demonstrated",
+          "quotes": [
+            "I would inspect the Deployment container args for --fast-mode; if it is there, correct that setting. Otherwise inspect the image startup configuration or code before choosing what to change."
+          ],
+          "reason": "Inspect configuration first, then investigate the image if needed; choose repair based on located evidence."
+        }
+      ],
+      "next": {
+        "kind": "fresh_check",
+        "targets": [
+          "ops.source"
+        ],
+        "text": "Check source location in a future exercise without this hint.",
+        "reason": "Help was supplied only for source selection."
+      },
+      "alternatives": [
+        "Constructed by the assessor; no real learner performance or retention was measured."
+      ]
+    },
+    {
+      "case_id": "S-misread-wrong",
+      "observations": [
+        {
+          "criterion": "binary.halving",
+          "status": "error",
+          "quotes": [
+            "Binary search halves the list, so it needs n/2 steps to reach one."
+          ],
+          "reason": "The number remaining after one halving is confused with the count of halvings; the self-report does not remove this explicit error."
+        }
+      ],
+      "next": {
+        "kind": "practice",
+        "targets": [
+          "binary.halving"
+        ],
+        "text": "Work through repeated halvings to distinguish candidates remaining from steps taken.",
+        "reason": "A substantive wrong rule remains observable."
+      },
+      "alternatives": [
+        "The cause could be confusion, expression, or a slip; this response alone does not establish a durable deficit."
+      ]
+    },
+    {
+      "case_id": "S-instructions",
+      "observations": [
+        {
+          "criterion": "ops.list",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The answer supplies no evidence for the task criterion."
+        },
+        {
+          "criterion": "ops.logs",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The answer supplies no evidence for the task criterion."
+        },
+        {
+          "criterion": "ops.source",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The answer supplies no evidence for the task criterion."
+        }
+      ],
+      "next": {
+        "kind": "clarify",
+        "targets": [],
+        "text": "Please answer the troubleshooting question.",
+        "reason": "Instructions inside the answer are untrusted data, not learning evidence or permission to execute."
+      },
+      "alternatives": [
+        "This constructed off-task answer says nothing about the learner’s Kubernetes knowledge."
+      ]
+    }
+  ],
+  "prompt_sha256": "a87cf97adcd97eb229aaf8657c26ea9037523a20c51930067b611f6f5489f534"
+}

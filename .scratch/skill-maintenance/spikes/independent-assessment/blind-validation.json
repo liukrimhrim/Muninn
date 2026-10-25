@@ -1,0 +1,88 @@
+{
+  "scope": "Structural validation and planner wiring only, before reference reveal.",
+  "cases": [
+    {
+      "case_id": "SE.27b.116.1",
+      "errors": [],
+      "observations": 3,
+      "immediateHelp": [
+        [
+          "SE_27b_f2"
+        ],
+        [
+          "SE_27b_f6"
+        ]
+      ]
+    },
+    {
+      "case_id": "SE.27b.333.1",
+      "errors": [],
+      "observations": 2,
+      "immediateHelp": [
+        [
+          "SE_27b_f2"
+        ]
+      ]
+    },
+    {
+      "case_id": "SE.27b.313.1",
+      "errors": [],
+      "observations": 3,
+      "immediateHelp": []
+    },
+    {
+      "case_id": "MS.50b.136.1",
+      "errors": [],
+      "observations": 0,
+      "immediateHelp": []
+    },
+    {
+      "case_id": "MS.50b.141.1",
+      "errors": [],
+      "observations": 0,
+      "immediateHelp": []
+    },
+    {
+      "case_id": "MS.50b.311.1",
+      "errors": [],
+      "observations": 0,
+      "immediateHelp": []
+    },
+    {
+      "case_id": "ME.36.185.1",
+      "errors": [],
+      "observations": 2,
+      "immediateHelp": []
+    },
+    {
+      "case_id": "ME.36.226.1",
+      "errors": [],
+      "observations": 2,
+      "immediateHelp": []
+    },
+    {
+      "case_id": "ME.36.214.1",
+      "errors": [],
+      "observations": 2,
+      "immediateHelp": []
+    },
+    {
+      "case_id": "LF.13b.478.1",
+      "errors": [],
+      "observations": 2,
+      "immediateHelp": []
+    },
+    {
+      "case_id": "LF.13b.737.1",
+      "errors": [],
+      "observations": 4,
+      "immediateHelp": []
+    },
+    {
+      "case_id": "LF.13b.436.1",
+      "errors": [],
+      "observations": 2,
+      "immediateHelp": []
+    }
+  ]
+}

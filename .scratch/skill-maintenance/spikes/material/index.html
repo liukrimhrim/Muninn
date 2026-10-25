@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>From material to useful practice</title>
+<style>
+*{box-sizing:border-box}body{font:16px/1.5 system-ui,sans-serif;background:#f4f2ed;color:#20332e;margin:0;padding:28px}main{max-width:1150px;margin:auto}h1{font-size:32px;line-height:1.2}h2{font-size:20px;margin:0 0 12px}p{max-width:80ch}button{font:inherit;border:1px solid #648574;border-radius:8px;background:white;padding:9px 13px;margin:0 8px 8px 0;cursor:pointer}button:hover{background:#e6efe8}section{background:white;border:1px solid #d3d9cf;border-radius:12px;padding:20px;margin:14px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.grid section{margin:0}.note{color:#52655d;font-size:14px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.55 ui-monospace,monospace;margin:0}.unit{border-top:1px solid #dde2d9;margin-top:12px;padding-top:12px}.held{border-left:5px solid #b67c29}details{margin-top:15px}summary{cursor:pointer}@media(max-width:800px){body{padding:16px}.grid{grid-template-columns:1fr}}
+</style></head><body><main>
+<p class="note">Optional walkthrough · throwaway design experiment</p>
+<h1>From material to useful practice</h1>
+<p>Keep the meaning and its conditions, choose what to remember, and practice it in a useful task. You do not need to answer or approve anything here.</p>
+<p class="note">The short sources, knowledge proposals, answers and judgments below were authored for this example. This page does not extract arbitrary material or measure learning.</p>
+<nav id="scenarios" aria-label="Examples"></nav>
+<div class="grid"><section><h2>1. Keep the source</h2><pre id="source"></pre></section><section><h2>2. Preserve the meaning</h2><div id="units"></div></section></div>
+<section><h2>3. Choose what the learner should be able to do</h2><div id="targets"></div><p id="groups"></p></section>
+<section class="held"><h2>Anything needing attention</h2><p id="held"></p><button id="edit">Clarify a supporting claim</button><button id="reset">Reset this example</button><p class="note">The edit shows which dependent content and exercises need checking. It creates no learner answer and does not rewrite earlier answers.</p></section>
+<section><h2>4. Start with a useful exercise</h2><p id="exercise"></p><div id="answers"></div><button id="walk">Play the authored example</button><p id="next"></p><p class="note">Playing the example uses supplied answers. It is a demonstration, not an assessment of you.</p></section>
+<section><h2>What happened</h2><pre id="trace"></pre><details><summary>Inspect the source references, mappings and retained state</summary><pre id="state"></pre></details></section>
+</main><script>
+
+// Pure planning functions. Input assessments are authored, not produced by this module.
+const NextSession = (() => {
+ const results={demonstrated:'Demonstrated in this response',error:'Observed error',uncertain:'Unresolved interpretation'};
+ const empty=()=>({events:[]});
+ const append=(state,event)=>state.events.some(e=>e.id===event.id)?state:{events:[...state.events,event]};
+ const recorded=data=>data.events.reduce(append,empty());
+ function evidence(state,target){return state.events.flatMap(event=>event.observations.filter(o=>o.target===target).map(o=>({...o,event})));}
+ function status(state,target){const history=evidence(state,target),last=history.at(-1);return {history,last,label:last?(last.result==='demonstrated'&&last.assisted?'Correct with a hint':results[last.result]):'Not observed'};}
+ function contractConflicts(data,state){
+  const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+  return data.targets.filter(t=>state.events.some(e=>(e.planningAssessment?.observations??e.observations).some(o=>(o.criterion??o.target)===t.id&&stable(o.contract)!==stable(t.contract)))).map(t=>t.id);
+ }
+ function plan(data,state){
+  const now=[],later=[],perTarget={};
+  if(!state.events.length)return {now,later,perTarget,note:'No response evidence loaded yet.'};
+  const conflicts=contractConflicts(data,state);
+  if(conflicts.length)return {now:[{kind:'review',targets:conflicts,text:'The capability definition changed. Review the retained evidence under its original contract before choosing practice.'}],later,perTarget,note:'Older observations have not been reinterpreted.'};
+  const bundles=data.practiceBundles??Object.entries(data.groups||{}).map(([id,title])=>({id,title,targets:data.targets.filter(t=>t.group===id).map(t=>t.id)}));
+  // Clarification changes the action, never the original knowledge observation.
+  // Rebuild pending questions from history so unrelated answers cannot dismiss them.
+  const pending=new Map();
+  for(const event of state.events){
+   for(const o of event.observations)if(['demonstrated','error'].includes(o.result))pending.delete(o.target);
+   const assessment=event.planningAssessment??event.assessmentRecord?.assessment,question=assessment?.next;
+   const review={kind:'review',text:'Interpretation remains unresolved. Pause this target for assessment review.',reason:'The reply did not settle the pending interpretation; do not infer a knowledge gap.'};
+   for(const o of assessment?.observations||[])if(o.status==='cannot_judge'&&pending.has(o.criterion))pending.set(o.criterion,review);
+   if(['clarify','follow_up'].includes(question?.kind))for(const target of question.targets)pending.set(target,question);
+  }
+  const questions=new Map();
+  for(const target of data.targets){
+   const question=pending.get(target.id);if(!question)continue;
+   if(!questions.has(question))questions.set(question,[]);
+   questions.get(question).push(target.id);
+  }
+  for(const [question,targets] of questions){
+   // A partially answered multi-target question needs narrowing, not verbatim repetition.
+   const partial=question.targets&&targets.length<question.targets.length;
+   now.push(partial?{kind:'review',targets,text:'Part of the question is answered. Review only the remaining interpretation before choosing practice.',reason:question.reason}:{...question,targets});
+  }
+  const lastEvent=state.events.at(-1);
+  if(lastEvent.outcome==='failed'&&!lastEvent.observations.length)now.push({kind:'clarify',targets:[],reason:'The whole task failed without target evidence. Clarify what happened; do not label every component weak.'});
+  for(const target of data.targets){
+   const {last}=status(state,target.id);let action;
+   if(pending.has(target.id))action='Resolve the pending interpretation before choosing corrective practice.';
+   else if(last?.result==='error'){action='Offer focused help for this observed error.';now.push({kind:'help',targets:[target.id],reason:action});}
+   else if(last?.result==='uncertain'){action='Ask one question that can change the repair choice.';now.push({kind:'clarify',targets:[target.id],reason:action});}
+   else if(last?.issue==='accepted_misread')action='No extra remediation for the accepted misread.';
+   else if(bundles.some(b=>b.targets.includes(target.id))&&!(last?.event.phase==='later'&&last.result==='demonstrated'&&!last.assisted))action=last?'Include in the single later check.':'Not observed; retain the planned check without claiming a gap.';
+   else action=last?'No extra separate drill for this result.':'No demonstrated gap; ordinary scheduling is outside this demo.';
+   perTarget[target.id]=action;
+  }
+  const scheduled=new Set();
+  for(const bundle of bundles){
+   const targets=data.targets.filter(t=>bundle.targets.includes(t.id)&&!scheduled.has(t.id)).filter(t=>{const {last}=status(state,t.id);return pending.has(t.id)||!(last?.event.phase==='later'&&last.result==='demonstrated'&&!last.assisted);}).map(t=>t.id);
+   if(targets.length){later.push({kind:'combined_check',group:bundle.id,title:bundle.title,targets,reason:'Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it.'});targets.forEach(t=>scheduled.add(t));}
+  }
+  return {now,later,perTarget,note:now.length?'Address the specific concern; retain the other observations.':later.length?'Stop the current drill. The agreed combined check belongs in a later session.':'The observed targets need no extra drills in this hypothetical session. Real retention is still untested.'};
+ }
+ function hypothetical(kind){
+  const pass=target=>({target,result:'demonstrated',help:'Hypothetical later response without a new hint.'});
+  let observations=['ops.list','ops.logs','ops.source'].map(pass),outcome='completed';
+  if(kind==='command_error')observations[1]={target:'ops.logs',result:'error',help:'Hypothetical error without a hint.'};
+  if(kind==='source_unclear')observations[2]={target:'ops.source',result:'uncertain',help:'Hypothetical response does not settle the source choice.'};
+  if(kind==='source_hint')observations[2]={...pass('ops.source'),assisted:true,help:'Hypothetical source-location hint supplied.'};
+  if(kind==='partial')observations=observations.slice(0,2);
+  if(kind==='outcome_only'){observations=[];outcome='failed';}
+  return {id:'hypothetical-'+kind,attempt:'imagined-later-session',origin:'hypothetical',phase:'later',outcome,observations,why:'Invented assessment for exploring the policy; no learner answered this case.'};
+ }
+ return {empty,append,recorded,evidence,status,plan,hypothetical,contractConflicts};
+})();
+
+const B=(function createBridge(T, M) {
+ const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+ const present=s=>typeof s==='string'&&s.trim().length>0;
+ function connect(data, state, input, record) {
+  const errors=T.validateBound(input,record);
+  const criteria=input.exercise.criteria.map(c=>c.id), known=data.targets.map(t=>t.id);
+  const explicit=Object.hasOwn(input.exercise,'coverage'),coverage=input.exercise.coverage;
+  if(!explicit&&(criteria.some(id=>!known.includes(id))||new Set(criteria).size!==criteria.length))errors.push('Criteria must map once each to known planning targets.');
+  if(!explicit&&data.targets.some(t=>t.contract&&criteria.includes(t.id)))errors.push('Versioned capabilities require explicit exercise coverage.');
+  if(explicit){
+   if(!Array.isArray(coverage))errors.push('Coverage must be an array.');
+   else{
+    if(new Set(coverage.map(c=>c?.target)).size!==coverage.length)errors.push('Map each capability once per exercise.');
+    for(const c of coverage){
+     if(!c){errors.push('Each coverage entry needs a capability and required criteria.');continue;}
+     const target=data.targets.find(t=>t.id===c.target),contract=c.contract;
+     if(!target||!contract||stable(contract)!==stable(target.contract))errors.push('Coverage must match the current capability contract exactly.');
+     if(!contract||!Number.isInteger(contract.version)||contract.version<1||!['action','mode','conditions'].every(k=>present(contract[k]))||!Array.isArray(contract.content)||!contract.content.length||contract.content.some(r=>!present(r?.id)||!Number.isInteger(r.version)||r.version<1))errors.push('A capability contract needs a version, content references, action, mode and conditions.');
+     if(!Array.isArray(c.criteria)||!c.criteria.length||new Set(c.criteria).size!==c.criteria.length||c.criteria.some(id=>!criteria.includes(id)))errors.push('Coverage must name distinct existing required criteria.');
+    }
+   }
+   if(!present(input.exercise.id)||![input.exercise.version,input.exercise.rubric_version].every(v=>Number.isInteger(v)&&v>0))errors.push('Explicit coverage needs exercise and rubric versions.');
+   if(data.goal&&!sameTargets(data.goal.targets,known))errors.push('Planning targets must match the selected goal.');
+  }
+  if(!present(input.attempt?.id)||!['recorded','hypothetical'].includes(input.attempt?.origin)||!['current','later'].includes(input.attempt?.phase))errors.push('The caller must supply attempt identity, origin and phase.');
+  if(!Array.isArray(input.context)||new Set(input.context?.map(c=>c.id)).size!==input.context?.length)errors.push('Context must have distinct reference IDs.');
+  if(!Array.isArray(input.assistance)||input.assistance.some(h=>!['current','earlier'].includes(h.timing)||!present(h.text)||!Array.isArray(h.targets)||!h.targets.length||h.targets.some(t=>!(explicit?criteria:known).includes(t))))errors.push('Record help timing, text and known targets explicitly; explicit coverage uses rubric criterion IDs.');
+  if(errors.length)return {errors,state};
+  const a=record.assessment;
+  for(const o of a.observations){
+   if(o.issue!==undefined){
+    if(o.issue!=='supported_misread'||o.status!=='demonstrated'||!present(o.issue_reason)||!Array.isArray(o.context_quotes)||!o.context_quotes.length)errors.push('A supported misread needs a demonstrated correction, reason and prior learner evidence.');
+    for(const ref of o.context_quotes||[]){const c=input.context.find(c=>c.id===ref.id);if(c?.role!=='learner'||!present(ref.quote)||!c.text.includes(ref.quote))errors.push('Misread support must quote supplied learner context.');}
+   }
+  }
+  if(a.next.kind==='practice'&&a.next.targets.some(t=>!a.observations.some(o=>o.criterion===t&&o.status==='error')))errors.push('Every remedial target needs its own observed error.');
+  if(explicit&&a.next.targets.some(id=>!coverage.some(c=>c.criteria.includes(id))))errors.push('A next-action criterion must map to a selected capability.');
+  if(M.contractConflicts(data,state).length)errors.push('Retained evidence uses a different capability contract. Preserve that history and review the mapping explicitly.');
+  if(errors.length)return {errors,state};
+  let event={id:input.case_id,attempt:input.attempt.id,origin:input.attempt.origin,phase:input.attempt.phase,quote:input.response,
+   why:explicit?'Explicit criterion-to-capability mapping; structural validation is not semantic validation.':'Current-chat assessment under the version-2 protocol; structural validation is not semantic validation.',
+   assessmentRecord:record,
+   observations:a.observations.filter(o=>['demonstrated','error'].includes(o.status)).map(o=>{
+    const help=input.assistance.filter(h=>h.targets.includes(o.criterion));
+    return {target:o.criterion,result:o.status,quotes:o.quotes,reason:o.reason,assisted:help.some(h=>h.timing==='current'),
+     help:help.length?help.map(h=>`${h.timing}: ${h.text}`).join(' '):'No task-specific help recorded; outside help is not established.',
+     ...(o.issue==='supported_misread'?{issue:'accepted_misread'}:{})};
+   })};
+  if(explicit){
+   // All named criteria are required. Missing evidence cannot complete a capability;
+   // an observed error remains evidence even when another required part is absent.
+   const derived=coverage.map(c=>{
+    const rows=c.criteria.map(id=>a.observations.find(o=>o.criterion===id));
+    const status=['error','cannot_judge','not_shown','demonstrated'].find(s=>rows.some(o=>o.status===s));
+    const help=input.assistance.filter(h=>h.targets.some(id=>c.criteria.includes(id)));
+    return {criterion:c.target,status,contract:c.contract,criteria:c.criteria,
+     evidenceRefs:c.criteria.map(criterion=>({answer:input.case_id,attempt:input.attempt.id,exercise:input.exercise.id,exerciseVersion:input.exercise.version,rubricVersion:input.exercise.rubric_version,criterion})),
+     quotes:[...new Set(rows.flatMap(o=>o.quotes))],reason:rows.map(o=>`${o.criterion}: ${o.reason}`).join(' '),
+     assisted:help.some(h=>h.timing==='current'),help:help.length?help.map(h=>`${h.timing}: ${h.text}`).join(' '):'No task-specific help recorded; outside help is not established.',
+     ...(status==='demonstrated'&&rows.some(o=>o.issue==='supported_misread')?{issue:'accepted_misread'}:{})};
+   });
+   event.observations=derived.filter(o=>['demonstrated','error'].includes(o.status)).map(({criterion,status,...rest})=>({target:criterion,result:status,...rest}));
+   // The original bound assessment stays intact. Only this projection uses capability IDs.
+   event.planningAssessment={observations:derived,next:{...a.next,targets:[...new Set(a.next.targets.flatMap(id=>coverage.filter(c=>c.criteria.includes(id)).map(c=>c.target)))]}};
+   event=JSON.parse(JSON.stringify(event));
+  }
+  const existing=state.events.find(e=>e.id===event.id);
+  if(existing&&stable(existing)!==stable(event))return {errors:['This answer ID already has different content or an assessment. Keep the original; review the change explicitly.'],state};
+  // Missing or ambiguous evidence stays in the attached record, not in learner-failure state.
+  const next=M.append(state,event);
+  return {errors:[],state:next,event,plan:M.plan(data,next),unresolved:a.observations.filter(o=>o.status==='cannot_judge'),
+   unobserved:a.observations.filter(o=>o.status==='not_shown'),proposal:a.next};
+ }
+ function sameTargets(a,b){return Array.isArray(a)&&new Set(a).size===a.length&&stable([...a].sort())===stable([...b].sort());}
+ return {connect};
+})((function createTrial() {
+  const statuses = ['demonstrated', 'error', 'not_shown', 'cannot_judge'];
+  const kinds = ['follow_up', 'practice', 'fresh_check', 'clarify', 'stop'];
+  const stable = x => JSON.stringify(x, (_, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(k => [k, v[k]])) : v);
+  const nonempty = s => typeof s === 'string' && s.trim().length > 0;
+  function packet(data, id) {
+    const c = data.cases.find(c => c.id === id);
+    if (!c) throw Error(`Unknown case: ${id}`);
+    const exercise = data.exercises.find(e => e.id === c.exercise_id);
+    if (!exercise) throw Error(`Unknown exercise: ${c.exercise_id}`);
+    return {case_id:c.id, exercise, response:c.response, assistance:c.assistance};
+  }
+  function validate(input, assessment) {
+    const errors = [];
+    if (!assessment || assessment.case_id !== input.case_id) return ['Assessment belongs to a different case.'];
+    const criteria = input.exercise.criteria.map(c => c.id);
+    const observations = assessment.observations;
+    if (!Array.isArray(observations)) return ['Observations must be an array.'];
+    if (observations.length !== criteria.length || new Set(observations.map(o => o.criterion)).size !== criteria.length) errors.push('Record each criterion exactly once.');
+    for (const o of observations) {
+      if (!criteria.includes(o.criterion)) errors.push(`Unknown criterion: ${o.criterion}`);
+      if (!statuses.includes(o.status)) errors.push(`Unknown status: ${o.status}`);
+      if (!nonempty(o.reason)) errors.push(`${o.criterion}: supply a reason.`);
+      if (!Array.isArray(o.quotes)) { errors.push(`${o.criterion}: quotes must be an array.`); continue; }
+      if (['demonstrated','error'].includes(o.status) && !o.quotes.length) errors.push(`${o.criterion}: evidence quote required.`);
+      if (o.status === 'not_shown' && o.quotes.length) errors.push(`${o.criterion}: absent evidence cannot have a supporting quote.`);
+      for (const q of o.quotes) if (!nonempty(q) || !input.response.includes(q)) errors.push(`${o.criterion}: quotation is not in the original answer.`);
+    }
+    const n = assessment.next;
+    if (!n || !kinds.includes(n.kind)) return [...errors, 'Choose one valid next action.'];
+    if (!nonempty(n.text) || !nonempty(n.reason)) errors.push('Next action needs learner-facing text and a reason.');
+    if (!Array.isArray(n.targets) || n.targets.some(t => !criteria.includes(t)) || new Set(n.targets).size !== n.targets.length) errors.push('Next-action targets must be distinct criteria from this exercise.');
+    if (['follow_up','practice','fresh_check'].includes(n.kind) && !n.targets?.length) errors.push('This action requires a target.');
+    if (n.kind === 'practice' && !observations.some(o => o.status === 'error' && n.targets?.includes(o.criterion))) errors.push('Targeted remedial practice requires an observed error in a selected target.');
+    if (n.kind === 'follow_up') {
+      const branches = ['correct','wrong','unclear'].map(k => n.branches?.[k]);
+      if (!branches.every(nonempty) || new Set(branches).size !== 3) errors.push('Follow-up needs distinct correct, wrong and unclear branches.');
+    }
+    if (!Array.isArray(assessment.alternatives) || !assessment.alternatives.every(nonempty)) errors.push('Alternatives must be an array of explanations.');
+    return errors;
+  }
+  function validateBound(input, record) {
+    if (!record || stable(record.input) !== stable(input)) return ['The saved assessment does not match the current prompt, answer, criteria or assistance.'];
+    return validate(input, record.assessment);
+  }
+  function validateReview(input, review) {
+    if (!review || stable(input) !== stable(review.input)) return ['Human review does not match this input.'];
+    const ids = input.exercise.criteria.map(c => c.id);
+    const errors = [];
+    if (!nonempty(review.reviewer) || !nonempty(review.reason)) errors.push('Reviewer name and reason are required.');
+    if (!review.statuses || Object.keys(review.statuses).length !== ids.length || !ids.every(id => statuses.includes(review.statuses[id]))) errors.push('Judge each criterion before revealing the AI assessment.');
+    if (!kinds.includes(review.next_kind)) errors.push('Choose the next action.');
+    if (!Array.isArray(review.targets) || review.targets.some(t => !ids.includes(t)) || new Set(review.targets).size !== review.targets.length) errors.push('Review targets must be distinct criteria from the exercise.');
+    if (['follow_up','practice','fresh_check'].includes(review.next_kind) && !review.targets?.length) errors.push('Select at least one target.');
+    if (typeof review.before_reveal !== 'boolean') errors.push('Record whether the AI assessment was already revealed.');
+    return errors;
+  }
+  function compare(record, review) {
+    const errors = [...validateBound(record.input, record), ...validateReview(record.input, review)];
+    if (errors.length) throw Error(errors.join('\n'));
+    const differences = record.assessment.observations.filter(o => review.statuses[o.criterion] !== o.status).map(o => ({criterion:o.criterion, ai:o.status, human:review.statuses[o.criterion]}));
+    return {case_id:record.input.case_id, before_reveal:review.before_reveal,
+      matching_criteria:record.assessment.observations.length-differences.length, total_criteria:record.assessment.observations.length,
+      differences, action_matches:record.assessment.next.kind === review.next_kind,
+      targets_match:stable([...record.assessment.next.targets].sort()) === stable([...review.targets].sort()),
+      interpretation:'Agreement or disagreement only. Neither assessor is automatically treated as correct.'};
+  }
+  return {statuses, kinds, packet, validate, validateBound, validateReview, compare};
+})(),NextSession);
+const S=(function createSelector(M,B){
+ const unique=xs=>[...new Set(xs)];
+ const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+ const same=(a,b)=>stable(a)===stable(b);
+ const cost=a=>Object.values(a.seconds).reduce((n,x)=>n+x,0);
+ const coverage=a=>a.exercise.coverage.map(c=>c.target);
+ const start=(budgetSeconds,phase='later',diagnosticLimit=3)=>({budgetSeconds,phase,diagnosticLimit,completed:[],checked:[],repaired:[]});
+ const spent=s=>s.completed.reduce((n,c)=>n+c.seconds,0);
+ function needs(data,state,session){
+  const plan=M.plan(data,state),questions=plan.now.filter(a=>['clarify','follow_up'].includes(a.kind));
+  const review=unique(plan.now.filter(a=>a.kind==='review').flatMap(a=>a.targets));
+  const diagnose=unique(questions.flatMap(q=>q.targets));
+  const practice=unique(plan.now.filter(a=>a.kind==='help').flatMap(a=>a.targets));
+  const checks=state.events.length?unique(plan.later.flatMap(a=>a.targets)):data.goal.targets;
+  const check=unique([...session.repaired.filter(t=>checks.includes(t)),...checks]).filter(t=>!review.includes(t)&&!diagnose.includes(t)&&!practice.includes(t)&&!session.checked.includes(t)&&M.status(state,t).last?.issue!=='accepted_misread');
+  return {plan,review,diagnose,practice,check,questions,taskConcern:questions.find(q=>!q.targets.length)||null};
+ }
+ // Exhaustive small-catalog comparison, not a production optimizer or learning objective.
+ function bundles(actions,targets,remaining){
+  let options=[{actions:[],seconds:0,covered:[]}];
+  for(const action of actions){
+   const added=options.map(p=>({actions:[...p.actions,action],seconds:p.seconds+cost(action),covered:unique([...p.covered,...coverage(action).filter(t=>targets.includes(t))])}));
+   options.push(...added.filter(p=>p.seconds<=remaining));
+  }
+  options=options.filter(p=>p.actions.length&&p.covered.length);
+  const full=options.filter(p=>targets.every(t=>p.covered.includes(t)));
+  return (full.length?full:options).sort((a,b)=>{
+   if(!full.length)for(const t of targets){const d=Number(b.covered.includes(t))-Number(a.covered.includes(t));if(d)return d;}
+   return a.seconds-b.seconds||a.actions.length-b.actions.length||a.actions.map(x=>x.id).join().localeCompare(b.actions.map(x=>x.id).join());
+  })[0];
+ }
+ function choose(data,state,catalog,session){
+  const n=needs(data,state,session),remaining=Math.max(0,session.budgetSeconds-spent(session)),declined=[];
+  const result={remaining,spent:spent(session),needs:n,declined,unresolved:unique([...n.review,...n.diagnose,...n.practice,...n.check])};
+  if(M.contractConflicts(data,state).length)return {...result,kind:'stop',reason:'Review changed capability definitions before reusing this evidence.'};
+  if(n.taskConcern)return {...result,kind:'stop',reason:'The whole task has an unresolved concern without a specific target. Clarify the outcome before selecting more practice; do not mark the session complete.'};
+  const done=new Set(session.completed.map(c=>c.action)),valid=[];
+  for(const a of catalog){
+   let reason;
+   if(done.has(a.id))reason='This prompt was already attempted in this session; use a fresh variant.';
+   else if(!a.exercise.coverage.length||a.exercise.coverage.some(c=>!same(c.contract,data.targets.find(t=>t.id===c.target)?.contract)))reason='The task does not match the required action, mode or conditions.';
+   else if(!Object.values(a.seconds).every(x=>Number.isFinite(x)&&x>=0)||cost(a)<=0)reason='The task needs a positive total cost including setup, answering and feedback.';
+   else if(cost(a)>remaining)reason='The full task cost exceeds the remaining time.';
+   else if(coverage(a).some(t=>n.review.includes(t)))reason='Assessment review is pending for a covered target.';
+   else if((a.requires||[]).some(t=>n.practice.includes(t)||n.diagnose.includes(t)||n.review.includes(t)))reason='An observed prerequisite concern blocks this task.';
+   if(reason)declined.push({id:a.id,reason});else valid.push(a);
+  }
+  const diagnosticCount=session.completed.filter(c=>c.kind==='diagnose').length;
+  const diagnostic=valid.filter(a=>{
+   if(a.kind!=='diagnose')return false;
+   let reason;
+   const branches=a.branches||[],signatures=unique(branches.map(b=>JSON.stringify([b.next,b.targets])));
+   if(!coverage(a).some(t=>n.diagnose.includes(t)))reason='There is no supported unresolved concern for this question.';
+   else if(diagnosticCount>=session.diagnosticLimit)reason='The diagnostic prompt limit is reached; keep the concern unresolved.';
+   else if(signatures.length<2)reason='Every answer would lead to the same teaching action.';
+   else if(branches.some(branch=>{
+    if(branch.next==='stop')return false;
+    const continuation=valid.filter(b=>b.kind===branch.next&&b.id!==a.id&&branch.targets.every(t=>coverage(b).includes(t)));
+    const checkCost=branch.next==='practice'?Math.min(...valid.filter(b=>b.kind==='check'&&branch.targets.every(t=>coverage(b).includes(t))).map(cost)):0;
+    return !continuation.some(b=>cost(a)+cost(b)+checkCost<=remaining);
+   }))reason='A substantive answer branch would leave no time for its next useful action and any post-practice check.';
+   if(reason)declined.push({id:a.id,reason});return !reason;
+  }).sort((a,b)=>cost(a)-cost(b)||a.id.localeCompare(b.id));
+  if(diagnostic.length)return {...result,kind:'diagnose',action:diagnostic[0],planned:[diagnostic[0].id],reason:'Resolve a supported concern whose answers change the next teaching action; reserve follow-up time, including a check after corrective practice.'};
+  for(const kind of ['practice','check']){
+   const targetSet=n[kind];
+   const candidates=valid.filter(a=>a.kind===kind&&coverage(a).some(t=>targetSet.includes(t))&&!coverage(a).some(t=>n.diagnose.includes(t)||(kind==='check'&&n.practice.includes(t))));
+   const selected=bundles(candidates,targetSet,remaining);
+   if(selected)return {...result,kind,action:selected.actions[0],planned:selected.actions.map(a=>a.id),plannedSeconds:selected.seconds,expectedCoverage:selected.covered,reason:kind==='practice'?'Address an observed error; retain successful and unresolved targets.':'Choose an affordable set of exercises for the pending targets, then reassess after the next answer. Expected coverage is not observed coverage.'};
+  }
+  return {...result,kind:'stop',reason:result.unresolved.length?'No suitable next action fits the evidence and remaining budget. Retain unresolved needs.':'The checks for this illustrative session are complete. Future retention remains untested.'};
+ }
+ function complete(data,state,catalog,session,actionId,record,actualSeconds){
+  const action=catalog.find(a=>a.id===actionId);
+  if(!action||!same(action.exercise,record.input.exercise))throw Error('The answer must belong to the selected task and its full coverage contract.');
+  if(!Number.isFinite(actualSeconds)||actualSeconds<0)throw Error('Record a nonnegative actual duration.');
+  const old=session.completed.find(c=>c.answer===record.input.case_id);
+  if(old&&(old.action!==actionId||old.seconds!==actualSeconds))throw Error('The completed answer already has different cost or task metadata.');
+  if(!old&&choose(data,state,catalog,session).action?.id!==actionId)throw Error('Recompute the next action before accepting an answer to it.');
+  const packet=JSON.parse(JSON.stringify(record));
+  // A check after correction here is immediate practice, not a delayed retention result.
+  packet.input.attempt.phase=old?state.events.find(e=>e.id===packet.input.case_id).phase:session.phase==='later'&&!session.repaired.length&&action.kind!=='practice'?'later':'current';
+  const out=B.connect(data,state,packet.input,packet);
+  if(out.errors.length)throw Error(out.errors.join('; '));
+  if(old)return {state:out.state,session,event:out.event,decision:choose(data,out.state,catalog,session)};
+  const shown=out.event.observations.filter(o=>o.result==='demonstrated'&&!o.assisted).map(o=>o.target);
+  const errors=out.event.observations.filter(o=>o.result==='error').map(o=>o.target);
+  const repaired=unique([...session.repaired,...(action.kind==='practice'?coverage(action):[])]);
+  const checked=unique([...session.checked.filter(t=>!errors.includes(t)&&!(action.kind==='practice'&&coverage(action).includes(t))),...(action.kind==='check'?shown:[])]);
+  const next={...session,repaired,checked,completed:[...session.completed,{action:actionId,kind:action.kind,answer:packet.input.case_id,seconds:actualSeconds}]};
+  return {state:out.state,session:next,event:out.event,decision:choose(data,out.state,catalog,next)};
+ }
+ return {start,spent,cost,coverage,needs,choose,complete};
+})(NextSession,B);
+const A=(function createMaterial(){
+ const clone=x=>JSON.parse(JSON.stringify(x));
+ const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+ const key=r=>`${r.id}@${r.version}`;
+ const version=v=>Number.isInteger(v)&&v>0;
+ const intent=t=>({version:t.version,content:clone(t.content),action:t.action,mode:t.mode,conditions:t.conditions});
+ const empty=()=>({sources:[],units:[]});
+ function capture(library,source){
+  if(!source.id||!Number.isInteger(source.version)||source.version<1||typeof source.text!=='string'||!source.text.trim())throw Error('A source needs an ID, positive version and literal text.');
+  const old=library.sources.find(s=>key(s)===key(source));
+  if(old&&stable(old)!==stable(source))throw Error('This source version already exists with different content. Capture a new version.');
+  return old?clone(library):{...clone(library),sources:[...clone(library.sources),clone(source)]};
+ }
+ function referenceErrors(library,refs){
+  if(!Array.isArray(refs)||!refs.length)return ['Source references are missing.'];
+  return refs.flatMap(ref=>{
+   const source=library.sources.find(s=>s.id===ref.source&&s.version===ref.version);
+   if(!source)return ['The referenced source version is unavailable.'];
+   const lines=source.text.split('\n');
+   if(!Number.isInteger(ref.start)||!Number.isInteger(ref.end)||ref.start<1||ref.end<ref.start||ref.end>lines.length)return ['The source location is outside the saved text.'];
+   return lines.slice(ref.start-1,ref.end).join('\n')===ref.quote?[]:['The quoted passage does not match that source version and location.'];
+  });
+ }
+ function prepare(library,draft){
+  const definitions=[...library.units,...draft.units],unitMap=new Map(),definitionErrors=new Map();
+  for(const unit of definitions){const k=key(unit),old=unitMap.get(k);if(old&&stable(old)!==stable(unit))definitionErrors.set(k,'One content identity has conflicting definitions.');else unitMap.set(k,unit);}
+  function closure(refs){
+   const found=new Map(),issues=[];
+   function visit(ref){
+    const k=key(ref);if(found.has(k))return;
+    const unit=unitMap.get(k);found.set(k,unit);
+    if(!unit){issues.push(`Missing content ${k}.`);return;}
+    if(definitionErrors.has(k))issues.push(definitionErrors.get(k));
+    if(!unit.id?.trim()||!version(unit.version))issues.push(`${k}: content needs a stable ID and positive version.`);
+    if(!unit.statement?.trim()||!unit.scope?.trim())issues.push(`${k}: content needs its meaning and scope.`);
+    if(unit.status!=='usable')issues.push(`${k}: ${unit.concern||'content is still a proposal'}.`);
+    issues.push(...referenceErrors(library,unit.refs).map(e=>`${k}: ${e}`));
+    for(const link of draft.sourceLinks||[])if(key(link.unit)===k)issues.push(...referenceErrors(library,link.refs).map(e=>`${k}: ${e}`));
+    for(const dependency of unit.dependsOn||[])visit(dependency);
+   }
+   refs.forEach(visit);return {units:[...found.values()].filter(Boolean),issues};
+  }
+  const held=[],targets=[];
+  for(const id of new Set(draft.selected)){
+   const candidate=draft.targets.find(t=>t.id===id);
+   if(!candidate){held.push({target:id,reasons:['Selected capability is missing.']});continue;}
+   const resolved=closure(candidate.content);
+   if(draft.targets.filter(t=>t.id===id).length!==1||!version(candidate.version))resolved.issues.push('Capability identity or version is invalid.');
+   if(!candidate.content.length||!candidate.action?.trim()||!candidate.mode?.trim()||!candidate.conditions?.trim())resolved.issues.push('The capability needs content, action, mode and conditions.');
+   if(resolved.issues.length){held.push({target:id,reasons:[...new Set(resolved.issues)]});continue;}
+   targets.push({id,label:candidate.label,contract:{version:candidate.version,content:resolved.units.map(u=>({id:u.id,version:u.version})).sort((a,b)=>key(a).localeCompare(key(b))),action:candidate.action,mode:candidate.mode,conditions:candidate.conditions}});
+  }
+  const catalog=[],heldExercises=[];
+  for(const e of draft.exercises){
+   if(!e.coverage.some(c=>draft.selected.includes(c.target)))continue;
+   const criteria=e.criteria.map(c=>c.id),reasons=[];
+   if(!e.id?.trim()||draft.exercises.filter(x=>x.id===e.id).length!==1||![e.version,e.rubric_version].every(version))reasons.push('Exercise and rubric identities need positive versions.');
+   if(!['check','practice'].includes(e.kind))reasons.push('This material spike supports checks and practice tasks.');
+   if(!['setup','answer','feedback'].every(k=>Number.isFinite(e.seconds?.[k])&&e.seconds[k]>=0)||Object.values(e.seconds||{}).reduce((n,x)=>n+x,0)<=0)reasons.push('Include usable setup, answering and feedback time estimates.');
+   if(e.status!=='usable')reasons.push(e.concern||'Exercise needs review after a content change.');
+   if(!e.prompt?.trim()||!criteria.length||new Set(criteria).size!==criteria.length||e.criteria.some(c=>!c.rule?.trim()))reasons.push('Exercise needs a prompt and distinct usable criteria.');
+   if(new Set(e.coverage.map(c=>c.target)).size!==e.coverage.length)reasons.push('Map each capability once per exercise.');
+   if(e.coverage.some(c=>!targets.some(t=>t.id===c.target)||!c.criteria.length||new Set(c.criteria).size!==c.criteria.length||c.criteria.some(id=>!criteria.includes(id))))reasons.push('Coverage must resolve to ready selected capabilities and their criteria.');
+   if(e.coverage.some(c=>{const t=draft.targets.find(t=>t.id===c.target);return !t||stable(c.authoredFor)!==stable(intent(t));}))reasons.push('The target changed since this exercise mapping was reviewed.');
+   if(reasons.length){heldExercises.push({exercise:e.id,reasons});continue;}
+   const exercise={id:e.id,version:e.version,rubric_version:e.rubric_version,subject:draft.title,prompt:e.prompt,criteria:clone(e.criteria),coverage:e.coverage.map(c=>({target:c.target,criteria:clone(c.criteria),contract:clone(targets.find(t=>t.id===c.target).contract)}))};
+   catalog.push({id:e.id,label:e.label,kind:e.kind,seconds:clone(e.seconds),exercise,samples:clone(e.samples)});
+  }
+  const noExercise=targets.filter(t=>!catalog.some(a=>a.exercise.coverage.some(c=>c.target===t.id))).map(t=>t.id);
+  const data={title:draft.title,components:[...unitMap.values()].map(clone),capabilities:targets,targets,goal:{text:draft.goal,targets:targets.map(t=>t.id)},knowledgeGroups:clone(draft.groups),practiceBundles:catalog.filter(a=>a.kind==='check').map(a=>({id:a.id,title:a.label,targets:a.exercise.coverage.map(c=>c.target)}))};
+  return {revision:draft.revision,requested:clone(draft.selected),held,heldExercises,noExercise,data,catalog,note:'Source-location validity and supplied review status do not establish truth or teaching quality.'};
+ }
+ function revise(draft,id,patch){
+  const next=clone(draft),unit=next.units.find(u=>u.id===id);
+  if(!unit)throw Error('Edit a local proposal; shared library revisions need their own explicit mapping.');
+  const affected=new Set([id]);
+  for(let changed=true;changed;){changed=false;for(const u of next.units)if(!affected.has(u.id)&&(u.dependsOn||[]).some(r=>affected.has(r.id))){affected.add(u.id);changed=true;}}
+  const oldVersions=new Map(next.units.map(u=>[u.id,u.version]));
+  const move=ref=>affected.has(ref.id)&&ref.version===oldVersions.get(ref.id)?{id:ref.id,version:ref.version+1}:ref;
+  for(const u of next.units){
+   if(u.id===id)for(const field of ['statement','scope','refs'])if(Object.hasOwn(patch,field))u[field]=clone(patch[field]);
+   if(affected.has(u.id)){u.version++;u.status='needs_review';u.concern='Meaning or a supporting claim changed; inspect this version.';u.replaces={id:u.id,version:u.version-1};}
+   u.dependsOn=(u.dependsOn||[]).map(move);
+  }
+  const targetIds=[];
+  for(const t of next.targets){if(t.content.some(r=>affected.has(r.id))){targetIds.push(t.id);t.version++;}t.content=t.content.map(move);}
+  const exerciseIds=[];
+  for(const e of next.exercises)if(e.coverage.some(c=>targetIds.includes(c.target))){e.version++;e.rubric_version++;e.status='needs_review';e.concern='Review the prompt, answer criteria and coverage after the content change.';exerciseIds.push(e.id);}
+  next.revision++;next.lastChange={units:[...affected],targets:targetIds,exercises:exerciseIds};return next;
+ }
+ function reviewed(draft,kind,id,reviewer,reason){
+  if(!['unit','exercise'].includes(kind))throw Error('Review a unit or an exercise.');
+  if(!reviewer?.trim()||!reason?.trim())throw Error('Record who inspected this version and why it is usable.');
+  const next=clone(draft),item=(kind==='unit'?next.units:next.exercises).find(x=>x.id===id);
+  if(!item)throw Error('The reviewed item is missing.');
+  if(kind==='exercise')for(const c of item.coverage){const t=next.targets.find(t=>t.id===c.target);if(!t)throw Error('The reviewed capability is missing.');c.authoredFor=intent(t);}
+  item.status='usable';delete item.concern;item.review={reviewer,reason};next.revision++;return next;
+ }
+ function reuse(library,draft,localId,existingRef,reason){
+  const existing=library.units.find(u=>key(u)===key(existingRef)),local=draft.units.find(u=>u.id===localId);
+  if(!existing||!local||!reason?.trim())throw Error('An explicit local-to-existing mapping and reason are required.');
+  if(existing.status!=='usable'||local.status!=='usable')throw Error('Resolve the flagged content or source concern before reusing this claim.');
+  if(existing.statement!==local.statement||existing.scope!==local.scope||stable(existing.dependsOn||[])!==stable(local.dependsOn||[]))throw Error('Different meaning, scope or dependencies are not an exact duplicate. Keep it separate for review.');
+  // A new dependency identity is a revision even when its wording is identical.
+  const next=revise(draft,localId,{}),replace=r=>r.id===local.id&&r.version===local.version+1?clone(existingRef):r;
+  next.units=next.units.filter(u=>u.id!==localId).map(u=>({...u,dependsOn:(u.dependsOn||[]).map(replace)}));
+  next.targets=next.targets.map(t=>({...t,content:t.content.map(replace)}));
+  next.groups=next.groups.map(g=>({...g,members:g.members.map(id=>id===localId?existing.id:id)}));
+  next.sourceLinks=[...(next.sourceLinks||[]),{unit:clone(existingRef),refs:clone(local.refs),reason}];
+  next.lastChange.units=next.lastChange.units.filter(id=>id!==localId);next.lastChange.reused={from:{id:local.id,version:local.version},to:clone(existingRef)};return next;
+ }
+ function bind(action,outcome,id){
+  const sample=action.samples[outcome];if(!sample)throw Error('This example has no such authored answer.');
+  const input={case_id:id,attempt:{id,origin:'hypothetical',phase:'current'},exercise:clone(action.exercise),response:sample.response,context:[{id:'provenance',role:'task',text:'Authored material-to-practice fixture; no learner or automatic grader supplied this response.'}],assistance:clone(sample.assistance||[])};
+  return {input,assessment:{case_id:id,observations:clone(sample.observations),next:{kind:'stop',targets:[],text:'Use the recorded evidence to choose useful practice.',reason:'No additional diagnostic claim is supplied.'},alternatives:[]},assessor:'Authored example',protocol:{name:'Material-to-practice boundary'}};
+ }
+ return {empty,capture,referenceErrors,prepare,revise,reviewed,reuse,bind};
+})();
+const EXAMPLES={"math":{"source":{"id":"branching-note","version":1,"title":"Depth and total work","text":"Let n = 2^k. Stop at size 1 and do constant local work per call.\nAfter k halvings, n/2^k = 1, so k = log2(n).\nTotal work counts every call in every continuing branch.\nOne continuing half-size branch has k+1 calls. Two continuing half-size branches have 2n-1 calls.\nEqual logarithmic depth does not imply equal total work.","provenance":"Authored example for this spike; not a new learner submission."},"library":{"sources":[{"id":"branching-note","version":1,"title":"Depth and total work","text":"Let n = 2^k. Stop at size 1 and do constant local work per call.\nAfter k halvings, n/2^k = 1, so k = log2(n).\nTotal work counts every call in every continuing branch.\nOne continuing half-size branch has k+1 calls. Two continuing half-size branches have 2n-1 calls.\nEqual logarithmic depth does not imply equal total work.","provenance":"Authored example for this spike; not a new learner submission."}],"units":[]},"draft":{"revision":1,"title":"Depth and total work","goal":"Explain reductions and combine them with total work","units":[{"id":"material.math.halving","version":1,"statement":"For n=2^k, k halvings reduce n to 1.","scope":"Start at n=2^k and halve to 1; k is a nonnegative integer. This describes reductions, not all work.","refs":[{"source":"branching-note","version":1,"start":1,"end":2,"quote":"Let n = 2^k. Stop at size 1 and do constant local work per call.\nAfter k halvings, n/2^k = 1, so k = log2(n)."}],"dependsOn":[],"status":"usable","review":{"reviewer":"Example author","reason":"Inspected against this short authored source; not an independent validation."}},{"id":"material.math.work","version":1,"statement":"Constant work per call must be combined with the number of calls across all branches.","scope":"Count constant local work in every call, including terminal calls, across all continuing branches.","refs":[{"source":"branching-note","version":1,"start":1,"end":3,"quote":"Let n = 2^k. Stop at size 1 and do constant local work per call.\nAfter k halvings, n/2^k = 1, so k = log2(n).\nTotal work counts every call in every continuing branch."}],"dependsOn":[],"status":"usable","review":{"reviewer":"Example author","reason":"Inspected against this short authored source; not an independent validation."}},{"id":"material.math.composition","version":1,"statement":"One continuing half-size branch and two continuing half-size branches can have the same depth but different total work.","scope":"Compare one continuing branch with two equal continuing half-size branches, n=2^k, constant local work per call and size-1 termination.","refs":[{"source":"branching-note","version":1,"start":1,"end":5,"quote":"Let n = 2^k. Stop at size 1 and do constant local work per call.\nAfter k halvings, n/2^k = 1, so k = log2(n).\nTotal work counts every call in every continuing branch.\nOne continuing half-size branch has k+1 calls. Two continuing half-size branches have 2n-1 calls.\nEqual logarithmic depth does not imply equal total work."}],"dependsOn":[{"id":"material.math.halving","version":1},{"id":"material.math.work","version":1}],"status":"usable","review":{"reviewer":"Example author","reason":"Inspected against this short authored source; not an independent validation."}}],"targets":[{"id":"material.math.explain","label":"Explain the halving–logarithm relationship","version":1,"content":[{"id":"material.math.halving","version":1}],"action":"Connect successive halving to the number of reductions.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."},{"id":"material.math.work","label":"Account for work across calls","version":1,"content":[{"id":"material.math.work","version":1}],"action":"Count work across every continuing branch.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."},{"id":"material.math.integrate","label":"Connect depth, branching and total work","version":1,"content":[{"id":"material.math.composition","version":1}],"action":"Distinguish one branch from two and justify the resulting total work.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."},{"id":"material.math.fluent","label":"Recall the complexity label fluently","version":1,"content":[{"id":"material.math.composition","version":1}],"action":"Retrieve the correct label within a separately agreed time condition.","mode":"fluent recall","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}],"selected":["material.math.explain","material.math.work","material.math.integrate"],"groups":[{"id":"search","members":["material.math.halving","material.math.work","material.math.composition"],"structure":"A search continues in one candidate region after each reduction."},{"id":"recursion","members":["material.math.halving","material.math.work","material.math.composition"],"structure":"Recursion combines reduction depth with the number of branches that continue."}],"exercises":[{"id":"material.math.practice","label":"Practice connecting branching with total work","kind":"practice","seconds":{"setup":0,"answer":25,"feedback":5},"version":1,"rubric_version":1,"prompt":"Worked explanation: count every call, not only the depth. One path has k+1 calls; two continuing branches form a full binary tree with 2n-1 calls. Explain why matching depth does not imply matching work.","criteria":[{"id":"work","rule":"Include calls in every continuing branch when counting total work."},{"id":"integration","rule":"Distinguish one path of k+1 calls from the two-branch tree of 2n-1 calls; equal depth does not imply equal total work."}],"coverage":[{"target":"material.math.integrate","criteria":["integration","work"],"authoredFor":{"version":1,"content":[{"id":"material.math.composition","version":1}],"action":"Distinguish one branch from two and justify the resulting total work.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"Every call contributes work. A single path has k+1 calls; the full binary tree has 2n-1. Equal depth does not imply equal work.","observations":[{"criterion":"work","status":"demonstrated","quotes":["Every call contributes work. A single path has k+1 calls; the full binary tree has 2n-1. Equal depth does not imply equal work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"demonstrated","quotes":["Every call contributes work. A single path has k+1 calls; the full binary tree has 2n-1. Equal depth does not imply equal work."],"reason":"Authored assessment for a selection comparison."}],"assistance":[{"timing":"current","targets":["work","integration"],"text":"The answer was supplied as part of the worked explanation."}]}}},{"id":"material.math.combined","label":"Compare one and two continuing half-size branches","kind":"check","seconds":{"setup":0,"answer":65,"feedback":5},"version":1,"rubric_version":1,"prompt":"Let n=2^k. Stop at size 1 and do constant local work per call. Explain the number of halvings, then compare the total calls with one versus two continuing half-size branches. Justify the difference.","criteria":[{"id":"reductions","rule":"Express repeated halving as n/2^k = 1 or an equivalent explanation."},{"id":"logarithm","rule":"Connect the number of reductions to log2(n)."},{"id":"work","rule":"Include calls in every continuing branch when counting total work."},{"id":"integration","rule":"Distinguish one path of k+1 calls from the two-branch tree of 2n-1 calls; equal depth does not imply equal total work."}],"coverage":[{"target":"material.math.explain","criteria":["reductions","logarithm"],"authoredFor":{"version":1,"content":[{"id":"material.math.halving","version":1}],"action":"Connect successive halving to the number of reductions.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}},{"target":"material.math.work","criteria":["work"],"authoredFor":{"version":1,"content":[{"id":"material.math.work","version":1}],"action":"Count work across every continuing branch.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}},{"target":"material.math.integrate","criteria":["integration","work"],"authoredFor":{"version":1,"content":[{"id":"material.math.composition","version":1}],"action":"Distinguish one branch from two and justify the resulting total work.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work.","observations":[{"criterion":"reductions","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"logarithm","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"work","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]},"partial":{"response":"n/2^k = 1 gives k = log2(n). Total work includes every call in every branch.","observations":[{"criterion":"reductions","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Total work includes every call in every branch."],"reason":"Authored assessment for a selection comparison."},{"criterion":"logarithm","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Total work includes every call in every branch."],"reason":"Authored assessment for a selection comparison."},{"criterion":"work","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Total work includes every call in every branch."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"not_shown","quotes":[],"reason":"Authored assessment for a selection comparison."}],"assistance":[]},"error":{"response":"n/2^k = 1 gives k = log2(n). Work includes every call in every branch, but both cases have logarithmic total work because their depths match.","observations":[{"criterion":"reductions","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Work includes every call in every branch, but both cases have logarithmic total work because their depths match."],"reason":"Authored assessment for a selection comparison."},{"criterion":"logarithm","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Work includes every call in every branch, but both cases have logarithmic total work because their depths match."],"reason":"Authored assessment for a selection comparison."},{"criterion":"work","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Work includes every call in every branch, but both cases have logarithmic total work because their depths match."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"error","quotes":["n/2^k = 1 gives k = log2(n). Work includes every call in every branch, but both cases have logarithmic total work because their depths match."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]},"hinted":{"response":"After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work.","observations":[{"criterion":"reductions","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"logarithm","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"work","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."}],"assistance":[{"timing":"current","targets":["reductions","logarithm","work","integration"],"text":"The answer was supplied as part of the worked explanation."}]}}},{"id":"material.math.explain","label":"Explain repeated halving and logarithms","kind":"check","seconds":{"setup":0,"answer":30,"feedback":5},"version":1,"rubric_version":1,"prompt":"Let n=2^k. Explain how many halvings reduce n to 1, and why the count is logarithmic.","criteria":[{"id":"reductions","rule":"Express repeated halving as n/2^k = 1 or an equivalent explanation."},{"id":"logarithm","rule":"Connect the number of reductions to log2(n)."}],"coverage":[{"target":"material.math.explain","criteria":["reductions","logarithm"],"authoredFor":{"version":1,"content":[{"id":"material.math.halving","version":1}],"action":"Connect successive halving to the number of reductions.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"After k halvings n/2^k = 1, so k = log2(n).","observations":[{"criterion":"reductions","status":"demonstrated","quotes":["After k halvings n/2^k = 1, so k = log2(n)."],"reason":"Authored assessment for a selection comparison."},{"criterion":"logarithm","status":"demonstrated","quotes":["After k halvings n/2^k = 1, so k = log2(n)."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]}}},{"id":"material.math.work","label":"Count the work across calls","kind":"check","seconds":{"setup":0,"answer":30,"feedback":5},"version":1,"rubric_version":1,"prompt":"A procedure branches into smaller calls. Each call, including a size-1 call, does constant local work. Explain what must be counted to determine total work.","criteria":[{"id":"work","rule":"Include calls in every continuing branch when counting total work."}],"coverage":[{"target":"material.math.work","criteria":["work"],"authoredFor":{"version":1,"content":[{"id":"material.math.work","version":1}],"action":"Count work across every continuing branch.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"Count the work of every call in every continuing branch.","observations":[{"criterion":"work","status":"demonstrated","quotes":["Count the work of every call in every continuing branch."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]}}},{"id":"material.math.integrate","label":"Connect equal depth with different total work","kind":"check","seconds":{"setup":0,"answer":35,"feedback":5},"version":1,"rubric_version":1,"prompt":"Two procedures start at n=2^k, stop at size 1 and do constant local work per call. One continues in one half; the other continues in both halves. A colleague says equal depth means equal total work. Evaluate that claim, accounting for every call.","criteria":[{"id":"work","rule":"Include calls in every continuing branch when counting total work."},{"id":"integration","rule":"Distinguish one path of k+1 calls from the two-branch tree of 2n-1 calls; equal depth does not imply equal total work."}],"coverage":[{"target":"material.math.integrate","criteria":["integration","work"],"authoredFor":{"version":1,"content":[{"id":"material.math.composition","version":1}],"action":"Distinguish one branch from two and justify the resulting total work.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"Every call counts: one path has k+1 calls and two branches give 2n-1 calls. Equal depth does not imply equal work.","observations":[{"criterion":"work","status":"demonstrated","quotes":["Every call counts: one path has k+1 calls and two branches give 2n-1 calls. Equal depth does not imply equal work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"demonstrated","quotes":["Every call counts: one path has k+1 calls and two branches give 2n-1 calls. Equal depth does not imply equal work."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]}}}],"omitted":[{"detail":"A separate timed complexity-label drill","reason":"Fluent recall is available as a capability but is not selected for the explanation goal."}]},"budget":180},"fact":{"source":{"id":"vocabulary-note","version":1,"title":"An invented association","text":"In this invented vocabulary exercise, mavo means blue.","provenance":"Authored example for this spike; not a new learner submission."},"library":{"sources":[{"id":"vocabulary-note","version":1,"title":"An invented association","text":"In this invented vocabulary exercise, mavo means blue.","provenance":"Authored example for this spike; not a new learner submission."}],"units":[]},"draft":{"revision":1,"title":"An invented association","goal":"Remember one supplied association","units":[{"id":"material.fact.example","version":1,"statement":"In this invented vocabulary exercise, mavo means blue.","scope":"The supplied invented vocabulary only; recall from mavo to blue.","refs":[{"source":"vocabulary-note","version":1,"start":1,"end":1,"quote":"In this invented vocabulary exercise, mavo means blue."}],"dependsOn":[],"status":"usable","review":{"reviewer":"Example author","reason":"Inspected against this short authored source; not an independent validation."}}],"targets":[{"id":"material.fact.recall","label":"Recall the supplied meaning","version":1,"content":[{"id":"material.fact.example","version":1}],"action":"Recall blue when asked for the taught meaning of mavo.","mode":"recall","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}],"selected":["material.fact.recall"],"groups":[],"exercises":[{"id":"material.fact.practice","label":"Practice the supplied association","kind":"practice","seconds":{"setup":0,"answer":10,"feedback":5},"version":1,"rubric_version":1,"prompt":"The supplied association is mavo → blue. Say the meaning, then attempt a separate recall check.","criteria":[{"id":"meaning","rule":"Recall the supplied association blue."}],"coverage":[{"target":"material.fact.recall","criteria":["meaning"],"authoredFor":{"version":1,"content":[{"id":"material.fact.example","version":1}],"action":"Recall blue when asked for the taught meaning of mavo.","mode":"recall","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"Mavo means blue.","observations":[{"criterion":"meaning","status":"demonstrated","quotes":["Mavo means blue."],"reason":"Authored assessment for a selection comparison."}],"assistance":[{"timing":"current","targets":["meaning"],"text":"The answer was supplied as part of the worked explanation."}]}}},{"id":"material.fact.recall","label":"Recall the meaning of mavo without a hint","kind":"check","seconds":{"setup":0,"answer":5,"feedback":5},"version":1,"rubric_version":1,"prompt":"In the invented vocabulary you studied, what does mavo mean? Answer without a hint.","criteria":[{"id":"meaning","rule":"Recall the supplied association blue."}],"coverage":[{"target":"material.fact.recall","criteria":["meaning"],"authoredFor":{"version":1,"content":[{"id":"material.fact.example","version":1}],"action":"Recall blue when asked for the taught meaning of mavo.","mode":"recall","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"Blue.","observations":[{"criterion":"meaning","status":"demonstrated","quotes":["Blue."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]}}}]},"budget":25},"doubtful":{"source":{"id":"branching-note","version":1,"title":"Depth and total work","text":"Let n = 2^k. Stop at size 1 and do constant local work per call.\nAfter k halvings, n/2^k = 1, so k = log2(n).\nTotal work counts every call in every continuing branch.\nOne continuing half-size branch has k+1 calls. Two continuing half-size branches have 2n-1 calls.\nEqual logarithmic depth does not imply equal total work.","provenance":"Authored example for this spike; not a new learner submission."},"library":{"sources":[{"id":"branching-note","version":1,"title":"Depth and total work","text":"Let n = 2^k. Stop at size 1 and do constant local work per call.\nAfter k halvings, n/2^k = 1, so k = log2(n).\nTotal work counts every call in every continuing branch.\nOne continuing half-size branch has k+1 calls. Two continuing half-size branches have 2n-1 calls.\nEqual logarithmic depth does not imply equal total work.","provenance":"Authored example for this spike; not a new learner submission."}],"units":[]},"draft":{"revision":1,"title":"Depth and total work","goal":"Explain reductions and combine them with total work","units":[{"id":"material.math.halving","version":1,"statement":"For n=2^k, k halvings reduce n to 1.","scope":"Start at n=2^k and halve to 1; k is a nonnegative integer. This describes reductions, not all work.","refs":[{"source":"branching-note","version":1,"start":1,"end":2,"quote":"Let n = 2^k. Stop at size 1 and do constant local work per call.\nAfter k halvings, n/2^k = 1, so k = log2(n)."}],"dependsOn":[],"status":"usable","review":{"reviewer":"Example author","reason":"Inspected against this short authored source; not an independent validation."}},{"id":"material.math.work","version":1,"statement":"Constant work per call must be combined with the number of calls across all branches.","scope":"Count constant local work in every call, including terminal calls, across all continuing branches.","refs":[{"source":"branching-note","version":1,"start":1,"end":3,"quote":"Let n = 2^k. Stop at size 1 and do constant local work per call.\nAfter k halvings, n/2^k = 1, so k = log2(n).\nTotal work counts every call in every continuing branch."}],"dependsOn":[],"status":"usable","review":{"reviewer":"Example author","reason":"Inspected against this short authored source; not an independent validation."}},{"id":"material.math.composition","version":1,"statement":"Every procedure that halves its input has logarithmic total work.","scope":"Compare one continuing branch with two equal continuing half-size branches, n=2^k, constant local work per call and size-1 termination.","refs":[{"source":"branching-note","version":1,"start":1,"end":5,"quote":"Let n = 2^k. Stop at size 1 and do constant local work per call.\nAfter k halvings, n/2^k = 1, so k = log2(n).\nTotal work counts every call in every continuing branch.\nOne continuing half-size branch has k+1 calls. Two continuing half-size branches have 2n-1 calls.\nEqual logarithmic depth does not imply equal total work."}],"dependsOn":[{"id":"material.math.halving","version":1},{"id":"material.math.work","version":1}],"status":"needs_review","review":{"reviewer":"Example author","reason":"Inspected against this short authored source; not an independent validation."},"concern":"This drops the number-of-branches condition and contradicts the supplied comparison. Exact source quotes do not justify it."}],"targets":[{"id":"material.math.explain","label":"Explain the halving–logarithm relationship","version":1,"content":[{"id":"material.math.halving","version":1}],"action":"Connect successive halving to the number of reductions.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."},{"id":"material.math.work","label":"Account for work across calls","version":1,"content":[{"id":"material.math.work","version":1}],"action":"Count work across every continuing branch.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."},{"id":"material.math.integrate","label":"Connect depth, branching and total work","version":1,"content":[{"id":"material.math.composition","version":1}],"action":"Distinguish one branch from two and justify the resulting total work.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."},{"id":"material.math.fluent","label":"Recall the complexity label fluently","version":1,"content":[{"id":"material.math.composition","version":1}],"action":"Retrieve the correct label within a separately agreed time condition.","mode":"fluent recall","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}],"selected":["material.math.explain","material.math.work","material.math.integrate"],"groups":[{"id":"search","members":["material.math.halving","material.math.work","material.math.composition"],"structure":"A search continues in one candidate region after each reduction."},{"id":"recursion","members":["material.math.halving","material.math.work","material.math.composition"],"structure":"Recursion combines reduction depth with the number of branches that continue."}],"exercises":[{"id":"material.math.practice","label":"Practice connecting branching with total work","kind":"practice","seconds":{"setup":0,"answer":25,"feedback":5},"version":1,"rubric_version":1,"prompt":"Worked explanation: count every call, not only the depth. One path has k+1 calls; two continuing branches form a full binary tree with 2n-1 calls. Explain why matching depth does not imply matching work.","criteria":[{"id":"work","rule":"Include calls in every continuing branch when counting total work."},{"id":"integration","rule":"Distinguish one path of k+1 calls from the two-branch tree of 2n-1 calls; equal depth does not imply equal total work."}],"coverage":[{"target":"material.math.integrate","criteria":["integration","work"],"authoredFor":{"version":1,"content":[{"id":"material.math.composition","version":1}],"action":"Distinguish one branch from two and justify the resulting total work.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"Every call contributes work. A single path has k+1 calls; the full binary tree has 2n-1. Equal depth does not imply equal work.","observations":[{"criterion":"work","status":"demonstrated","quotes":["Every call contributes work. A single path has k+1 calls; the full binary tree has 2n-1. Equal depth does not imply equal work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"demonstrated","quotes":["Every call contributes work. A single path has k+1 calls; the full binary tree has 2n-1. Equal depth does not imply equal work."],"reason":"Authored assessment for a selection comparison."}],"assistance":[{"timing":"current","targets":["work","integration"],"text":"The answer was supplied as part of the worked explanation."}]}}},{"id":"material.math.combined","label":"Compare one and two continuing half-size branches","kind":"check","seconds":{"setup":0,"answer":65,"feedback":5},"version":1,"rubric_version":1,"prompt":"Let n=2^k. Stop at size 1 and do constant local work per call. Explain the number of halvings, then compare the total calls with one versus two continuing half-size branches. Justify the difference.","criteria":[{"id":"reductions","rule":"Express repeated halving as n/2^k = 1 or an equivalent explanation."},{"id":"logarithm","rule":"Connect the number of reductions to log2(n)."},{"id":"work","rule":"Include calls in every continuing branch when counting total work."},{"id":"integration","rule":"Distinguish one path of k+1 calls from the two-branch tree of 2n-1 calls; equal depth does not imply equal total work."}],"coverage":[{"target":"material.math.explain","criteria":["reductions","logarithm"],"authoredFor":{"version":1,"content":[{"id":"material.math.halving","version":1}],"action":"Connect successive halving to the number of reductions.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}},{"target":"material.math.work","criteria":["work"],"authoredFor":{"version":1,"content":[{"id":"material.math.work","version":1}],"action":"Count work across every continuing branch.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}},{"target":"material.math.integrate","criteria":["integration","work"],"authoredFor":{"version":1,"content":[{"id":"material.math.composition","version":1}],"action":"Distinguish one branch from two and justify the resulting total work.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work.","observations":[{"criterion":"reductions","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"logarithm","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"work","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]},"partial":{"response":"n/2^k = 1 gives k = log2(n). Total work includes every call in every branch.","observations":[{"criterion":"reductions","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Total work includes every call in every branch."],"reason":"Authored assessment for a selection comparison."},{"criterion":"logarithm","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Total work includes every call in every branch."],"reason":"Authored assessment for a selection comparison."},{"criterion":"work","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Total work includes every call in every branch."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"not_shown","quotes":[],"reason":"Authored assessment for a selection comparison."}],"assistance":[]},"error":{"response":"n/2^k = 1 gives k = log2(n). Work includes every call in every branch, but both cases have logarithmic total work because their depths match.","observations":[{"criterion":"reductions","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Work includes every call in every branch, but both cases have logarithmic total work because their depths match."],"reason":"Authored assessment for a selection comparison."},{"criterion":"logarithm","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Work includes every call in every branch, but both cases have logarithmic total work because their depths match."],"reason":"Authored assessment for a selection comparison."},{"criterion":"work","status":"demonstrated","quotes":["n/2^k = 1 gives k = log2(n). Work includes every call in every branch, but both cases have logarithmic total work because their depths match."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"error","quotes":["n/2^k = 1 gives k = log2(n). Work includes every call in every branch, but both cases have logarithmic total work because their depths match."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]},"hinted":{"response":"After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work.","observations":[{"criterion":"reductions","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"logarithm","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"work","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"demonstrated","quotes":["After k halvings, n/2^k = 1, so k = log2(n). Constant work applies to every call: one branch has k+1 calls; two branches have 2n-1. Equal logarithmic depth does not mean equal total work."],"reason":"Authored assessment for a selection comparison."}],"assistance":[{"timing":"current","targets":["reductions","logarithm","work","integration"],"text":"The answer was supplied as part of the worked explanation."}]}}},{"id":"material.math.explain","label":"Explain repeated halving and logarithms","kind":"check","seconds":{"setup":0,"answer":30,"feedback":5},"version":1,"rubric_version":1,"prompt":"Let n=2^k. Explain how many halvings reduce n to 1, and why the count is logarithmic.","criteria":[{"id":"reductions","rule":"Express repeated halving as n/2^k = 1 or an equivalent explanation."},{"id":"logarithm","rule":"Connect the number of reductions to log2(n)."}],"coverage":[{"target":"material.math.explain","criteria":["reductions","logarithm"],"authoredFor":{"version":1,"content":[{"id":"material.math.halving","version":1}],"action":"Connect successive halving to the number of reductions.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"After k halvings n/2^k = 1, so k = log2(n).","observations":[{"criterion":"reductions","status":"demonstrated","quotes":["After k halvings n/2^k = 1, so k = log2(n)."],"reason":"Authored assessment for a selection comparison."},{"criterion":"logarithm","status":"demonstrated","quotes":["After k halvings n/2^k = 1, so k = log2(n)."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]}}},{"id":"material.math.work","label":"Count the work across calls","kind":"check","seconds":{"setup":0,"answer":30,"feedback":5},"version":1,"rubric_version":1,"prompt":"A procedure branches into smaller calls. Each call, including a size-1 call, does constant local work. Explain what must be counted to determine total work.","criteria":[{"id":"work","rule":"Include calls in every continuing branch when counting total work."}],"coverage":[{"target":"material.math.work","criteria":["work"],"authoredFor":{"version":1,"content":[{"id":"material.math.work","version":1}],"action":"Count work across every continuing branch.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"Count the work of every call in every continuing branch.","observations":[{"criterion":"work","status":"demonstrated","quotes":["Count the work of every call in every continuing branch."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]}}},{"id":"material.math.integrate","label":"Connect equal depth with different total work","kind":"check","seconds":{"setup":0,"answer":35,"feedback":5},"version":1,"rubric_version":1,"prompt":"Two procedures start at n=2^k, stop at size 1 and do constant local work per call. One continues in one half; the other continues in both halves. A colleague says equal depth means equal total work. Evaluate that claim, accounting for every call.","criteria":[{"id":"work","rule":"Include calls in every continuing branch when counting total work."},{"id":"integration","rule":"Distinguish one path of k+1 calls from the two-branch tree of 2n-1 calls; equal depth does not imply equal total work."}],"coverage":[{"target":"material.math.integrate","criteria":["integration","work"],"authoredFor":{"version":1,"content":[{"id":"material.math.composition","version":1}],"action":"Distinguish one branch from two and justify the resulting total work.","mode":"explanation","conditions":"Use the supplied situation without an answer hint. Earlier teaching remains in context."}}],"status":"usable","samples":{"correct":{"response":"Every call counts: one path has k+1 calls and two branches give 2n-1 calls. Equal depth does not imply equal work.","observations":[{"criterion":"work","status":"demonstrated","quotes":["Every call counts: one path has k+1 calls and two branches give 2n-1 calls. Equal depth does not imply equal work."],"reason":"Authored assessment for a selection comparison."},{"criterion":"integration","status":"demonstrated","quotes":["Every call counts: one path has k+1 calls and two branches give 2n-1 calls. Equal depth does not imply equal work."],"reason":"Authored assessment for a selection comparison."}],"assistance":[]}}}],"omitted":[{"detail":"A separate timed complexity-label drill","reason":"Fluent recall is available as a capability but is not selected for the explanation goal."}]},"budget":180}};
+const copy=x=>JSON.parse(JSON.stringify(x)),el=id=>document.getElementById(id);
+let current='math',example,pack,state,session,trace=[];
+function button(label,fn){const b=document.createElement('button');b.textContent=label;b.onclick=fn;return b;}
+function decision(){return S.choose(pack.data,state,pack.catalog,session);}
+function load(key){current=key;example=copy(EXAMPLES[key]);pack=A.prepare(example.library,example.draft);state=NextSession.empty();session=S.start(example.budget,'current');trace=[];render();}
+function answer(outcome){const d=decision();if(!d.action)return;const r=A.bind(d.action,outcome,'page-answer-'+trace.length),out=S.complete(pack.data,state,pack.catalog,session,d.action.id,r,S.cost(d.action));state=out.state;session=out.session;trace.push({action:d.action.id,response:r.input.response,observations:out.event.observations.map(o=>({target:o.target,result:o.result,assisted:o.assisted})),next:out.decision.action?.label||out.decision.reason});render();}
+function render(){
+ el('source').textContent=example.source.text.split('\n').map((line,i)=>`${i+1}. ${line}`).join('\n');
+ el('units').replaceChildren();for(const u of example.draft.units){const p=document.createElement('p');p.setAttribute('class','unit');p.textContent=u.statement+' Scope: '+u.scope+' Source lines: '+u.refs.map(r=>`${r.start}–${r.end}`).join(', ')+(u.dependsOn.length?' Builds on: '+u.dependsOn.map(r=>r.id.replace('material.math.','')).join(', ')+'.':'');el('units').append(p);}
+ el('targets').replaceChildren();for(const t of example.draft.targets.filter(t=>example.draft.selected.includes(t.id))){const p=document.createElement('p');p.textContent=t.label+' — '+t.action;el('targets').append(p);}
+ el('groups').textContent=example.draft.groups.length?'Keep the parts connected: '+example.draft.groups.map(g=>g.structure).join(' '):'One association needs one recall target.';
+ const held=pack.held.map(h=>h.target+': '+h.reasons.join(' ')),tasks=pack.heldExercises.map(h=>h.exercise+': '+h.reasons.join(' '));
+ el('held').textContent=[...held,...tasks,...pack.noExercise.map(id=>id+': no usable exercise yet.')].join('\n')||'No flagged issues in this authored example. Its content has been inspected by the example author; this does not establish independent teaching quality.';
+ const d=decision();el('exercise').textContent=d.action?.exercise.prompt||'No eligible task is available for the current state.';
+ el('next').textContent=(pack.held.length||pack.noExercise.length?'Some requested learning targets remain on hold. ':'')+d.reason;
+ el('answers').replaceChildren();if(d.action)for(const outcome of Object.keys(d.action.samples)){const labels={correct:'Use the supplied correct answer',error:'Use the supplied connection error',partial:'Use an answer that omits the connection',hinted:'Use an answer with help'};el('answers').append(button(labels[outcome]||outcome,()=>answer(outcome)));}
+ el('trace').textContent=trace.length?JSON.stringify(trace,null,2):'No learner evidence has been created. The proposed exercise is not evidence of knowledge.';
+ el('state').textContent=JSON.stringify({revision:example.draft.revision,requested:pack.requested,held:pack.held,unserved:pack.noExercise,units:example.draft.units,targets:pack.data.targets,catalog:pack.catalog.map(a=>a.exercise),events:state.events,session},null,2);
+}
+for(const [key,label] of [['math','Connected explanation'],['fact','One association'],['doubtful','An unsupported proposal']])el('scenarios').append(button(label,()=>load(key)));
+el('reset').onclick=()=>load(current);
+el('edit').onclick=()=>{const u=example.draft.units[0];example.draft=A.revise(example.draft,u.id,{scope:u.scope+' Recheck this explicit condition before using the revised version.'});pack=A.prepare(example.library,example.draft);render();};
+el('walk').onclick=()=>{load(current);for(const outcome of current==='math'?['error','correct','correct']:['correct']){const d=decision();if(!d.action)break;answer(outcome);}};
+load('math');
+</script></body></html>

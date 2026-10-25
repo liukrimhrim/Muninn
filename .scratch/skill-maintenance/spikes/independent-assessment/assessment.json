@@ -1,0 +1,563 @@
+{
+  "assessor": "Current Codex chat; selected human annotations withheld during assessment. The public corpus may have appeared in model training.",
+  "input_sha256": "d76a87c6a297cbcbd67f91a72894ca782adf7e9812bd81e0f1b33672a952f993",
+  "protocol_sha256": "d9105b04912e863dd4f29a4ae66bea37b98ab3caf433495940ab7aa64fd58ebc",
+  "records": [
+    {
+      "case_id": "SE.27b.116.1",
+      "observations": [
+        {
+          "criterion": "SE_27b_f3",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The answer refers to he but does not express the student-finger ownership relation; the premise is supplied by the question."
+        },
+        {
+          "criterion": "SE_27b_f2",
+          "status": "error",
+          "quotes": [
+            "the temperature could go down 3 degrees"
+          ],
+          "reason": "This explicitly predicts a decrease rather than the higher reading in the stated reference situation."
+        },
+        {
+          "criterion": "SE_27b_f6",
+          "status": "error",
+          "quotes": [
+            "he will take some of the heat of the ball"
+          ],
+          "reason": "Taking heat away and lowering the reading contradicts the warming effect in the reference."
+        },
+        {
+          "criterion": "SE_27b_f4",
+          "status": "demonstrated",
+          "quotes": [
+            "he will take some of the heat of the ball"
+          ],
+          "reason": "In context the person holding the bulb causes a temperature change through contact. The direction is wrong, but attribution to the contacting person is present."
+        }
+      ],
+      "next": {
+        "kind": "practice",
+        "targets": [
+          "SE_27b_f2",
+          "SE_27b_f6"
+        ],
+        "text": "Contrast the direction of heat transfer and the resulting reading.",
+        "reason": "The stated cooling prediction is an explicit error. Teach the connected cause/effect once, not two independent drills."
+      },
+      "alternatives": [
+        "The numerical three-degree claim is unsupported but does not identify a separate stable weakness.",
+        "The physical answer assumes the hand is warmer than the surrounding medium, as the reference does."
+      ]
+    },
+    {
+      "case_id": "SE.27b.333.1",
+      "observations": [
+        {
+          "criterion": "SE_27b_f3",
+          "status": "demonstrated",
+          "quotes": [
+            "your hand"
+          ],
+          "reason": "The possessive identifies the contacting body part as the person’s own; hand is a reasonable equivalent for finger in this context."
+        },
+        {
+          "criterion": "SE_27b_f2",
+          "status": "error",
+          "quotes": [
+            "Yes"
+          ],
+          "reason": "As an answer to would the temperature read the same, Yes predicts no change rather than a higher reading."
+        },
+        {
+          "criterion": "SE_27b_f6",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The unclear air-barrier explanation does not express a warming effect; do not infer a separate mechanism error from the wrong overall prediction alone."
+        },
+        {
+          "criterion": "SE_27b_f4",
+          "status": "cannot_judge",
+          "quotes": [
+            "if you put your hand on the round part the air is not going to feel thermometer"
+          ],
+          "reason": "Contact is mentioned, but the air-feeling explanation does not make clear whether hand contact is understood to change the bulb temperature."
+        }
+      ],
+      "next": {
+        "kind": "follow_up",
+        "targets": [
+          "SE_27b_f2",
+          "SE_27b_f4"
+        ],
+        "text": "Do you mean the reading stays the same, and what effect does your hand have on the bulb?",
+        "reason": "Clarifying the awkward wording can change whether temperature-change teaching is warranted.",
+        "branches": {
+          "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+          "wrong": "Offer focused help only for the explicit mistaken relationship.",
+          "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+        }
+      },
+      "alternatives": [
+        "Yes could be a response-form mistake; it cannot be silently reinterpreted as No.",
+        "The stated air explanation is unclear and may involve a different causal model."
+      ]
+    },
+    {
+      "case_id": "SE.27b.313.1",
+      "observations": [
+        {
+          "criterion": "SE_27b_f3",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "No ownership or finger statement is supplied by the response itself."
+        },
+        {
+          "criterion": "SE_27b_f2",
+          "status": "demonstrated",
+          "quotes": [
+            "increase the number"
+          ],
+          "reason": "Absorbing heat and increasing the reading expresses the higher measured temperature."
+        },
+        {
+          "criterion": "SE_27b_f6",
+          "status": "demonstrated",
+          "quotes": [
+            "it would absorb the heat and increase the number"
+          ],
+          "reason": "The response connects heat absorption to an increased thermometer reading, expressing warming."
+        },
+        {
+          "criterion": "SE_27b_f4",
+          "status": "demonstrated",
+          "quotes": [
+            "because it would absorb the heat"
+          ],
+          "reason": "As the explanation of what changes when holding the bulb, this reasonably implies heat from the contacting hand; the referent is supplied by the question."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The heating explanation is sufficient for these selected relationships.",
+        "reason": "Do not demand the exact reference wording."
+      },
+      "alternatives": [
+        "The heat source is implicit in the question-answer context rather than independently named.",
+        "Nothing here establishes durable retention."
+      ]
+    },
+    {
+      "case_id": "MS.50b.136.1",
+      "observations": [
+        {
+          "criterion": "MS_50b_f4",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The answer describes getting consistent units and measurements, not people understanding a communicated measurement."
+        },
+        {
+          "criterion": "MS_50b_f2",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "Communication to another person is not stated."
+        },
+        {
+          "criterion": "MS_50b_f1",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "Same measurement expresses consistency but does not itself say the measurement is communicated."
+        },
+        {
+          "criterion": "MS_50b_f5",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "Understanding what a reported measurement means is not expressed; the response discusses consistency."
+        }
+      ],
+      "next": {
+        "kind": "follow_up",
+        "targets": [
+          "MS_50b_f1",
+          "MS_50b_f5"
+        ],
+        "text": "How would knowing the unit help Jen understand the reported 28 degrees?",
+        "reason": "The answer gives a plausible consistency benefit. One application can distinguish the communication relationship without assuming it is missing.",
+        "branches": {
+          "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+          "wrong": "Offer focused help only for the explicit mistaken relationship.",
+          "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+        }
+      },
+      "alternatives": [
+        "The student may understand communication but have chosen another valid benefit of standardization.",
+        "No explicit contradictory belief is shown."
+      ]
+    },
+    {
+      "case_id": "MS.50b.141.1",
+      "observations": [
+        {
+          "criterion": "MS_50b_f4",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "Calling a unit important provides no people-knowing relationship."
+        },
+        {
+          "criterion": "MS_50b_f2",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "No communication to people is described."
+        },
+        {
+          "criterion": "MS_50b_f1",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "No communication of a measurement is described."
+        },
+        {
+          "criterion": "MS_50b_f5",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The response does not explain interpreting the measurement."
+        }
+      ],
+      "next": {
+        "kind": "follow_up",
+        "targets": [
+          "MS_50b_f1",
+          "MS_50b_f5"
+        ],
+        "text": "What could Jen misunderstand if Bill only said 28 without naming the unit?",
+        "reason": "The response repeats importance without giving a reason. A concrete application would change the need for support.",
+        "branches": {
+          "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+          "wrong": "Offer focused help only for the explicit mistaken relationship.",
+          "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+        }
+      },
+      "alternatives": [
+        "The brief answer may reflect expression or task engagement rather than lack of knowledge."
+      ]
+    },
+    {
+      "case_id": "MS.50b.311.1",
+      "observations": [
+        {
+          "criterion": "MS_50b_f4",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "To know how to do it is a generic procedural purpose, not evidence that people understand the reported measurement in this target."
+        },
+        {
+          "criterion": "MS_50b_f2",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The response does not describe communicating with another person."
+        },
+        {
+          "criterion": "MS_50b_f1",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The response gives no measurement-communication relationship."
+        },
+        {
+          "criterion": "MS_50b_f5",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "Knowing the best way to do something does not establish understanding what a measurement means."
+        }
+      ],
+      "next": {
+        "kind": "clarify",
+        "targets": [
+          "MS_50b_f5"
+        ],
+        "text": "What do you mean by do it in the weather example?",
+        "reason": "The referent is unclear; resolve the wording before diagnosing a knowledge gap."
+      },
+      "alternatives": [
+        "It could refer to measuring, choosing an action, or interpreting the weather; the response does not settle which."
+      ]
+    },
+    {
+      "case_id": "ME.36.185.1",
+      "observations": [
+        {
+          "criterion": "ME_36_f8",
+          "status": "demonstrated",
+          "quotes": [
+            "In a parallel circuit the energy flows straight to the bulb"
+          ],
+          "reason": "The generic the bulb in a description of parallel operation applies to a bulb on its branch, rather than a singled-out exceptional bulb."
+        },
+        {
+          "criterion": "ME_36_f4",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "A disconnection assertion does not describe the single pathway of a series circuit."
+        },
+        {
+          "criterion": "ME_36_f2",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The number of series bulbs is not expressed in the response."
+        },
+        {
+          "criterion": "ME_36_f18",
+          "status": "demonstrated",
+          "quotes": [
+            "In a parallel circuit the energy flows straight to the bulb, goes through and keeps going in a circuit."
+          ],
+          "reason": "In response to why the parallel bulbs are bright, this offers direct energy flow to the bulb as the explanation. The causal link is implicit in the question-answer structure."
+        }
+      ],
+      "next": {
+        "kind": "follow_up",
+        "targets": [
+          "ME_36_f4"
+        ],
+        "text": "What do you mean by a disconnection in the series circuit?",
+        "reason": "The explicit disconnection claim warrants checking continuity before teaching a path explanation. It is not evidence that the selected one-path facet was demonstrated.",
+        "branches": {
+          "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+          "wrong": "Offer focused help only for the explicit mistaken relationship.",
+          "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+        }
+      },
+      "alternatives": [
+        "The series disconnection assertion is a substantive concern outside the exact four-facet comparison. A full answer assessment must not declare the whole response correct from the selected parallel facets."
+      ]
+    },
+    {
+      "case_id": "ME.36.226.1",
+      "observations": [
+        {
+          "criterion": "ME_36_f8",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "Two or more appears to count parallel paths; it does not explicitly distribute a direct path to each bulb."
+        },
+        {
+          "criterion": "ME_36_f4",
+          "status": "demonstrated",
+          "quotes": [
+            "a series is only one way"
+          ],
+          "reason": "This directly states the single pathway in series."
+        },
+        {
+          "criterion": "ME_36_f2",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The two-or-more phrase contrasts pathways, not an explicit count of the two series bulbs."
+        },
+        {
+          "criterion": "ME_36_f18",
+          "status": "demonstrated",
+          "quotes": [
+            "bright in a parallel because parallel is 2 or more and a series is only one way. So parallel is stronger."
+          ],
+          "reason": "The response causally connects parallel brightness with multiple paths rather than one shared path; this is a reasonable paraphrase of the reference contrast."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The pathway contrast supports the selected explanation.",
+        "reason": "Do not require the exact wording direct path to credit a reasonable explanation."
+      },
+      "alternatives": [
+        "Stronger is vague and does not establish a precise electrical model.",
+        "The selected facets do not cover every aspect of the larger explanation."
+      ]
+    },
+    {
+      "case_id": "ME.36.214.1",
+      "observations": [
+        {
+          "criterion": "ME_36_f8",
+          "status": "demonstrated",
+          "quotes": [
+            "the bulbs are not sharing energy with each other"
+          ],
+          "reason": "This distributes separate energy access across the parallel bulbs, supporting each rather than a selected bulb."
+        },
+        {
+          "criterion": "ME_36_f4",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "Energy-sharing wording does not by itself state that the series bulbs share one pathway."
+        },
+        {
+          "criterion": "ME_36_f2",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "Each other need not specify exactly two bulbs independently of the task premise."
+        },
+        {
+          "criterion": "ME_36_f18",
+          "status": "demonstrated",
+          "quotes": [
+            "the lights are bright in a parallel because the bulbs are not sharing energy with each other"
+          ],
+          "reason": "The response explicitly links separate energy access in parallel to brightness; this is an informal equivalent of the reference explanation."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The parallel brightness explanation is sufficient for the selected relationship.",
+        "reason": "Do not turn informal wording into an unnecessary extra drill."
+      },
+      "alternatives": [
+        "Using each other’s energy is physically imprecise. The selected comparison does not validate a complete voltage/current explanation."
+      ]
+    },
+    {
+      "case_id": "LF.13b.478.1",
+      "observations": [
+        {
+          "criterion": "LF_13b_f2",
+          "status": "demonstrated",
+          "quotes": [
+            "The earth material will get smaller"
+          ],
+          "reason": "Getting smaller expresses wearing down the material."
+        },
+        {
+          "criterion": "LF_13b_f4",
+          "status": "demonstrated",
+          "quotes": [
+            "The earth material will get smaller"
+          ],
+          "reason": "As an answer to what happens during erosion, the stated reduction is located in erosion."
+        },
+        {
+          "criterion": "LF_13b_f3",
+          "status": "cannot_judge",
+          "quotes": [
+            "make new land"
+          ],
+          "reason": "New land could imply transport and deposition, but could also mean local reshaping; movement is not clear enough to credit."
+        },
+        {
+          "criterion": "LF_13b_f5",
+          "status": "cannot_judge",
+          "quotes": [
+            "make new land"
+          ],
+          "reason": "The erosion context is supplied, but whether movement is meant remains unresolved."
+        }
+      ],
+      "next": {
+        "kind": "follow_up",
+        "targets": [
+          "LF_13b_f3"
+        ],
+        "text": "What happens to the material after it is worn away?",
+        "reason": "One question can establish whether transport is intended and change whether transport practice is needed.",
+        "branches": {
+          "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+          "wrong": "Offer focused help only for the explicit mistaken relationship.",
+          "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+        }
+      },
+      "alternatives": [
+        "A deposition interpretation would support movement; the short phrase does not uniquely establish it."
+      ]
+    },
+    {
+      "case_id": "LF.13b.737.1",
+      "observations": [
+        {
+          "criterion": "LF_13b_f2",
+          "status": "demonstrated",
+          "quotes": [
+            "Earth materials get taken away"
+          ],
+          "reason": "Taking material away from the named locations expresses their erosion/wearing away."
+        },
+        {
+          "criterion": "LF_13b_f4",
+          "status": "demonstrated",
+          "quotes": [
+            "Earth materials get taken away from river banks, beaches, and island."
+          ],
+          "reason": "In the erosion question, the response describes this removal as the process being asked about."
+        },
+        {
+          "criterion": "LF_13b_f3",
+          "status": "demonstrated",
+          "quotes": [
+            "get taken away from river banks, beaches, and island"
+          ],
+          "reason": "Taken away from a location directly expresses movement of the material."
+        },
+        {
+          "criterion": "LF_13b_f5",
+          "status": "demonstrated",
+          "quotes": [
+            "Earth materials get taken away from river banks, beaches, and island."
+          ],
+          "reason": "The answer locates the described transport within the erosion process asked about."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The removal explanation covers these selected relationships.",
+        "reason": "Equivalent words are sufficient."
+      },
+      "alternatives": [
+        "This is one response, not a retention estimate."
+      ]
+    },
+    {
+      "case_id": "LF.13b.436.1",
+      "observations": [
+        {
+          "criterion": "LF_13b_f2",
+          "status": "demonstrated",
+          "quotes": [
+            "Earth materials are worn away"
+          ],
+          "reason": "The core predicate explicitly matches wearing away of material."
+        },
+        {
+          "criterion": "LF_13b_f4",
+          "status": "demonstrated",
+          "quotes": [
+            "Earth materials are worn away"
+          ],
+          "reason": "The reply asserts wearing away in the erosion context of the question."
+        },
+        {
+          "criterion": "LF_13b_f3",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "The response states wearing away, but does not separately express material transport."
+        },
+        {
+          "criterion": "LF_13b_f5",
+          "status": "not_shown",
+          "quotes": [],
+          "reason": "No movement event is supplied to locate during erosion."
+        }
+      ],
+      "next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The wearing-away relationship is supported.",
+        "reason": "Retain movement as unobserved, without claiming a misconception or forcing a completeness quiz."
+      },
+      "alternatives": [
+        "The final phrase is unclear; do not silently change I see to ice.",
+        "The clear core clause remains assessable despite the unclear ending."
+      ]
+    }
+  ],
+  "pre_reveal_design_note": "Some source facets describe grammatical possession or task-supplied counts, not useful standalone learning targets. Preserve this distinction instead of treating every linguistic facet as a practice unit. This concern was recorded before reference reveal."
+}

@@ -1,0 +1,1229 @@
+{
+  "scope": "Synthetic authored walkthroughs using the exact HTML model. No automated natural-language assessment, real learner, retention effect, or browser interaction is simulated.",
+  "results": [
+    {
+      "subject": "binary",
+      "case": "One missing component",
+      "attempts": 5,
+      "probes": 0,
+      "seconds": 345,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Try the larger exercise; expose only the uncertain piece",
+          "kind": "initial",
+          "target": 5,
+          "next": "probe",
+          "nextTarget": 2,
+          "unresolved": [
+            2
+          ],
+          "reason": "There is no supported component gap yet. Check “Powers of two and logarithms”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "Miss the component probe",
+          "kind": "probe",
+          "target": 2,
+          "next": "repair",
+          "nextTarget": 2,
+          "unresolved": [
+            2
+          ],
+          "reason": "The response directly exposed a gap in “Powers of two and logarithms”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 2,
+          "next": "check",
+          "nextTarget": 2,
+          "unresolved": [
+            2
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 2,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "binary",
+      "case": "A missing connection",
+      "attempts": 5,
+      "probes": 0,
+      "seconds": 345,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Try the larger exercise; expose only the uncertain piece",
+          "kind": "initial",
+          "target": 5,
+          "next": "probe",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "There is no supported component gap yet. Check “Connect halving to logarithmic growth”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "Miss the relationship probe",
+          "kind": "probe",
+          "target": 3,
+          "next": "repair",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "The response directly exposed a gap in “Connect halving to logarithmic growth”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 3,
+          "next": "check",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 3,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "binary",
+      "case": "Choosing the rule",
+      "attempts": 4,
+      "probes": 0,
+      "seconds": 315,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Try the larger exercise; expose only the uncertain piece",
+          "kind": "initial",
+          "target": 5,
+          "next": "repair",
+          "nextTarget": 4,
+          "unresolved": [
+            4
+          ],
+          "reason": "The response directly exposed a gap in “Choose when the method applies”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 4,
+          "next": "check",
+          "nextTarget": 4,
+          "unresolved": [
+            4
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 4,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "binary",
+      "case": "Two gaps",
+      "attempts": 6,
+      "probes": 0,
+      "seconds": 390,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Observe two separate gaps",
+          "kind": "initial",
+          "target": 5,
+          "next": "repair",
+          "nextTarget": 0,
+          "unresolved": [
+            0,
+            2
+          ],
+          "reason": "The response directly exposed a gap in “Ordered-search condition”. Focus there first. Other observed gaps remain queued. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 0,
+          "next": "check",
+          "nextTarget": 0,
+          "unresolved": [
+            0,
+            2
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 0,
+          "next": "repair",
+          "nextTarget": 2,
+          "unresolved": [
+            2
+          ],
+          "reason": "The response directly exposed a gap in “Powers of two and logarithms”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 2,
+          "next": "check",
+          "nextTarget": 2,
+          "unresolved": [
+            2
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 2,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "binary",
+      "case": "Success hides a gap",
+      "attempts": 5,
+      "probes": 0,
+      "seconds": 345,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Try the larger exercise; expose only the uncertain piece",
+          "kind": "initial",
+          "target": 5,
+          "next": "probe",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "There is no supported component gap yet. Check “Connect halving to logarithmic growth”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "Reveal the relationship gap",
+          "kind": "probe",
+          "target": 3,
+          "next": "repair",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "The response directly exposed a gap in “Connect halving to logarithmic growth”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 3,
+          "next": "check",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 3,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "binary",
+      "case": "Revise the diagnosis",
+      "attempts": 8,
+      "probes": 0,
+      "seconds": 540,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Try the larger exercise; expose only the uncertain piece",
+          "kind": "initial",
+          "target": 5,
+          "next": "probe",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "There is no supported component gap yet. Check “Connect halving to logarithmic growth”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "Locate the connection gap",
+          "kind": "probe",
+          "target": 3,
+          "next": "repair",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "The response directly exposed a gap in “Connect halving to logarithmic growth”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 3,
+          "next": "check",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 3,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "A fresh larger attempt contradicts an earlier strength",
+          "kind": "recheck",
+          "target": 5,
+          "next": "repair",
+          "nextTarget": 0,
+          "unresolved": [
+            0
+          ],
+          "reason": "The response directly exposed a gap in “Ordered-search condition”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 0,
+          "next": "check",
+          "nextTarget": 0,
+          "unresolved": [
+            0
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 0,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "binary",
+      "case": "Uncertain: stop probing",
+      "attempts": 4,
+      "probes": 3,
+      "seconds": 210,
+      "final": "pause",
+      "settled": false,
+      "trace": [
+        {
+          "action": "Record failure with no attributable observations",
+          "kind": "initial",
+          "target": 5,
+          "next": "probe",
+          "nextTarget": 0,
+          "unresolved": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "There is no supported component gap yet. Check “Ordered-search condition”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "The first probe is inconclusive",
+          "kind": "probe",
+          "target": 0,
+          "next": "probe",
+          "nextTarget": 1,
+          "unresolved": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "There is no supported component gap yet. Check “Eliminate the correct half”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "The next probe is inconclusive",
+          "kind": "probe",
+          "target": 1,
+          "next": "probe",
+          "nextTarget": 2,
+          "unresolved": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "There is no supported component gap yet. Check “Powers of two and logarithms”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "Still inconclusive: stop",
+          "kind": "probe",
+          "target": 2,
+          "next": "pause",
+          "unresolved": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "The 3-question diagnosis limit is reached. 5 component possibilities remain unresolved, along with integration or a slip. No exact cause is established. Increase the explicit limit or return in another session."
+        }
+      ]
+    },
+    {
+      "subject": "binary",
+      "case": "Hints and later checks",
+      "attempts": 3,
+      "probes": 0,
+      "seconds": 360,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Complete the larger exercise with help",
+          "kind": "initial",
+          "target": 5,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        },
+        {
+          "action": "Simulate seven days passing",
+          "kind": "wait",
+          "next": "delayed",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "Check the connected knowledge after a simulated delay using another authored example. Advancing time is not evidence of retention."
+        },
+        {
+          "action": "Pass the reserved later example",
+          "kind": "delayed",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 14; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "binary",
+      "case": "The parts pass; the whole fails",
+      "attempts": 3,
+      "probes": 0,
+      "seconds": 285,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Observe components without a coherent whole",
+          "kind": "initial",
+          "target": 5,
+          "next": "repair",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The separate component checks passed, but the connected response failed its criterion. Practice combining the parts, then retry a larger example. Integration difficulty is a working explanation; a slip remains possible."
+        },
+        {
+          "action": "Practice connecting the pieces",
+          "kind": "repair",
+          "target": 5,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "grammar",
+      "case": "One missing component",
+      "attempts": 5,
+      "probes": 0,
+      "seconds": 345,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Try the larger exercise; expose only the uncertain piece",
+          "kind": "initial",
+          "target": 5,
+          "next": "probe",
+          "nextTarget": 2,
+          "unresolved": [
+            2
+          ],
+          "reason": "There is no supported component gap yet. Check “Recall the verb forms”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "Miss the component probe",
+          "kind": "probe",
+          "target": 2,
+          "next": "repair",
+          "nextTarget": 2,
+          "unresolved": [
+            2
+          ],
+          "reason": "The response directly exposed a gap in “Recall the verb forms”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 2,
+          "next": "check",
+          "nextTarget": 2,
+          "unresolved": [
+            2
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 2,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "grammar",
+      "case": "A missing connection",
+      "attempts": 5,
+      "probes": 0,
+      "seconds": 345,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Try the larger exercise; expose only the uncertain piece",
+          "kind": "initial",
+          "target": 5,
+          "next": "probe",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "There is no supported component gap yet. Check “Connect the head to its verb”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "Miss the relationship probe",
+          "kind": "probe",
+          "target": 3,
+          "next": "repair",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "The response directly exposed a gap in “Connect the head to its verb”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 3,
+          "next": "check",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 3,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "grammar",
+      "case": "Choosing the rule",
+      "attempts": 4,
+      "probes": 0,
+      "seconds": 315,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Try the larger exercise; expose only the uncertain piece",
+          "kind": "initial",
+          "target": 5,
+          "next": "repair",
+          "nextTarget": 4,
+          "unresolved": [
+            4
+          ],
+          "reason": "The response directly exposed a gap in “Choose the question pattern”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 4,
+          "next": "check",
+          "nextTarget": 4,
+          "unresolved": [
+            4
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 4,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "grammar",
+      "case": "Two gaps",
+      "attempts": 6,
+      "probes": 0,
+      "seconds": 390,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Observe two separate gaps",
+          "kind": "initial",
+          "target": 5,
+          "next": "repair",
+          "nextTarget": 0,
+          "unresolved": [
+            0,
+            2
+          ],
+          "reason": "The response directly exposed a gap in “Find the subject head”. Focus there first. Other observed gaps remain queued. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 0,
+          "next": "check",
+          "nextTarget": 0,
+          "unresolved": [
+            0,
+            2
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 0,
+          "next": "repair",
+          "nextTarget": 2,
+          "unresolved": [
+            2
+          ],
+          "reason": "The response directly exposed a gap in “Recall the verb forms”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 2,
+          "next": "check",
+          "nextTarget": 2,
+          "unresolved": [
+            2
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 2,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "grammar",
+      "case": "Success hides a gap",
+      "attempts": 5,
+      "probes": 0,
+      "seconds": 345,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Try the larger exercise; expose only the uncertain piece",
+          "kind": "initial",
+          "target": 5,
+          "next": "probe",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "There is no supported component gap yet. Check “Connect the head to its verb”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "Reveal the relationship gap",
+          "kind": "probe",
+          "target": 3,
+          "next": "repair",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "The response directly exposed a gap in “Connect the head to its verb”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 3,
+          "next": "check",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 3,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "grammar",
+      "case": "Revise the diagnosis",
+      "attempts": 8,
+      "probes": 0,
+      "seconds": 540,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Try the larger exercise; expose only the uncertain piece",
+          "kind": "initial",
+          "target": 5,
+          "next": "probe",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "There is no supported component gap yet. Check “Connect the head to its verb”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "Locate the connection gap",
+          "kind": "probe",
+          "target": 3,
+          "next": "repair",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "The response directly exposed a gap in “Connect the head to its verb”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 3,
+          "next": "check",
+          "nextTarget": 3,
+          "unresolved": [
+            3
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 3,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "A fresh larger attempt contradicts an earlier strength",
+          "kind": "recheck",
+          "target": 5,
+          "next": "repair",
+          "nextTarget": 0,
+          "unresolved": [
+            0
+          ],
+          "reason": "The response directly exposed a gap in “Find the subject head”. Focus there first. This does not explain every part of the larger result."
+        },
+        {
+          "action": "Read and restate the targeted explanation",
+          "kind": "repair",
+          "target": 0,
+          "next": "check",
+          "nextTarget": 0,
+          "unresolved": [
+            0
+          ],
+          "reason": "Feedback supplied practice, not independent evidence. Try a different focused prompt without help before returning to the larger task."
+        },
+        {
+          "action": "Pass the independent focused check",
+          "kind": "check",
+          "target": 0,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "grammar",
+      "case": "Uncertain: stop probing",
+      "attempts": 4,
+      "probes": 3,
+      "seconds": 210,
+      "final": "pause",
+      "settled": false,
+      "trace": [
+        {
+          "action": "Record failure with no attributable observations",
+          "kind": "initial",
+          "target": 5,
+          "next": "probe",
+          "nextTarget": 0,
+          "unresolved": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "There is no supported component gap yet. Check “Find the subject head”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "The first probe is inconclusive",
+          "kind": "probe",
+          "target": 0,
+          "next": "probe",
+          "nextTarget": 1,
+          "unresolved": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "There is no supported component gap yet. Check “Identify subject number”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "The next probe is inconclusive",
+          "kind": "probe",
+          "target": 1,
+          "next": "probe",
+          "nextTarget": 2,
+          "unresolved": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "There is no supported component gap yet. Check “Recall the verb forms”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested."
+        },
+        {
+          "action": "Still inconclusive: stop",
+          "kind": "probe",
+          "target": 2,
+          "next": "pause",
+          "unresolved": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "The 3-question diagnosis limit is reached. 5 component possibilities remain unresolved, along with integration or a slip. No exact cause is established. Increase the explicit limit or return in another session."
+        }
+      ]
+    },
+    {
+      "subject": "grammar",
+      "case": "Hints and later checks",
+      "attempts": 3,
+      "probes": 0,
+      "seconds": 360,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Complete the larger exercise with help",
+          "kind": "initial",
+          "target": 5,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        },
+        {
+          "action": "Simulate seven days passing",
+          "kind": "wait",
+          "next": "delayed",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "Check the connected knowledge after a simulated delay using another authored example. Advancing time is not evidence of retention."
+        },
+        {
+          "action": "Pass the reserved later example",
+          "kind": "delayed",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 14; lasting retention is still untested."
+        }
+      ]
+    },
+    {
+      "subject": "grammar",
+      "case": "The parts pass; the whole fails",
+      "attempts": 3,
+      "probes": 0,
+      "seconds": 285,
+      "final": "wait",
+      "settled": true,
+      "trace": [
+        {
+          "action": "Observe components without a coherent whole",
+          "kind": "initial",
+          "target": 5,
+          "next": "repair",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The separate component checks passed, but the connected response failed its criterion. Practice combining the parts, then retry a larger example. Integration difficulty is a working explanation; a slip remains possible."
+        },
+        {
+          "action": "Practice connecting the pieces",
+          "kind": "repair",
+          "target": 5,
+          "next": "recheck",
+          "nextTarget": 5,
+          "unresolved": [],
+          "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop."
+        },
+        {
+          "action": "Pass a different integrated exercise",
+          "kind": "recheck",
+          "target": 5,
+          "next": "wait",
+          "unresolved": [],
+          "reason": "This larger response met every criterion independently. Stop separate prompts for this session. A later integrated check is reserved for simulated day 7; lasting retention is still untested."
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "shortBudget": {
+      "before": {
+        "kind": "pause",
+        "reason": "The next useful step is “Larger exercise” (120 estimated seconds), but only 60 remain. Preserve the unresolved needs and continue in another planning session.",
+        "planned": {
+          "kind": "initial",
+          "target": 5,
+          "group": true,
+          "criteria": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "cost": 120,
+          "title": "Larger exercise",
+          "prompt": "Two arrays contain 64 distinct IDs each. One is sorted and one is shuffled. Choose the array where a midpoint value comparison can safely eliminate a side, and explain why.\nFor the ideal model that halves the candidate count each step, how many halvings leave one candidate? Derive the general relation between starting size n and halving count k.",
+          "answer": "Choose the sorted array. Order lets a midpoint comparison rule out the side whose values cannot match. After k ideal halvings, n/2^k = 1, so k = log₂(n). Starting with 64 gives 6 halvings. This counts ideal halvings, not the exact comparisons of a particular implementation.",
+          "reason": "Start with a connected task. Its separate criteria may show useful strengths and gaps without a prerequisite quiz.",
+          "repeated": false
+        }
+      },
+      "after": {
+        "kind": "initial",
+        "target": 5,
+        "group": true,
+        "criteria": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "cost": 120,
+        "title": "Larger exercise",
+        "prompt": "Two arrays contain 64 distinct IDs each. One is sorted and one is shuffled. Choose the array where a midpoint value comparison can safely eliminate a side, and explain why.\nFor the ideal model that halves the candidate count each step, how many halvings leave one candidate? Derive the general relation between starting size n and halving count k.",
+        "answer": "Choose the sorted array. Order lets a midpoint comparison rule out the side whose values cannot match. After k ideal halvings, n/2^k = 1, so k = log₂(n). Starting with 64 gives 6 halvings. This counts ideal halvings, not the exact comparisons of a particular implementation.",
+        "reason": "Start with a connected task. Its separate criteria may show useful strengths and gaps without a prerequisite quiz.",
+        "repeated": false
+      }
+    },
+    "noAttribution": {
+      "storedEvidence": [],
+      "next": {
+        "kind": "probe",
+        "target": 0,
+        "group": false,
+        "criteria": [
+          0
+        ],
+        "cost": 30,
+        "title": "Ordered-search condition",
+        "prompt": "Why can a midpoint comparison rule out half of an alphabetized list, but not an arbitrary unsorted list?",
+        "answer": "In sorted order, every value on the discarded side is bounded by the midpoint. An unsorted list gives no such guarantee.",
+        "reason": "There is no supported component gap yet. Check “Ordered-search condition”: a miss leads to focused reinforcement; a pass narrows the remaining possibilities. Other candidates stay untested.",
+        "repeated": false
+      }
+    },
+    "purity": {
+      "inputUnchanged": true,
+      "afterTarget": 1
+    },
+    "contradictoryGrade": {
+      "kind": "pause",
+      "reason": "The rubric says every criterion passed, but the overall result is failed or unclear. Reconcile those judgments before attributing a knowledge gap. Undo the response to correct its assessment."
+    },
+    "assisted": {
+      "settled": false,
+      "next": {
+        "kind": "recheck",
+        "target": 5,
+        "group": true,
+        "criteria": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "cost": 120,
+        "title": "Integrated recheck",
+        "prompt": "Two arrays contain 16 distinct IDs each. One is sorted and one is shuffled. Choose the array where a midpoint value comparison can safely eliminate a side, and explain why.\nFor the ideal model that halves the candidate count each step, how many halvings leave one candidate? Derive the general relation between starting size n and halving count k.",
+        "answer": "Choose the sorted array. Order lets a midpoint comparison rule out the side whose values cannot match. After k ideal halvings, n/2^k = 1, so k = log₂(n). Starting with 16 gives 4 halvings. This counts ideal halvings, not the exact comparisons of a particular implementation.",
+        "reason": "The focused target has now passed, or the larger answer was completed with help. Test integration independently in a different larger example before closing the loop.",
+        "repeated": false
+      }
+    },
+    "unobservedIntegration": {
+      "kind": "recheck",
+      "target": 5,
+      "group": true,
+      "criteria": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "cost": 120,
+      "title": "Integrated recheck",
+      "prompt": "Two arrays contain 16 distinct IDs each. One is sorted and one is shuffled. Choose the array where a midpoint value comparison can safely eliminate a side, and explain why.\nFor the ideal model that halves the candidate count each step, how many halvings leave one candidate? Derive the general relation between starting size n and halving count k.",
+      "answer": "Choose the sorted array. Order lets a midpoint comparison rule out the side whose values cannot match. After k ideal halvings, n/2^k = 1, so k = log₂(n). Starting with 16 gives 4 halvings. This counts ideal halvings, not the exact comparisons of a particular implementation.",
+      "reason": "The separate components are supported, but integration was not clearly observed. Check a different larger example before assuming that integration needs repair.",
+      "repeated": false
+    }
+  }
+}

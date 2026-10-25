@@ -1,0 +1,19 @@
+{
+  "assessed_cases": 10,
+  "subjects": [
+    "Binary search",
+    "English grammar"
+  ],
+  "criteria": 45,
+  "quotes": 33,
+  "structural_errors": 0,
+  "human_comparisons": 0,
+  "human_status": "Pending; build does not read or manufacture human judgments.",
+  "grading_accuracy": null,
+  "limitations": [
+    "Constructed answers authored by the same assistant.",
+    "Assessment performed in the current chat, not an automated API call.",
+    "Quote validity is not semantic validity.",
+    "Browser layout and interaction not yet verified."
+  ]
+}

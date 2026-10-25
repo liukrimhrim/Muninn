@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clarify before choosing practice — prototype</title>
+<style>
+body{font:16px/1.6 system-ui,sans-serif;max-width:900px;margin:40px auto;padding:0 22px;color:#253831;background:#f5f7f5}h1{line-height:1.2}section{background:white;border:1px solid #cddbd2;border-radius:10px;padding:20px;margin:18px 0}button{font:inherit;padding:8px 12px;margin:4px;border:1px solid #91a99c;background:white;border-radius:6px;cursor:pointer}button:hover{background:#e5f0e9}blockquote{border-left:3px solid #25654c;padding-left:18px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem}.muted{color:#52655b}li{margin:8px 0}
+</style>
+<body><p class="muted">Throwaway logic experiment · no new exercise for you</p>
+<h1>Clarify before choosing practice</h1>
+<p>Can the system keep a possible error in the record while first checking what the answer means? This starts with an archived student answer and its frozen assessment. The follow-up answers are invented to let you explore the decision.</p>
+<section><h2>The original answer</h2><p id="prompt"></p><blockquote id="original"></blockquote><p class="muted">The pending later check is invented too. These selected assessment details are not an agreed curriculum.</p></section>
+<section><h2>Current decision</h2><p id="mode"></p><div id="decision" aria-live="polite"></div><h3>Evidence retained</h3><ul id="evidence"></ul><h3>Latest answer</h3><blockquote id="latest"></blockquote></section>
+<section><h2>Explore an outcome</h2><p>Each button adds a labelled example. Use Reset to try another branch from the original answer; adding the identical example twice adds no evidence.</p><div id="actions"></div><button id="reset">Reset to the archived answer</button></section>
+<section><h2>Guided examples</h2><div id="tabs"></div><p id="walk"></p><div id="steps"></div></section>
+<details><summary>Original records and full current state</summary><pre id="state"></pre></details>
+<footer class="muted"><p>Archived question and response: <a href="https://github.com/myrosia/semeval-2013-task7/tree/5157c69f914e8c581045c03e98f96398d40a91b8">SCIEntsBank, Dzikovska and Nielsen</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>. The selected and reformatted dataset material retains that license. Assessments and invented continuations are identified separately; no endorsement is implied.</p><p>This checks planning behavior, not assessment accuracy or learning benefit. No hints, responses or questions are sent to a learner. Browser layout remains unverified.</p></footer>
+<script>
+
+// Pure planning functions. Input assessments are authored, not produced by this module.
+const NextSession = (() => {
+ const results={demonstrated:'Demonstrated in this response',error:'Observed error',uncertain:'Unresolved interpretation'};
+ const empty=()=>({events:[]});
+ const append=(state,event)=>state.events.some(e=>e.id===event.id)?state:{events:[...state.events,event]};
+ const recorded=data=>data.events.reduce(append,empty());
+ function evidence(state,target){return state.events.flatMap(event=>event.observations.filter(o=>o.target===target).map(o=>({...o,event})));}
+ function status(state,target){const history=evidence(state,target),last=history.at(-1);return {history,last,label:last?(last.result==='demonstrated'&&last.assisted?'Correct with a hint':results[last.result]):'Not observed'};}
+ function contractConflicts(data,state){
+  const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+  return data.targets.filter(t=>state.events.some(e=>(e.planningAssessment?.observations??e.observations).some(o=>(o.criterion??o.target)===t.id&&stable(o.contract)!==stable(t.contract)))).map(t=>t.id);
+ }
+ function plan(data,state){
+  const now=[],later=[],perTarget={};
+  if(!state.events.length)return {now,later,perTarget,note:'No response evidence loaded yet.'};
+  const conflicts=contractConflicts(data,state);
+  if(conflicts.length)return {now:[{kind:'review',targets:conflicts,text:'The capability definition changed. Review the retained evidence under its original contract before choosing practice.'}],later,perTarget,note:'Older observations have not been reinterpreted.'};
+  const bundles=data.practiceBundles??Object.entries(data.groups||{}).map(([id,title])=>({id,title,targets:data.targets.filter(t=>t.group===id).map(t=>t.id)}));
+  // Clarification changes the action, never the original knowledge observation.
+  // Rebuild pending questions from history so unrelated answers cannot dismiss them.
+  const pending=new Map();
+  for(const event of state.events){
+   for(const o of event.observations)if(['demonstrated','error'].includes(o.result))pending.delete(o.target);
+   const assessment=event.planningAssessment??event.assessmentRecord?.assessment,question=assessment?.next;
+   const review={kind:'review',text:'Interpretation remains unresolved. Pause this target for assessment review.',reason:'The reply did not settle the pending interpretation; do not infer a knowledge gap.'};
+   for(const o of assessment?.observations||[])if(o.status==='cannot_judge'&&pending.has(o.criterion))pending.set(o.criterion,review);
+   if(['clarify','follow_up'].includes(question?.kind))for(const target of question.targets)pending.set(target,question);
+  }
+  const questions=new Map();
+  for(const target of data.targets){
+   const question=pending.get(target.id);if(!question)continue;
+   if(!questions.has(question))questions.set(question,[]);
+   questions.get(question).push(target.id);
+  }
+  for(const [question,targets] of questions){
+   // A partially answered multi-target question needs narrowing, not verbatim repetition.
+   const partial=question.targets&&targets.length<question.targets.length;
+   now.push(partial?{kind:'review',targets,text:'Part of the question is answered. Review only the remaining interpretation before choosing practice.',reason:question.reason}:{...question,targets});
+  }
+  const lastEvent=state.events.at(-1);
+  if(lastEvent.outcome==='failed'&&!lastEvent.observations.length)now.push({kind:'clarify',targets:[],reason:'The whole task failed without target evidence. Clarify what happened; do not label every component weak.'});
+  for(const target of data.targets){
+   const {last}=status(state,target.id);let action;
+   if(pending.has(target.id))action='Resolve the pending interpretation before choosing corrective practice.';
+   else if(last?.result==='error'){action='Offer focused help for this observed error.';now.push({kind:'help',targets:[target.id],reason:action});}
+   else if(last?.result==='uncertain'){action='Ask one question that can change the repair choice.';now.push({kind:'clarify',targets:[target.id],reason:action});}
+   else if(last?.issue==='accepted_misread')action='No extra remediation for the accepted misread.';
+   else if(bundles.some(b=>b.targets.includes(target.id))&&!(last?.event.phase==='later'&&last.result==='demonstrated'&&!last.assisted))action=last?'Include in the single later check.':'Not observed; retain the planned check without claiming a gap.';
+   else action=last?'No extra separate drill for this result.':'No demonstrated gap; ordinary scheduling is outside this demo.';
+   perTarget[target.id]=action;
+  }
+  const scheduled=new Set();
+  for(const bundle of bundles){
+   const targets=data.targets.filter(t=>bundle.targets.includes(t.id)&&!scheduled.has(t.id)).filter(t=>{const {last}=status(state,t.id);return pending.has(t.id)||!(last?.event.phase==='later'&&last.result==='demonstrated'&&!last.assisted);}).map(t=>t.id);
+   if(targets.length){later.push({kind:'combined_check',group:bundle.id,title:bundle.title,targets,reason:'Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it.'});targets.forEach(t=>scheduled.add(t));}
+  }
+  return {now,later,perTarget,note:now.length?'Address the specific concern; retain the other observations.':later.length?'Stop the current drill. The agreed combined check belongs in a later session.':'The observed targets need no extra drills in this hypothetical session. Real retention is still untested.'};
+ }
+ function hypothetical(kind){
+  const pass=target=>({target,result:'demonstrated',help:'Hypothetical later response without a new hint.'});
+  let observations=['ops.list','ops.logs','ops.source'].map(pass),outcome='completed';
+  if(kind==='command_error')observations[1]={target:'ops.logs',result:'error',help:'Hypothetical error without a hint.'};
+  if(kind==='source_unclear')observations[2]={target:'ops.source',result:'uncertain',help:'Hypothetical response does not settle the source choice.'};
+  if(kind==='source_hint')observations[2]={...pass('ops.source'),assisted:true,help:'Hypothetical source-location hint supplied.'};
+  if(kind==='partial')observations=observations.slice(0,2);
+  if(kind==='outcome_only'){observations=[];outcome='failed';}
+  return {id:'hypothetical-'+kind,attempt:'imagined-later-session',origin:'hypothetical',phase:'later',outcome,observations,why:'Invented assessment for exploring the policy; no learner answered this case.'};
+ }
+ return {empty,append,recorded,evidence,status,plan,hypothetical,contractConflicts};
+})();
+
+const B=(function createBridge(T, M) {
+ const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+ const present=s=>typeof s==='string'&&s.trim().length>0;
+ function connect(data, state, input, record) {
+  const errors=T.validateBound(input,record);
+  const criteria=input.exercise.criteria.map(c=>c.id), known=data.targets.map(t=>t.id);
+  const explicit=Object.hasOwn(input.exercise,'coverage'),coverage=input.exercise.coverage;
+  if(!explicit&&(criteria.some(id=>!known.includes(id))||new Set(criteria).size!==criteria.length))errors.push('Criteria must map once each to known planning targets.');
+  if(!explicit&&data.targets.some(t=>t.contract&&criteria.includes(t.id)))errors.push('Versioned capabilities require explicit exercise coverage.');
+  if(explicit){
+   if(!Array.isArray(coverage))errors.push('Coverage must be an array.');
+   else{
+    if(new Set(coverage.map(c=>c?.target)).size!==coverage.length)errors.push('Map each capability once per exercise.');
+    for(const c of coverage){
+     if(!c){errors.push('Each coverage entry needs a capability and required criteria.');continue;}
+     const target=data.targets.find(t=>t.id===c.target),contract=c.contract;
+     if(!target||!contract||stable(contract)!==stable(target.contract))errors.push('Coverage must match the current capability contract exactly.');
+     if(!contract||!Number.isInteger(contract.version)||contract.version<1||!['action','mode','conditions'].every(k=>present(contract[k]))||!Array.isArray(contract.content)||!contract.content.length||contract.content.some(r=>!present(r?.id)||!Number.isInteger(r.version)||r.version<1))errors.push('A capability contract needs a version, content references, action, mode and conditions.');
+     if(!Array.isArray(c.criteria)||!c.criteria.length||new Set(c.criteria).size!==c.criteria.length||c.criteria.some(id=>!criteria.includes(id)))errors.push('Coverage must name distinct existing required criteria.');
+    }
+   }
+   if(!present(input.exercise.id)||![input.exercise.version,input.exercise.rubric_version].every(v=>Number.isInteger(v)&&v>0))errors.push('Explicit coverage needs exercise and rubric versions.');
+   if(data.goal&&!sameTargets(data.goal.targets,known))errors.push('Planning targets must match the selected goal.');
+  }
+  if(!present(input.attempt?.id)||!['recorded','hypothetical'].includes(input.attempt?.origin)||!['current','later'].includes(input.attempt?.phase))errors.push('The caller must supply attempt identity, origin and phase.');
+  if(!Array.isArray(input.context)||new Set(input.context?.map(c=>c.id)).size!==input.context?.length)errors.push('Context must have distinct reference IDs.');
+  if(!Array.isArray(input.assistance)||input.assistance.some(h=>!['current','earlier'].includes(h.timing)||!present(h.text)||!Array.isArray(h.targets)||!h.targets.length||h.targets.some(t=>!(explicit?criteria:known).includes(t))))errors.push('Record help timing, text and known targets explicitly; explicit coverage uses rubric criterion IDs.');
+  if(errors.length)return {errors,state};
+  const a=record.assessment;
+  for(const o of a.observations){
+   if(o.issue!==undefined){
+    if(o.issue!=='supported_misread'||o.status!=='demonstrated'||!present(o.issue_reason)||!Array.isArray(o.context_quotes)||!o.context_quotes.length)errors.push('A supported misread needs a demonstrated correction, reason and prior learner evidence.');
+    for(const ref of o.context_quotes||[]){const c=input.context.find(c=>c.id===ref.id);if(c?.role!=='learner'||!present(ref.quote)||!c.text.includes(ref.quote))errors.push('Misread support must quote supplied learner context.');}
+   }
+  }
+  if(a.next.kind==='practice'&&a.next.targets.some(t=>!a.observations.some(o=>o.criterion===t&&o.status==='error')))errors.push('Every remedial target needs its own observed error.');
+  if(explicit&&a.next.targets.some(id=>!coverage.some(c=>c.criteria.includes(id))))errors.push('A next-action criterion must map to a selected capability.');
+  if(M.contractConflicts(data,state).length)errors.push('Retained evidence uses a different capability contract. Preserve that history and review the mapping explicitly.');
+  if(errors.length)return {errors,state};
+  let event={id:input.case_id,attempt:input.attempt.id,origin:input.attempt.origin,phase:input.attempt.phase,quote:input.response,
+   why:explicit?'Explicit criterion-to-capability mapping; structural validation is not semantic validation.':'Current-chat assessment under the version-2 protocol; structural validation is not semantic validation.',
+   assessmentRecord:record,
+   observations:a.observations.filter(o=>['demonstrated','error'].includes(o.status)).map(o=>{
+    const help=input.assistance.filter(h=>h.targets.includes(o.criterion));
+    return {target:o.criterion,result:o.status,quotes:o.quotes,reason:o.reason,assisted:help.some(h=>h.timing==='current'),
+     help:help.length?help.map(h=>`${h.timing}: ${h.text}`).join(' '):'No task-specific help recorded; outside help is not established.',
+     ...(o.issue==='supported_misread'?{issue:'accepted_misread'}:{})};
+   })};
+  if(explicit){
+   // All named criteria are required. Missing evidence cannot complete a capability;
+   // an observed error remains evidence even when another required part is absent.
+   const derived=coverage.map(c=>{
+    const rows=c.criteria.map(id=>a.observations.find(o=>o.criterion===id));
+    const status=['error','cannot_judge','not_shown','demonstrated'].find(s=>rows.some(o=>o.status===s));
+    const help=input.assistance.filter(h=>h.targets.some(id=>c.criteria.includes(id)));
+    return {criterion:c.target,status,contract:c.contract,criteria:c.criteria,
+     evidenceRefs:c.criteria.map(criterion=>({answer:input.case_id,attempt:input.attempt.id,exercise:input.exercise.id,exerciseVersion:input.exercise.version,rubricVersion:input.exercise.rubric_version,criterion})),
+     quotes:[...new Set(rows.flatMap(o=>o.quotes))],reason:rows.map(o=>`${o.criterion}: ${o.reason}`).join(' '),
+     assisted:help.some(h=>h.timing==='current'),help:help.length?help.map(h=>`${h.timing}: ${h.text}`).join(' '):'No task-specific help recorded; outside help is not established.',
+     ...(status==='demonstrated'&&rows.some(o=>o.issue==='supported_misread')?{issue:'accepted_misread'}:{})};
+   });
+   event.observations=derived.filter(o=>['demonstrated','error'].includes(o.status)).map(({criterion,status,...rest})=>({target:criterion,result:status,...rest}));
+   // The original bound assessment stays intact. Only this projection uses capability IDs.
+   event.planningAssessment={observations:derived,next:{...a.next,targets:[...new Set(a.next.targets.flatMap(id=>coverage.filter(c=>c.criteria.includes(id)).map(c=>c.target)))]}};
+   event=JSON.parse(JSON.stringify(event));
+  }
+  const existing=state.events.find(e=>e.id===event.id);
+  if(existing&&stable(existing)!==stable(event))return {errors:['This answer ID already has different content or an assessment. Keep the original; review the change explicitly.'],state};
+  // Missing or ambiguous evidence stays in the attached record, not in learner-failure state.
+  const next=M.append(state,event);
+  return {errors:[],state:next,event,plan:M.plan(data,next),unresolved:a.observations.filter(o=>o.status==='cannot_judge'),
+   unobserved:a.observations.filter(o=>o.status==='not_shown'),proposal:a.next};
+ }
+ function sameTargets(a,b){return Array.isArray(a)&&new Set(a).size===a.length&&stable([...a].sort())===stable([...b].sort());}
+ return {connect};
+}) ((function createTrial() {
+  const statuses = ['demonstrated', 'error', 'not_shown', 'cannot_judge'];
+  const kinds = ['follow_up', 'practice', 'fresh_check', 'clarify', 'stop'];
+  const stable = x => JSON.stringify(x, (_, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(k => [k, v[k]])) : v);
+  const nonempty = s => typeof s === 'string' && s.trim().length > 0;
+  function packet(data, id) {
+    const c = data.cases.find(c => c.id === id);
+    if (!c) throw Error(`Unknown case: ${id}`);
+    const exercise = data.exercises.find(e => e.id === c.exercise_id);
+    if (!exercise) throw Error(`Unknown exercise: ${c.exercise_id}`);
+    return {case_id:c.id, exercise, response:c.response, assistance:c.assistance};
+  }
+  function validate(input, assessment) {
+    const errors = [];
+    if (!assessment || assessment.case_id !== input.case_id) return ['Assessment belongs to a different case.'];
+    const criteria = input.exercise.criteria.map(c => c.id);
+    const observations = assessment.observations;
+    if (!Array.isArray(observations)) return ['Observations must be an array.'];
+    if (observations.length !== criteria.length || new Set(observations.map(o => o.criterion)).size !== criteria.length) errors.push('Record each criterion exactly once.');
+    for (const o of observations) {
+      if (!criteria.includes(o.criterion)) errors.push(`Unknown criterion: ${o.criterion}`);
+      if (!statuses.includes(o.status)) errors.push(`Unknown status: ${o.status}`);
+      if (!nonempty(o.reason)) errors.push(`${o.criterion}: supply a reason.`);
+      if (!Array.isArray(o.quotes)) { errors.push(`${o.criterion}: quotes must be an array.`); continue; }
+      if (['demonstrated','error'].includes(o.status) && !o.quotes.length) errors.push(`${o.criterion}: evidence quote required.`);
+      if (o.status === 'not_shown' && o.quotes.length) errors.push(`${o.criterion}: absent evidence cannot have a supporting quote.`);
+      for (const q of o.quotes) if (!nonempty(q) || !input.response.includes(q)) errors.push(`${o.criterion}: quotation is not in the original answer.`);
+    }
+    const n = assessment.next;
+    if (!n || !kinds.includes(n.kind)) return [...errors, 'Choose one valid next action.'];
+    if (!nonempty(n.text) || !nonempty(n.reason)) errors.push('Next action needs learner-facing text and a reason.');
+    if (!Array.isArray(n.targets) || n.targets.some(t => !criteria.includes(t)) || new Set(n.targets).size !== n.targets.length) errors.push('Next-action targets must be distinct criteria from this exercise.');
+    if (['follow_up','practice','fresh_check'].includes(n.kind) && !n.targets?.length) errors.push('This action requires a target.');
+    if (n.kind === 'practice' && !observations.some(o => o.status === 'error' && n.targets?.includes(o.criterion))) errors.push('Targeted remedial practice requires an observed error in a selected target.');
+    if (n.kind === 'follow_up') {
+      const branches = ['correct','wrong','unclear'].map(k => n.branches?.[k]);
+      if (!branches.every(nonempty) || new Set(branches).size !== 3) errors.push('Follow-up needs distinct correct, wrong and unclear branches.');
+    }
+    if (!Array.isArray(assessment.alternatives) || !assessment.alternatives.every(nonempty)) errors.push('Alternatives must be an array of explanations.');
+    return errors;
+  }
+  function validateBound(input, record) {
+    if (!record || stable(record.input) !== stable(input)) return ['The saved assessment does not match the current prompt, answer, criteria or assistance.'];
+    return validate(input, record.assessment);
+  }
+  function validateReview(input, review) {
+    if (!review || stable(input) !== stable(review.input)) return ['Human review does not match this input.'];
+    const ids = input.exercise.criteria.map(c => c.id);
+    const errors = [];
+    if (!nonempty(review.reviewer) || !nonempty(review.reason)) errors.push('Reviewer name and reason are required.');
+    if (!review.statuses || Object.keys(review.statuses).length !== ids.length || !ids.every(id => statuses.includes(review.statuses[id]))) errors.push('Judge each criterion before revealing the AI assessment.');
+    if (!kinds.includes(review.next_kind)) errors.push('Choose the next action.');
+    if (!Array.isArray(review.targets) || review.targets.some(t => !ids.includes(t)) || new Set(review.targets).size !== review.targets.length) errors.push('Review targets must be distinct criteria from the exercise.');
+    if (['follow_up','practice','fresh_check'].includes(review.next_kind) && !review.targets?.length) errors.push('Select at least one target.');
+    if (typeof review.before_reveal !== 'boolean') errors.push('Record whether the AI assessment was already revealed.');
+    return errors;
+  }
+  function compare(record, review) {
+    const errors = [...validateBound(record.input, record), ...validateReview(record.input, review)];
+    if (errors.length) throw Error(errors.join('\n'));
+    const differences = record.assessment.observations.filter(o => review.statuses[o.criterion] !== o.status).map(o => ({criterion:o.criterion, ai:o.status, human:review.statuses[o.criterion]}));
+    return {case_id:record.input.case_id, before_reveal:review.before_reveal,
+      matching_criteria:record.assessment.observations.length-differences.length, total_criteria:record.assessment.observations.length,
+      differences, action_matches:record.assessment.next.kind === review.next_kind,
+      targets_match:stable([...record.assessment.next.targets].sort()) === stable([...review.targets].sort()),
+      interpretation:'Agreement or disagreement only. Neither assessor is automatically treated as correct.'};
+  }
+  return {statuses, kinds, packet, validate, validateBound, validateReview, compare};
+})(),NextSession);
+const DATA={"targets":[{"id":"SE_27b_f3","label":"Whose hand is involved"},{"id":"SE_27b_f2","label":"Change in the reading","group":"pending"},{"id":"SE_27b_f6","label":"Warming effect"},{"id":"SE_27b_f4","label":"Effect of hand contact","group":"pending"},{"id":"arithmetic","label":"Separate arithmetic answer"}],"groups":{"pending":"Invented later check for the two clarified targets"}},RECORDS={"original":{"input":{"case_id":"SE.27b.333.1","attempt":{"id":"SE.27b.333.1","origin":"recorded","phase":"current"},"exercise":{"prompt":"If a student was holding a thermometer by the bulb (the round part at the bottom of the thermometer) when reading the temperature, would the temperature read the same? Why or why not?","reference":"No. The temperature would be higher because the student's finger would make the temperature warmer. [Heat would transfer from the student's finger to the thermometer bulb.]","criteria":[{"id":"SE_27b_f3","rule":"Interpret finger — NMod_pos — student in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f3","govNum":"SE_27b_ra12","modNum":"SE_27b_ra10","reltn":"NMod_pos","govText":"finger","modText":"student"}},{"id":"SE_27b_f2","rule":"Interpret temperature — Be — higher in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f2","govNum":"SE_27b_ra4","modNum":"SE_27b_ra7","reltn":"Be","govText":"temperature","modText":"higher"}},{"id":"SE_27b_f6","rule":"Interpret make — Predicate — warmer in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f6","govNum":"SE_27b_ra14","modNum":"SE_27b_ra17","reltn":"Predicate","govText":"make","modText":"warmer"}},{"id":"SE_27b_f4","rule":"Interpret make — Means — finger in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f4","govNum":"SE_27b_ra14","modNum":"SE_27b_ra12","reltn":"Means","govText":"make","modText":"finger"}}]},"response":"Yes, Because if you put your hand on the round part the air is not going to feel thermometer.","context":[{"id":"reference-context","role":"assessment_reference","text":"No. The temperature would be higher because the student's finger would make the temperature warmer. [Heat would transfer from the student's finger to the thermometer bulb.]","facets":[{"id":"SE_27b_f1","govNum":"SE_27b_ra0","modNum":"SE_27b_ra1","reltn":"Root","govText":"root","modText":"No"},{"id":"SE_27b_f2","govNum":"SE_27b_ra4","modNum":"SE_27b_ra7","reltn":"Be","govText":"temperature","modText":"higher"},{"id":"SE_27b_f3","govNum":"SE_27b_ra12","modNum":"SE_27b_ra10","reltn":"NMod_pos","govText":"finger","modText":"student"},{"id":"SE_27b_f4","govNum":"SE_27b_ra14","modNum":"SE_27b_ra12","reltn":"Means","govText":"make","modText":"finger"},{"id":"SE_27b_f5","govNum":"SE_27b_ra14","modNum":"SE_27b_ra16","reltn":"Theme","govText":"make","modText":"temperature"},{"id":"SE_27b_f6","govNum":"SE_27b_ra14","modNum":"SE_27b_ra17","reltn":"Predicate","govText":"make","modText":"warmer"},{"id":"SE_27b_f7","govNum":"SE_27b_ra6","modNum":"SE_27b_ra14","reltn":"Cause_because","childProp2Facet2":"SE_27b_f6","childProp1Facet1":"SE_27b_f2","govText":"be","modText":"make","childProp2Facet1":"SE_27b_f4"},{"id":"SE_27b_f8","govNum":"SE_27b_ra22","modNum":"SE_27b_ra20","reltn":"Theme","govText":"transfer","modText":"Heat"},{"id":"SE_27b_f9","govNum":"SE_27b_ra22","modNum":"SE_27b_ra27","reltn":"Source_from","govText":"transfer","modText":"finger"},{"id":"SE_27b_f10","govNum":"SE_27b_ra27","modNum":"SE_27b_ra25","reltn":"NMod_pos","govText":"finger","modText":"student"},{"id":"SE_27b_f11","govNum":"SE_27b_ra22","modNum":"SE_27b_ra31","reltn":"Destination_to","govText":"transfer","modText":"bulb"},{"id":"SE_27b_f12","govNum":"SE_27b_ra31","modNum":"SE_27b_ra30","reltn":"NMod","govText":"bulb","modText":"thermometer"}]},{"id":"conditions","role":"dataset_metadata","text":"Archived student response. Prior teaching, assistance, timing and learner history are unavailable. This is a selected-facet view, not a complete grade."}],"assistance":[],"source":{"question_id":"SE_27b","module":"SE","path":"sciEntsBank/test-unseen-questions/Extra/SE-inv2-27b.xml"}},"assessment":{"case_id":"SE.27b.333.1","observations":[{"criterion":"SE_27b_f3","status":"demonstrated","quotes":["your hand"],"reason":"The possessive identifies the contacting body part as the person’s own; hand is a reasonable equivalent for finger in this context."},{"criterion":"SE_27b_f2","status":"error","quotes":["Yes"],"reason":"As an answer to would the temperature read the same, Yes predicts no change rather than a higher reading."},{"criterion":"SE_27b_f6","status":"not_shown","quotes":[],"reason":"The unclear air-barrier explanation does not express a warming effect; do not infer a separate mechanism error from the wrong overall prediction alone."},{"criterion":"SE_27b_f4","status":"cannot_judge","quotes":["if you put your hand on the round part the air is not going to feel thermometer"],"reason":"Contact is mentioned, but the air-feeling explanation does not make clear whether hand contact is understood to change the bulb temperature."}],"next":{"kind":"follow_up","targets":["SE_27b_f2","SE_27b_f4"],"text":"Do you mean the reading stays the same, and what effect does your hand have on the bulb?","reason":"Clarifying the awkward wording can change whether temperature-change teaching is warranted.","branches":{"correct":"Record the relationship actually shown and stop immediate diagnosis.","wrong":"Offer focused help only for the explicit mistaken relationship.","unclear":"Keep the interpretation unresolved; offer an example without claiming an exact gap."}},"alternatives":["Yes could be a response-form mistake; it cannot be silently reinterpreted as No.","The stated air explanation is unclear and may involve a different causal model."]}},"correct":{"input":{"case_id":"invented-correct","attempt":{"id":"invented-correct","origin":"hypothetical","phase":"current"},"exercise":{"prompt":"Do you mean the reading stays the same, and what effect does your hand have on the bulb?","criteria":[{"id":"SE_27b_f2","rule":"Interpret temperature — Be — higher in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f2","govNum":"SE_27b_ra4","modNum":"SE_27b_ra7","reltn":"Be","govText":"temperature","modText":"higher"}},{"id":"SE_27b_f4","rule":"Interpret make — Means — finger in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f4","govNum":"SE_27b_ra14","modNum":"SE_27b_ra12","reltn":"Means","govText":"make","modText":"finger"}}]},"response":"The reading rises because my hand transfers heat to the bulb.","context":[{"id":"origin","role":"task","text":"Authored continuation of the archived thermometer example; not a collected learner answer."}],"assistance":[]},"assessment":{"case_id":"invented-correct","observations":[{"criterion":"SE_27b_f2","status":"demonstrated","quotes":["The reading rises because my hand transfers heat to the bulb."],"reason":"Authored observation for checking action policy, not independent semantic validation."},{"criterion":"SE_27b_f4","status":"demonstrated","quotes":["The reading rises because my hand transfers heat to the bulb."],"reason":"Authored observation for checking action policy, not independent semantic validation."}],"next":{"kind":"stop","targets":[],"text":"Stop this diagnostic turn.","reason":"This constructed branch checks what the existing planner does."},"alternatives":[]}},"wrong":{"input":{"case_id":"invented-wrong","attempt":{"id":"invented-wrong","origin":"hypothetical","phase":"current"},"exercise":{"prompt":"Do you mean the reading stays the same, and what effect does your hand have on the bulb?","criteria":[{"id":"SE_27b_f2","rule":"Interpret temperature — Be — higher in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f2","govNum":"SE_27b_ra4","modNum":"SE_27b_ra7","reltn":"Be","govText":"temperature","modText":"higher"}},{"id":"SE_27b_f4","rule":"Interpret make — Means — finger in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f4","govNum":"SE_27b_ra14","modNum":"SE_27b_ra12","reltn":"Means","govText":"make","modText":"finger"}}]},"response":"The reading falls because my hand takes heat away from the bulb.","context":[{"id":"origin","role":"task","text":"Authored continuation of the archived thermometer example; not a collected learner answer."}],"assistance":[]},"assessment":{"case_id":"invented-wrong","observations":[{"criterion":"SE_27b_f2","status":"error","quotes":["The reading falls because my hand takes heat away from the bulb."],"reason":"Authored observation for checking action policy, not independent semantic validation."},{"criterion":"SE_27b_f4","status":"error","quotes":["The reading falls because my hand takes heat away from the bulb."],"reason":"Authored observation for checking action policy, not independent semantic validation."}],"next":{"kind":"practice","targets":["SE_27b_f2","SE_27b_f4"],"text":"Offer help for the stated error.","reason":"This constructed branch checks what the existing planner does."},"alternatives":[]}},"unclear":{"input":{"case_id":"invented-unclear","attempt":{"id":"invented-unclear","origin":"hypothetical","phase":"current"},"exercise":{"prompt":"Do you mean the reading stays the same, and what effect does your hand have on the bulb?","criteria":[{"id":"SE_27b_f2","rule":"Interpret temperature — Be — higher in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f2","govNum":"SE_27b_ra4","modNum":"SE_27b_ra7","reltn":"Be","govText":"temperature","modText":"higher"}},{"id":"SE_27b_f4","rule":"Interpret make — Means — finger in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f4","govNum":"SE_27b_ra14","modNum":"SE_27b_ra12","reltn":"Means","govText":"make","modText":"finger"}}]},"response":"I cannot explain what I meant.","context":[{"id":"origin","role":"task","text":"Authored continuation of the archived thermometer example; not a collected learner answer."}],"assistance":[]},"assessment":{"case_id":"invented-unclear","observations":[{"criterion":"SE_27b_f2","status":"cannot_judge","quotes":["I cannot explain what I meant."],"reason":"Authored observation for checking action policy, not independent semantic validation."},{"criterion":"SE_27b_f4","status":"cannot_judge","quotes":["I cannot explain what I meant."],"reason":"Authored observation for checking action policy, not independent semantic validation."}],"next":{"kind":"stop","targets":[],"text":"Stop this diagnostic turn.","reason":"This constructed branch checks what the existing planner does."},"alternatives":[]}},"omitted":{"input":{"case_id":"invented-omitted","attempt":{"id":"invented-omitted","origin":"hypothetical","phase":"current"},"exercise":{"prompt":"Do you mean the reading stays the same, and what effect does your hand have on the bulb?","criteria":[{"id":"SE_27b_f2","rule":"Interpret temperature — Be — higher in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f2","govNum":"SE_27b_ra4","modNum":"SE_27b_ra7","reltn":"Be","govText":"temperature","modText":"higher"}},{"id":"SE_27b_f4","rule":"Interpret make — Means — finger in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f4","govNum":"SE_27b_ra14","modNum":"SE_27b_ra12","reltn":"Means","govText":"make","modText":"finger"}}]},"response":"I left that part out.","context":[{"id":"origin","role":"task","text":"Authored continuation of the archived thermometer example; not a collected learner answer."}],"assistance":[]},"assessment":{"case_id":"invented-omitted","observations":[{"criterion":"SE_27b_f2","status":"not_shown","quotes":[],"reason":"Authored observation for checking action policy, not independent semantic validation."},{"criterion":"SE_27b_f4","status":"not_shown","quotes":[],"reason":"Authored observation for checking action policy, not independent semantic validation."}],"next":{"kind":"stop","targets":[],"text":"Stop this diagnostic turn.","reason":"This constructed branch checks what the existing planner does."},"alternatives":[]}},"partial":{"input":{"case_id":"invented-partial","attempt":{"id":"invented-partial","origin":"hypothetical","phase":"current"},"exercise":{"prompt":"Do you mean the reading stays the same, and what effect does your hand have on the bulb?","criteria":[{"id":"SE_27b_f2","rule":"Interpret temperature — Be — higher in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f2","govNum":"SE_27b_ra4","modNum":"SE_27b_ra7","reltn":"Be","govText":"temperature","modText":"higher"}},{"id":"SE_27b_f4","rule":"Interpret make — Means — finger in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f4","govNum":"SE_27b_ra14","modNum":"SE_27b_ra12","reltn":"Means","govText":"make","modText":"finger"}}]},"response":"The reading rises.","context":[{"id":"origin","role":"task","text":"Authored continuation of the archived thermometer example; not a collected learner answer."}],"assistance":[]},"assessment":{"case_id":"invented-partial","observations":[{"criterion":"SE_27b_f2","status":"demonstrated","quotes":["The reading rises."],"reason":"Authored observation for checking action policy, not independent semantic validation."},{"criterion":"SE_27b_f4","status":"not_shown","quotes":[],"reason":"Authored observation for checking action policy, not independent semantic validation."}],"next":{"kind":"stop","targets":[],"text":"Stop this diagnostic turn.","reason":"This constructed branch checks what the existing planner does."},"alternatives":[]}},"unrelated":{"input":{"case_id":"invented-unrelated","attempt":{"id":"invented-unrelated","origin":"hypothetical","phase":"current"},"exercise":{"prompt":"What is two plus two?","criteria":[{"id":"arithmetic","rule":"Two plus two equals four."}]},"response":"Two plus two equals five.","context":[{"id":"origin","role":"task","text":"Authored continuation of the archived thermometer example; not a collected learner answer."}],"assistance":[]},"assessment":{"case_id":"invented-unrelated","observations":[{"criterion":"arithmetic","status":"error","quotes":["Two plus two equals five."],"reason":"Authored observation for checking action policy, not independent semantic validation."}],"next":{"kind":"practice","targets":["arithmetic"],"text":"Offer help for the stated error.","reason":"This constructed branch checks what the existing planner does."},"alternatives":[]}},"later":{"input":{"case_id":"invented-later","attempt":{"id":"invented-later","origin":"hypothetical","phase":"later"},"exercise":{"prompt":"Do you mean the reading stays the same, and what effect does your hand have on the bulb?","criteria":[{"id":"SE_27b_f2","rule":"Interpret temperature — Be — higher in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f2","govNum":"SE_27b_ra4","modNum":"SE_27b_ra7","reltn":"Be","govText":"temperature","modText":"higher"}},{"id":"SE_27b_f4","rule":"Interpret make — Means — finger in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f4","govNum":"SE_27b_ra14","modNum":"SE_27b_ra12","reltn":"Means","govText":"make","modText":"finger"}}]},"response":"The reading rises because my hand transfers heat to the bulb.","context":[{"id":"origin","role":"task","text":"Authored continuation of the archived thermometer example; not a collected learner answer."}],"assistance":[]},"assessment":{"case_id":"invented-later","observations":[{"criterion":"SE_27b_f2","status":"demonstrated","quotes":["The reading rises because my hand transfers heat to the bulb."],"reason":"Authored observation for checking action policy, not independent semantic validation."},{"criterion":"SE_27b_f4","status":"demonstrated","quotes":["The reading rises because my hand transfers heat to the bulb."],"reason":"Authored observation for checking action policy, not independent semantic validation."}],"next":{"kind":"stop","targets":[],"text":"Stop this diagnostic turn.","reason":"This constructed branch checks what the existing planner does."},"alternatives":[]}},"hinted":{"input":{"case_id":"invented-hinted","attempt":{"id":"invented-hinted","origin":"hypothetical","phase":"later"},"exercise":{"prompt":"Do you mean the reading stays the same, and what effect does your hand have on the bulb?","criteria":[{"id":"SE_27b_f2","rule":"Interpret temperature — Be — higher in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f2","govNum":"SE_27b_ra4","modNum":"SE_27b_ra7","reltn":"Be","govText":"temperature","modText":"higher"}},{"id":"SE_27b_f4","rule":"Interpret make — Means — finger in the complete reference answer; preserve its linked propositions.","sourceFacet":{"id":"SE_27b_f4","govNum":"SE_27b_ra14","modNum":"SE_27b_ra12","reltn":"Means","govText":"make","modText":"finger"}}]},"response":"The reading rises because my hand transfers heat to the bulb.","context":[{"id":"origin","role":"task","text":"Authored continuation of the archived thermometer example; not a collected learner answer."}],"assistance":[{"timing":"current","targets":["SE_27b_f4"],"text":"Invented hint supplying the hand-to-bulb heat direction."}]},"assessment":{"case_id":"invented-hinted","observations":[{"criterion":"SE_27b_f2","status":"demonstrated","quotes":["The reading rises because my hand transfers heat to the bulb."],"reason":"Authored observation for checking action policy, not independent semantic validation."},{"criterion":"SE_27b_f4","status":"demonstrated","quotes":["The reading rises because my hand transfers heat to the bulb."],"reason":"Authored observation for checking action policy, not independent semantic validation."}],"next":{"kind":"stop","targets":[],"text":"Stop this diagnostic turn.","reason":"This constructed branch checks what the existing planner does."},"alternatives":[]}}};
+const $=id=>document.getElementById(id),text=(tag,value)=>{const e=document.createElement(tag);e.textContent=value;return e;};
+const labels={correct:'Clear correct answer',wrong:'Clear wrong answer',unclear:'Meaning still unclear',partial:'Only one part answered',omitted:'No clarification supplied',unrelated:'An unrelated error',later:'Invented later answer',hinted:'Invented later answer with help'};
+const walks=[{title:'Clarify first',note:'The apparent error stays visible, but the question comes first. A correct explanation ends the immediate intervention.',steps:['correct']},{title:'A confirmed error',note:'A clearly wrong explanation now supports focused help.',steps:['wrong']},{title:'Still uncertain',note:'An unclear reply can stop questioning and leave the assessment unresolved. It does not revive corrective practice.',steps:['unclear']},{title:'Help elsewhere',note:'Clarification for the thermometer does not block help for a separate arithmetic error.',steps:['unrelated']}];
+let state,last,walk=0,step=0;
+function apply(key){const r=RECORDS[key];last=B.connect(DATA,state,r.input,r);if(last.errors.length)throw Error(last.errors.join('; '));state=last.state;render();}
+function reset(){state=NextSession.empty();step=0;apply('original');}
+function render(){
+ const plan=NextSession.plan(DATA,state),names=ids=>ids.map(id=>DATA.targets.find(t=>t.id===id).label).join('; ');
+ $('mode').textContent=state.events.length===1?'Archived response only; frozen assessment.':'Includes invented continuations; no new learner result.';
+ $('decision').replaceChildren();
+ if(!plan.now.length)$('decision').append(text('p','No immediate clarification or corrective practice remains.'));
+ for(const a of plan.now)$('decision').append(text('p',`${a.kind==='help'?'Focused help':a.kind==='review'?'Assessment unresolved':'Clarify first'}: ${names(a.targets)}. ${a.text||a.reason}`));
+ for(const a of plan.later)$('decision').append(text('p',`Constructed later check still includes: ${names(a.targets)}.`));
+ if(!plan.later.length)$('decision').append(text('p','The constructed later check has no remaining targets. This is not a measured retention result.'));
+ $('evidence').replaceChildren(...DATA.targets.map(t=>{const s=NextSession.status(state,t.id);return text('li',`${t.label}: ${s.label}. ${s.history.length} observations retained${s.history.some(o=>o.result==='error')?'; earlier error remains in history':''}.`);}));
+ $('latest').textContent=last.event.quote;$('state').textContent=JSON.stringify({plan,state},null,2);
+ $('walk').textContent=walks[walk].note;$('steps').replaceChildren();
+ walks[walk].steps.forEach((key,i)=>{const b=text('button',`${i+1}. ${labels[key]}`);b.disabled=i!==step;b.onclick=()=>{step++;apply(key);};$('steps').append(b);});
+}
+$('prompt').textContent=RECORDS.original.input.exercise.prompt;$('original').textContent=RECORDS.original.input.response;
+for(const [key,label] of Object.entries(labels)){const b=text('button',label);b.onclick=()=>apply(key);$('actions').append(b);}
+walks.forEach((w,i)=>{const b=text('button',w.title);b.onclick=()=>{walk=i;reset();};$('tabs').append(b);});
+$('reset').onclick=reset;reset();
+</script></body></html>

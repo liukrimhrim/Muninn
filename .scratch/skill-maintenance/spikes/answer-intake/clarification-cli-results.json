@@ -1,0 +1,25 @@
+{
+  "scope": "Real CLI with authored fixtures, plus protection of the historical comparison. No saved learner-state changes.",
+  "checks": [
+    {
+      "name": "CLI still offers help only for the explicit log-command error",
+      "met": true
+    },
+    {
+      "name": "CLI selects the targeted follow-up without corrective help",
+      "met": true
+    },
+    {
+      "name": "CLI retains the original error and the pending log check",
+      "met": true
+    },
+    {
+      "name": "Changed answer bytes still reject reuse of the assessment",
+      "met": true
+    },
+    {
+      "name": "Historical comparison refuses changed dependencies without overwriting audited results",
+      "met": true
+    }
+  ]
+}

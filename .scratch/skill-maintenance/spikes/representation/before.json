@@ -1,0 +1,168 @@
+{
+  "scope": "Authored examples through the existing validator, bridge and planner. No new learner or model-service call.",
+  "hashes": {
+    "examples": "91e66db6ff4e725845259d35865169ac40510e506734f4fb6178be5a84ec3f9e",
+    "planner": "1b0d61e1e9c3c0c4347ffda2e7eddb642b9002642809b0e4c0670e16aa6ca376",
+    "bridge": "3758156775ac7b4f62da67d6df34a5477fb83535c92b4180f9ff1eda248ac717",
+    "validator": "dd8dbe4c98c2e3890e719d192f70cd56ac0950e077ed5553835082e524baec57"
+  },
+  "checks": [
+    {
+      "name": "Useful evidence choice plus wrong command asks for production help only",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Wrong evidence choice plus correct command asks for selection help only",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Several criteria produce one capability observation with all evidence references",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Partial command evidence does not become either a failure or a complete demonstration",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "An incidental criterion is retained without becoming a practice target",
+      "met": false
+    },
+    {
+      "name": "Known mathematical parts with wrong combination target integration only",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Later parts alone cannot clear a previously observed integration error",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "One criterion reused by two capabilities retains the same evidence reference",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "A hint to a shared criterion qualifies both dependent capabilities only",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets.; Record help timing, text and known targets explicitly."
+    },
+    {
+      "name": "A command-form hint leaves evidence choice and functional evidence independent",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets.; Record help timing, text and known targets explicitly."
+    },
+    {
+      "name": "A reconstruction goal does not silently add fluent-recall observations or drills",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Overlapping practice bundles schedule each pending target once",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Semantic knowledge-group overlap changes no practice evidence or policy",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Clarification maps a criterion to its capability and precedes corrective help",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "An unclear reply keeps mapped assessment unresolved without reviving help",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "A clear later response resolves mapped clarification and pending checks",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "A successful alternate path leaves bypassed targets unobserved without creating errors",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Current correction ends immediate help while preserving a later check",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Simple fact recall works without an integration or relationship requirement",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "An exact duplicate answer does not multiply evidence",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "A changed interpretation cannot silently replace the same answer ID",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Saved assessments stay bound to their original criteria and coverage",
+      "met": true
+    },
+    {
+      "name": "A current contract version change rejects an old assessment",
+      "met": true
+    },
+    {
+      "name": "Contract wording drift is detected even without a version bump",
+      "met": true
+    },
+    {
+      "name": "Coverage of an unknown capability is rejected",
+      "met": true
+    },
+    {
+      "name": "Missing, repeated, or empty criterion mappings are rejected",
+      "met": true
+    },
+    {
+      "name": "Duplicate coverage cannot emit two observations for one capability",
+      "met": true
+    },
+    {
+      "name": "Help must identify affected rubric criteria in an explicit-coverage packet",
+      "met": true
+    },
+    {
+      "name": "An unmapped incidental criterion cannot become a remedial target",
+      "met": true
+    },
+    {
+      "name": "A new contract cannot reinterpret retained observations during intake",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "Direct planning detects a retained contract mismatch before choosing practice",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    },
+    {
+      "name": "A new version can start with new evidence without rewriting old history",
+      "met": false
+    },
+    {
+      "name": "Branch comparisons leave their initial evidence unchanged",
+      "met": false,
+      "error": "Criteria must map once each to known planning targets."
+    }
+  ],
+  "grading_accuracy": null,
+  "learning_benefit": null
+}

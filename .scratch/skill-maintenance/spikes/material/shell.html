@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>From material to useful practice</title>
+<style>
+*{box-sizing:border-box}body{font:16px/1.5 system-ui,sans-serif;background:#f4f2ed;color:#20332e;margin:0;padding:28px}main{max-width:1150px;margin:auto}h1{font-size:32px;line-height:1.2}h2{font-size:20px;margin:0 0 12px}p{max-width:80ch}button{font:inherit;border:1px solid #648574;border-radius:8px;background:white;padding:9px 13px;margin:0 8px 8px 0;cursor:pointer}button:hover{background:#e6efe8}section{background:white;border:1px solid #d3d9cf;border-radius:12px;padding:20px;margin:14px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.grid section{margin:0}.note{color:#52655d;font-size:14px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.55 ui-monospace,monospace;margin:0}.unit{border-top:1px solid #dde2d9;margin-top:12px;padding-top:12px}.held{border-left:5px solid #b67c29}details{margin-top:15px}summary{cursor:pointer}@media(max-width:800px){body{padding:16px}.grid{grid-template-columns:1fr}}
+</style></head><body><main>
+<p class="note">Optional walkthrough · throwaway design experiment</p>
+<h1>From material to useful practice</h1>
+<p>Keep the meaning and its conditions, choose what to remember, and practice it in a useful task. You do not need to answer or approve anything here.</p>
+<p class="note">The short sources, knowledge proposals, answers and judgments below were authored for this example. This page does not extract arbitrary material or measure learning.</p>
+<nav id="scenarios" aria-label="Examples"></nav>
+<div class="grid"><section><h2>1. Keep the source</h2><pre id="source"></pre></section><section><h2>2. Preserve the meaning</h2><div id="units"></div></section></div>
+<section><h2>3. Choose what the learner should be able to do</h2><div id="targets"></div><p id="groups"></p></section>
+<section class="held"><h2>Anything needing attention</h2><p id="held"></p><button id="edit">Clarify a supporting claim</button><button id="reset">Reset this example</button><p class="note">The edit shows which dependent content and exercises need checking. It creates no learner answer and does not rewrite earlier answers.</p></section>
+<section><h2>4. Start with a useful exercise</h2><p id="exercise"></p><div id="answers"></div><button id="walk">Play the authored example</button><p id="next"></p><p class="note">Playing the example uses supplied answers. It is a demonstration, not an assessment of you.</p></section>
+<section><h2>What happened</h2><pre id="trace"></pre><details><summary>Inspect the source references, mappings and retained state</summary><pre id="state"></pre></details></section>
+</main><script>
+/*MODEL*/
+const copy=x=>JSON.parse(JSON.stringify(x)),el=id=>document.getElementById(id);
+let current='math',example,pack,state,session,trace=[];
+function button(label,fn){const b=document.createElement('button');b.textContent=label;b.onclick=fn;return b;}
+function decision(){return S.choose(pack.data,state,pack.catalog,session);}
+function load(key){current=key;example=copy(EXAMPLES[key]);pack=A.prepare(example.library,example.draft);state=NextSession.empty();session=S.start(example.budget,'current');trace=[];render();}
+function answer(outcome){const d=decision();if(!d.action)return;const r=A.bind(d.action,outcome,'page-answer-'+trace.length),out=S.complete(pack.data,state,pack.catalog,session,d.action.id,r,S.cost(d.action));state=out.state;session=out.session;trace.push({action:d.action.id,response:r.input.response,observations:out.event.observations.map(o=>({target:o.target,result:o.result,assisted:o.assisted})),next:out.decision.action?.label||out.decision.reason});render();}
+function render(){
+ el('source').textContent=example.source.text.split('\n').map((line,i)=>`${i+1}. ${line}`).join('\n');
+ el('units').replaceChildren();for(const u of example.draft.units){const p=document.createElement('p');p.setAttribute('class','unit');p.textContent=u.statement+' Scope: '+u.scope+' Source lines: '+u.refs.map(r=>`${r.start}–${r.end}`).join(', ')+(u.dependsOn.length?' Builds on: '+u.dependsOn.map(r=>r.id.replace('material.math.','')).join(', ')+'.':'');el('units').append(p);}
+ el('targets').replaceChildren();for(const t of example.draft.targets.filter(t=>example.draft.selected.includes(t.id))){const p=document.createElement('p');p.textContent=t.label+' — '+t.action;el('targets').append(p);}
+ el('groups').textContent=example.draft.groups.length?'Keep the parts connected: '+example.draft.groups.map(g=>g.structure).join(' '):'One association needs one recall target.';
+ const held=pack.held.map(h=>h.target+': '+h.reasons.join(' ')),tasks=pack.heldExercises.map(h=>h.exercise+': '+h.reasons.join(' '));
+ el('held').textContent=[...held,...tasks,...pack.noExercise.map(id=>id+': no usable exercise yet.')].join('\n')||'No flagged issues in this authored example. Its content has been inspected by the example author; this does not establish independent teaching quality.';
+ const d=decision();el('exercise').textContent=d.action?.exercise.prompt||'No eligible task is available for the current state.';
+ el('next').textContent=(pack.held.length||pack.noExercise.length?'Some requested learning targets remain on hold. ':'')+d.reason;
+ el('answers').replaceChildren();if(d.action)for(const outcome of Object.keys(d.action.samples)){const labels={correct:'Use the supplied correct answer',error:'Use the supplied connection error',partial:'Use an answer that omits the connection',hinted:'Use an answer with help'};el('answers').append(button(labels[outcome]||outcome,()=>answer(outcome)));}
+ el('trace').textContent=trace.length?JSON.stringify(trace,null,2):'No learner evidence has been created. The proposed exercise is not evidence of knowledge.';
+ el('state').textContent=JSON.stringify({revision:example.draft.revision,requested:pack.requested,held:pack.held,unserved:pack.noExercise,units:example.draft.units,targets:pack.data.targets,catalog:pack.catalog.map(a=>a.exercise),events:state.events,session},null,2);
+}
+for(const [key,label] of [['math','Connected explanation'],['fact','One association'],['doubtful','An unsupported proposal']])el('scenarios').append(button(label,()=>load(key)));
+el('reset').onclick=()=>load(current);
+el('edit').onclick=()=>{const u=example.draft.units[0];example.draft=A.revise(example.draft,u.id,{scope:u.scope+' Recheck this explicit condition before using the revised version.'});pack=A.prepare(example.library,example.draft);render();};
+el('walk').onclick=()=>{load(current);for(const outcome of current==='math'?['error','correct','correct']:['correct']){const d=decision();if(!d.action)break;answer(outcome);}};
+load('math');
+</script></body></html>

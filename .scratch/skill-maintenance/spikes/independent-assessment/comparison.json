@@ -1,0 +1,1176 @@
+{
+  "scope": "Blind assessment compared with pre-existing human facet annotations, using the frozen mapping. Agreement is not verified correctness; no human practice judgments exist.",
+  "freeze_commit": "f397ef8",
+  "freeze_hash_checks": "all passed",
+  "reference_sha256": "b34ff37773ac556c07fa3b149a7d1dd6ac43cd12b9240892c206f9f15372f81c",
+  "cases": 12,
+  "facets": 48,
+  "comparable": 36,
+  "counts": {
+    "match": 23,
+    "disagree": 10,
+    "abstain": 3,
+    "excluded": 12
+  },
+  "byLabel": {
+    "Inferred": {
+      "total": 16,
+      "match": 10,
+      "disagree": 6,
+      "abstain": 0,
+      "excluded": 0
+    },
+    "Contra-Expr": {
+      "total": 1,
+      "match": 1,
+      "disagree": 0,
+      "abstain": 0,
+      "excluded": 0
+    },
+    "Expressed": {
+      "total": 3,
+      "match": 2,
+      "disagree": 1,
+      "abstain": 0,
+      "excluded": 0
+    },
+    "Contra-Infr": {
+      "total": 3,
+      "match": 1,
+      "disagree": 1,
+      "abstain": 1,
+      "excluded": 0
+    },
+    "Assumed": {
+      "total": 12,
+      "match": 0,
+      "disagree": 0,
+      "abstain": 0,
+      "excluded": 12
+    },
+    "Unaddressed": {
+      "total": 13,
+      "match": 9,
+      "disagree": 2,
+      "abstain": 2,
+      "excluded": 0
+    }
+  },
+  "mapping": {
+    "Expressed": "demonstrated",
+    "Inferred": "demonstrated",
+    "Contra-Expr": "error",
+    "Contra-Infr": "error",
+    "Self-Contra": "error",
+    "Unaddressed": "not_shown",
+    "Assumed": null,
+    "Diff-Arg": null
+  },
+  "rows": [
+    {
+      "case_id": "SE.27b.116.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f3",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "not_shown",
+      "outcome": "disagree",
+      "reason": "The answer refers to he but does not express the student-finger ownership relation; the premise is supplied by the question.",
+      "quotes": []
+    },
+    {
+      "case_id": "SE.27b.116.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f2",
+      "reference_label": "Contra-Expr",
+      "reference_mapped": "error",
+      "assessor_status": "error",
+      "outcome": "match",
+      "reason": "This explicitly predicts a decrease rather than the higher reading in the stated reference situation.",
+      "quotes": [
+        "the temperature could go down 3 degrees"
+      ]
+    },
+    {
+      "case_id": "SE.27b.116.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f6",
+      "reference_label": "Expressed",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "error",
+      "outcome": "disagree",
+      "reason": "Taking heat away and lowering the reading contradicts the warming effect in the reference.",
+      "quotes": [
+        "he will take some of the heat of the ball"
+      ]
+    },
+    {
+      "case_id": "SE.27b.116.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f4",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "In context the person holding the bulb causes a temperature change through contact. The direction is wrong, but attribution to the contacting person is present.",
+      "quotes": [
+        "he will take some of the heat of the ball"
+      ]
+    },
+    {
+      "case_id": "SE.27b.333.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f3",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "The possessive identifies the contacting body part as the person’s own; hand is a reasonable equivalent for finger in this context.",
+      "quotes": [
+        "your hand"
+      ]
+    },
+    {
+      "case_id": "SE.27b.333.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f2",
+      "reference_label": "Contra-Infr",
+      "reference_mapped": "error",
+      "assessor_status": "error",
+      "outcome": "match",
+      "reason": "As an answer to would the temperature read the same, Yes predicts no change rather than a higher reading.",
+      "quotes": [
+        "Yes"
+      ]
+    },
+    {
+      "case_id": "SE.27b.333.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f6",
+      "reference_label": "Contra-Infr",
+      "reference_mapped": "error",
+      "assessor_status": "not_shown",
+      "outcome": "disagree",
+      "reason": "The unclear air-barrier explanation does not express a warming effect; do not infer a separate mechanism error from the wrong overall prediction alone.",
+      "quotes": []
+    },
+    {
+      "case_id": "SE.27b.333.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f4",
+      "reference_label": "Contra-Infr",
+      "reference_mapped": "error",
+      "assessor_status": "cannot_judge",
+      "outcome": "abstain",
+      "reason": "Contact is mentioned, but the air-feeling explanation does not make clear whether hand contact is understood to change the bulb temperature.",
+      "quotes": [
+        "if you put your hand on the round part the air is not going to feel thermometer"
+      ]
+    },
+    {
+      "case_id": "SE.27b.313.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f3",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "not_shown",
+      "outcome": "disagree",
+      "reason": "No ownership or finger statement is supplied by the response itself.",
+      "quotes": []
+    },
+    {
+      "case_id": "SE.27b.313.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f2",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "Absorbing heat and increasing the reading expresses the higher measured temperature.",
+      "quotes": [
+        "increase the number"
+      ]
+    },
+    {
+      "case_id": "SE.27b.313.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f6",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "The response connects heat absorption to an increased thermometer reading, expressing warming.",
+      "quotes": [
+        "it would absorb the heat and increase the number"
+      ]
+    },
+    {
+      "case_id": "SE.27b.313.1",
+      "question_id": "SE_27b",
+      "facet_id": "SE_27b_f4",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "As the explanation of what changes when holding the bulb, this reasonably implies heat from the contacting hand; the referent is supplied by the question.",
+      "quotes": [
+        "because it would absorb the heat"
+      ]
+    },
+    {
+      "case_id": "MS.50b.136.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f4",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "not_shown",
+      "outcome": "disagree",
+      "reason": "The answer describes getting consistent units and measurements, not people understanding a communicated measurement.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.136.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f2",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "not_shown",
+      "outcome": "excluded",
+      "reason": "Communication to another person is not stated.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.136.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f1",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "not_shown",
+      "outcome": "match",
+      "reason": "Same measurement expresses consistency but does not itself say the measurement is communicated.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.136.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f5",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "not_shown",
+      "outcome": "disagree",
+      "reason": "Understanding what a reported measurement means is not expressed; the response discusses consistency.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.141.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f4",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "not_shown",
+      "outcome": "match",
+      "reason": "Calling a unit important provides no people-knowing relationship.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.141.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f2",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "not_shown",
+      "outcome": "excluded",
+      "reason": "No communication to people is described.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.141.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f1",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "not_shown",
+      "outcome": "match",
+      "reason": "No communication of a measurement is described.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.141.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f5",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "not_shown",
+      "outcome": "match",
+      "reason": "The response does not explain interpreting the measurement.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.311.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f4",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "not_shown",
+      "outcome": "match",
+      "reason": "To know how to do it is a generic procedural purpose, not evidence that people understand the reported measurement in this target.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.311.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f2",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "not_shown",
+      "outcome": "excluded",
+      "reason": "The response does not describe communicating with another person.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.311.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f1",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "not_shown",
+      "outcome": "match",
+      "reason": "The response gives no measurement-communication relationship.",
+      "quotes": []
+    },
+    {
+      "case_id": "MS.50b.311.1",
+      "question_id": "MS_50b",
+      "facet_id": "MS_50b_f5",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "not_shown",
+      "outcome": "disagree",
+      "reason": "Knowing the best way to do something does not establish understanding what a measurement means.",
+      "quotes": []
+    },
+    {
+      "case_id": "ME.36.185.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f8",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "demonstrated",
+      "outcome": "excluded",
+      "reason": "The generic the bulb in a description of parallel operation applies to a bulb on its branch, rather than a singled-out exceptional bulb.",
+      "quotes": [
+        "In a parallel circuit the energy flows straight to the bulb"
+      ]
+    },
+    {
+      "case_id": "ME.36.185.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f4",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "not_shown",
+      "outcome": "match",
+      "reason": "A disconnection assertion does not describe the single pathway of a series circuit.",
+      "quotes": []
+    },
+    {
+      "case_id": "ME.36.185.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f2",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "not_shown",
+      "outcome": "excluded",
+      "reason": "The number of series bulbs is not expressed in the response.",
+      "quotes": []
+    },
+    {
+      "case_id": "ME.36.185.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f18",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "demonstrated",
+      "outcome": "excluded",
+      "reason": "In response to why the parallel bulbs are bright, this offers direct energy flow to the bulb as the explanation. The causal link is implicit in the question-answer structure.",
+      "quotes": [
+        "In a parallel circuit the energy flows straight to the bulb, goes through and keeps going in a circuit."
+      ]
+    },
+    {
+      "case_id": "ME.36.226.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f8",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "not_shown",
+      "outcome": "excluded",
+      "reason": "Two or more appears to count parallel paths; it does not explicitly distribute a direct path to each bulb.",
+      "quotes": []
+    },
+    {
+      "case_id": "ME.36.226.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f4",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "This directly states the single pathway in series.",
+      "quotes": [
+        "a series is only one way"
+      ]
+    },
+    {
+      "case_id": "ME.36.226.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f2",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "not_shown",
+      "outcome": "excluded",
+      "reason": "The two-or-more phrase contrasts pathways, not an explicit count of the two series bulbs.",
+      "quotes": []
+    },
+    {
+      "case_id": "ME.36.226.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f18",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "demonstrated",
+      "outcome": "excluded",
+      "reason": "The response causally connects parallel brightness with multiple paths rather than one shared path; this is a reasonable paraphrase of the reference contrast.",
+      "quotes": [
+        "bright in a parallel because parallel is 2 or more and a series is only one way. So parallel is stronger."
+      ]
+    },
+    {
+      "case_id": "ME.36.214.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f8",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "demonstrated",
+      "outcome": "excluded",
+      "reason": "This distributes separate energy access across the parallel bulbs, supporting each rather than a selected bulb.",
+      "quotes": [
+        "the bulbs are not sharing energy with each other"
+      ]
+    },
+    {
+      "case_id": "ME.36.214.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f4",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "not_shown",
+      "outcome": "disagree",
+      "reason": "Energy-sharing wording does not by itself state that the series bulbs share one pathway.",
+      "quotes": []
+    },
+    {
+      "case_id": "ME.36.214.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f2",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "not_shown",
+      "outcome": "excluded",
+      "reason": "Each other need not specify exactly two bulbs independently of the task premise.",
+      "quotes": []
+    },
+    {
+      "case_id": "ME.36.214.1",
+      "question_id": "ME_36",
+      "facet_id": "ME_36_f18",
+      "reference_label": "Assumed",
+      "reference_mapped": null,
+      "assessor_status": "demonstrated",
+      "outcome": "excluded",
+      "reason": "The response explicitly links separate energy access in parallel to brightness; this is an informal equivalent of the reference explanation.",
+      "quotes": [
+        "the lights are bright in a parallel because the bulbs are not sharing energy with each other"
+      ]
+    },
+    {
+      "case_id": "LF.13b.478.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f2",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "Getting smaller expresses wearing down the material.",
+      "quotes": [
+        "The earth material will get smaller"
+      ]
+    },
+    {
+      "case_id": "LF.13b.478.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f4",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "As an answer to what happens during erosion, the stated reduction is located in erosion.",
+      "quotes": [
+        "The earth material will get smaller"
+      ]
+    },
+    {
+      "case_id": "LF.13b.478.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f3",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "cannot_judge",
+      "outcome": "abstain",
+      "reason": "New land could imply transport and deposition, but could also mean local reshaping; movement is not clear enough to credit.",
+      "quotes": [
+        "make new land"
+      ]
+    },
+    {
+      "case_id": "LF.13b.478.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f5",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "cannot_judge",
+      "outcome": "abstain",
+      "reason": "The erosion context is supplied, but whether movement is meant remains unresolved.",
+      "quotes": [
+        "make new land"
+      ]
+    },
+    {
+      "case_id": "LF.13b.737.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f2",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "demonstrated",
+      "outcome": "disagree",
+      "reason": "Taking material away from the named locations expresses their erosion/wearing away.",
+      "quotes": [
+        "Earth materials get taken away"
+      ]
+    },
+    {
+      "case_id": "LF.13b.737.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f4",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "demonstrated",
+      "outcome": "disagree",
+      "reason": "In the erosion question, the response describes this removal as the process being asked about.",
+      "quotes": [
+        "Earth materials get taken away from river banks, beaches, and island."
+      ]
+    },
+    {
+      "case_id": "LF.13b.737.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f3",
+      "reference_label": "Expressed",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "Taken away from a location directly expresses movement of the material.",
+      "quotes": [
+        "get taken away from river banks, beaches, and island"
+      ]
+    },
+    {
+      "case_id": "LF.13b.737.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f5",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "The answer locates the described transport within the erosion process asked about.",
+      "quotes": [
+        "Earth materials get taken away from river banks, beaches, and island."
+      ]
+    },
+    {
+      "case_id": "LF.13b.436.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f2",
+      "reference_label": "Expressed",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "The core predicate explicitly matches wearing away of material.",
+      "quotes": [
+        "Earth materials are worn away"
+      ]
+    },
+    {
+      "case_id": "LF.13b.436.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f4",
+      "reference_label": "Inferred",
+      "reference_mapped": "demonstrated",
+      "assessor_status": "demonstrated",
+      "outcome": "match",
+      "reason": "The reply asserts wearing away in the erosion context of the question.",
+      "quotes": [
+        "Earth materials are worn away"
+      ]
+    },
+    {
+      "case_id": "LF.13b.436.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f3",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "not_shown",
+      "outcome": "match",
+      "reason": "The response states wearing away, but does not separately express material transport.",
+      "quotes": []
+    },
+    {
+      "case_id": "LF.13b.436.1",
+      "question_id": "LF_13b",
+      "facet_id": "LF_13b_f5",
+      "reference_label": "Unaddressed",
+      "reference_mapped": "not_shown",
+      "assessor_status": "not_shown",
+      "outcome": "match",
+      "reason": "No movement event is supplied to locate during erosion.",
+      "quotes": []
+    }
+  ],
+  "caseConsequences": [
+    {
+      "case_id": "SE.27b.116.1",
+      "proposed_next": {
+        "kind": "practice",
+        "targets": [
+          "SE_27b_f2",
+          "SE_27b_f6"
+        ],
+        "text": "Contrast the direction of heat transfer and the resulting reading.",
+        "reason": "The stated cooling prediction is an explicit error. Teach the connected cause/effect once, not two independent drills."
+      },
+      "actual_immediate_help": [
+        "SE_27b_f2",
+        "SE_27b_f6"
+      ],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [
+            "SE_27b_f2",
+            "SE_27b_f6"
+          ],
+          "pending": [
+            "SE_27b_f3",
+            "SE_27b_f2",
+            "SE_27b_f6"
+          ],
+          "removed": [
+            "SE_27b_f4"
+          ]
+        },
+        "mapped_reference": {
+          "help": [
+            "SE_27b_f2"
+          ],
+          "pending": [
+            "SE_27b_f2"
+          ],
+          "removed": [
+            "SE_27b_f3",
+            "SE_27b_f6",
+            "SE_27b_f4"
+          ]
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [
+          "SE_27b_f3",
+          "SE_27b_f6"
+        ],
+        "extra_help_against_reference": [
+          "SE_27b_f6"
+        ],
+        "missing_help_against_reference": []
+      }
+    },
+    {
+      "case_id": "SE.27b.333.1",
+      "proposed_next": {
+        "kind": "follow_up",
+        "targets": [
+          "SE_27b_f2",
+          "SE_27b_f4"
+        ],
+        "text": "Do you mean the reading stays the same, and what effect does your hand have on the bulb?",
+        "reason": "Clarifying the awkward wording can change whether temperature-change teaching is warranted.",
+        "branches": {
+          "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+          "wrong": "Offer focused help only for the explicit mistaken relationship.",
+          "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+        }
+      },
+      "actual_immediate_help": [
+        "SE_27b_f2"
+      ],
+      "clarification_proposed_while_planner_offers_help": true,
+      "counterfactual": {
+        "assessor": {
+          "help": [
+            "SE_27b_f2"
+          ],
+          "pending": [
+            "SE_27b_f2",
+            "SE_27b_f6",
+            "SE_27b_f4"
+          ],
+          "removed": [
+            "SE_27b_f3"
+          ]
+        },
+        "mapped_reference": {
+          "help": [
+            "SE_27b_f2",
+            "SE_27b_f6",
+            "SE_27b_f4"
+          ],
+          "pending": [
+            "SE_27b_f2",
+            "SE_27b_f6",
+            "SE_27b_f4"
+          ],
+          "removed": [
+            "SE_27b_f3"
+          ]
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": [
+          "SE_27b_f6",
+          "SE_27b_f4"
+        ]
+      }
+    },
+    {
+      "case_id": "SE.27b.313.1",
+      "proposed_next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The heating explanation is sufficient for these selected relationships.",
+        "reason": "Do not demand the exact reference wording."
+      },
+      "actual_immediate_help": [],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [],
+          "pending": [
+            "SE_27b_f3"
+          ],
+          "removed": [
+            "SE_27b_f2",
+            "SE_27b_f6",
+            "SE_27b_f4"
+          ]
+        },
+        "mapped_reference": {
+          "help": [],
+          "pending": [],
+          "removed": [
+            "SE_27b_f3",
+            "SE_27b_f2",
+            "SE_27b_f6",
+            "SE_27b_f4"
+          ]
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [
+          "SE_27b_f3"
+        ],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": []
+      }
+    },
+    {
+      "case_id": "MS.50b.136.1",
+      "proposed_next": {
+        "kind": "follow_up",
+        "targets": [
+          "MS_50b_f1",
+          "MS_50b_f5"
+        ],
+        "text": "How would knowing the unit help Jen understand the reported 28 degrees?",
+        "reason": "The answer gives a plausible consistency benefit. One application can distinguish the communication relationship without assuming it is missing.",
+        "branches": {
+          "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+          "wrong": "Offer focused help only for the explicit mistaken relationship.",
+          "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+        }
+      },
+      "actual_immediate_help": [],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [],
+          "pending": [
+            "MS_50b_f4",
+            "MS_50b_f1",
+            "MS_50b_f5"
+          ],
+          "removed": []
+        },
+        "mapped_reference": {
+          "help": [],
+          "pending": [
+            "MS_50b_f1"
+          ],
+          "removed": [
+            "MS_50b_f4",
+            "MS_50b_f5"
+          ]
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [
+          "MS_50b_f4",
+          "MS_50b_f5"
+        ],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": []
+      }
+    },
+    {
+      "case_id": "MS.50b.141.1",
+      "proposed_next": {
+        "kind": "follow_up",
+        "targets": [
+          "MS_50b_f1",
+          "MS_50b_f5"
+        ],
+        "text": "What could Jen misunderstand if Bill only said 28 without naming the unit?",
+        "reason": "The response repeats importance without giving a reason. A concrete application would change the need for support.",
+        "branches": {
+          "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+          "wrong": "Offer focused help only for the explicit mistaken relationship.",
+          "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+        }
+      },
+      "actual_immediate_help": [],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [],
+          "pending": [
+            "MS_50b_f4",
+            "MS_50b_f1",
+            "MS_50b_f5"
+          ],
+          "removed": []
+        },
+        "mapped_reference": {
+          "help": [],
+          "pending": [
+            "MS_50b_f4",
+            "MS_50b_f1",
+            "MS_50b_f5"
+          ],
+          "removed": []
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": []
+      }
+    },
+    {
+      "case_id": "MS.50b.311.1",
+      "proposed_next": {
+        "kind": "clarify",
+        "targets": [
+          "MS_50b_f5"
+        ],
+        "text": "What do you mean by do it in the weather example?",
+        "reason": "The referent is unclear; resolve the wording before diagnosing a knowledge gap."
+      },
+      "actual_immediate_help": [],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [],
+          "pending": [
+            "MS_50b_f4",
+            "MS_50b_f1",
+            "MS_50b_f5"
+          ],
+          "removed": []
+        },
+        "mapped_reference": {
+          "help": [],
+          "pending": [
+            "MS_50b_f4",
+            "MS_50b_f1"
+          ],
+          "removed": [
+            "MS_50b_f5"
+          ]
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [
+          "MS_50b_f5"
+        ],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": []
+      }
+    },
+    {
+      "case_id": "ME.36.185.1",
+      "proposed_next": {
+        "kind": "follow_up",
+        "targets": [
+          "ME_36_f4"
+        ],
+        "text": "What do you mean by a disconnection in the series circuit?",
+        "reason": "The explicit disconnection claim warrants checking continuity before teaching a path explanation. It is not evidence that the selected one-path facet was demonstrated.",
+        "branches": {
+          "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+          "wrong": "Offer focused help only for the explicit mistaken relationship.",
+          "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+        }
+      },
+      "actual_immediate_help": [],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [],
+          "pending": [
+            "ME_36_f4"
+          ],
+          "removed": []
+        },
+        "mapped_reference": {
+          "help": [],
+          "pending": [
+            "ME_36_f4"
+          ],
+          "removed": []
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": []
+      }
+    },
+    {
+      "case_id": "ME.36.226.1",
+      "proposed_next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The pathway contrast supports the selected explanation.",
+        "reason": "Do not require the exact wording direct path to credit a reasonable explanation."
+      },
+      "actual_immediate_help": [],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [],
+          "pending": [],
+          "removed": [
+            "ME_36_f4"
+          ]
+        },
+        "mapped_reference": {
+          "help": [],
+          "pending": [],
+          "removed": [
+            "ME_36_f4"
+          ]
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": []
+      }
+    },
+    {
+      "case_id": "ME.36.214.1",
+      "proposed_next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The parallel brightness explanation is sufficient for the selected relationship.",
+        "reason": "Do not turn informal wording into an unnecessary extra drill."
+      },
+      "actual_immediate_help": [],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [],
+          "pending": [
+            "ME_36_f4"
+          ],
+          "removed": []
+        },
+        "mapped_reference": {
+          "help": [],
+          "pending": [],
+          "removed": [
+            "ME_36_f4"
+          ]
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [
+          "ME_36_f4"
+        ],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": []
+      }
+    },
+    {
+      "case_id": "LF.13b.478.1",
+      "proposed_next": {
+        "kind": "follow_up",
+        "targets": [
+          "LF_13b_f3"
+        ],
+        "text": "What happens to the material after it is worn away?",
+        "reason": "One question can establish whether transport is intended and change whether transport practice is needed.",
+        "branches": {
+          "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+          "wrong": "Offer focused help only for the explicit mistaken relationship.",
+          "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+        }
+      },
+      "actual_immediate_help": [],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [],
+          "pending": [
+            "LF_13b_f3",
+            "LF_13b_f5"
+          ],
+          "removed": [
+            "LF_13b_f2",
+            "LF_13b_f4"
+          ]
+        },
+        "mapped_reference": {
+          "help": [],
+          "pending": [
+            "LF_13b_f3",
+            "LF_13b_f5"
+          ],
+          "removed": [
+            "LF_13b_f2",
+            "LF_13b_f4"
+          ]
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": []
+      }
+    },
+    {
+      "case_id": "LF.13b.737.1",
+      "proposed_next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The removal explanation covers these selected relationships.",
+        "reason": "Equivalent words are sufficient."
+      },
+      "actual_immediate_help": [],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [],
+          "pending": [],
+          "removed": [
+            "LF_13b_f2",
+            "LF_13b_f4",
+            "LF_13b_f3",
+            "LF_13b_f5"
+          ]
+        },
+        "mapped_reference": {
+          "help": [],
+          "pending": [
+            "LF_13b_f2",
+            "LF_13b_f4"
+          ],
+          "removed": [
+            "LF_13b_f3",
+            "LF_13b_f5"
+          ]
+        },
+        "extra_removed_against_reference": [
+          "LF_13b_f2",
+          "LF_13b_f4"
+        ],
+        "extra_retained_against_reference": [],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": []
+      }
+    },
+    {
+      "case_id": "LF.13b.436.1",
+      "proposed_next": {
+        "kind": "stop",
+        "targets": [],
+        "text": "The wearing-away relationship is supported.",
+        "reason": "Retain movement as unobserved, without claiming a misconception or forcing a completeness quiz."
+      },
+      "actual_immediate_help": [],
+      "clarification_proposed_while_planner_offers_help": false,
+      "counterfactual": {
+        "assessor": {
+          "help": [],
+          "pending": [
+            "LF_13b_f3",
+            "LF_13b_f5"
+          ],
+          "removed": [
+            "LF_13b_f2",
+            "LF_13b_f4"
+          ]
+        },
+        "mapped_reference": {
+          "help": [],
+          "pending": [
+            "LF_13b_f3",
+            "LF_13b_f5"
+          ],
+          "removed": [
+            "LF_13b_f2",
+            "LF_13b_f4"
+          ]
+        },
+        "extra_removed_against_reference": [],
+        "extra_retained_against_reference": [],
+        "extra_help_against_reference": [],
+        "missing_help_against_reference": []
+      }
+    }
+  ],
+  "counterfactualTotals": {
+    "extra_removed_against_reference": 2,
+    "extra_retained_against_reference": 7,
+    "extra_help_against_reference": 1,
+    "missing_help_against_reference": 2
+  },
+  "limitations": [
+    "12 correlated student responses across four selected science questions; not representative.",
+    "Public data may have appeared in model training.",
+    "12 Assumed labels are excluded by the pre-reveal convention.",
+    "Annotation and assessor interpretations may both be wrong.",
+    "Practice consequences are policy simulations, not observed teaching effects.",
+    "No source human judgments of next actions, misread diagnosis, assistance, retention or mastery."
+  ]
+}

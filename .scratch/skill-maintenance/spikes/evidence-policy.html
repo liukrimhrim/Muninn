@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What did the learner actually demonstrate?</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#183129;background:#f4f6f2;line-height:1.5}body{max-width:1120px;margin:40px auto;padding:0 24px}h1{font-size:34px;line-height:1.15;max-width:820px}h2{font-size:21px;margin-top:0}p{max-width:900px}small,.muted{color:#52665d}.tag{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#376752}section{background:white;border:1px solid #d3ddd4;border-radius:10px;padding:22px;margin:18px 0}button,select{font:inherit;padding:8px 12px;border:1px solid #a8bcb0;border-radius:6px;background:white;color:#183129;cursor:pointer;margin:3px}button:hover,button[aria-selected=true]{background:#e1eee5}button:disabled{opacity:.5;cursor:default}button.primary{background:#245940;color:white}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;vertical-align:top;padding:11px 8px;border-bottom:1px solid #e4e9e2}th{font-size:12px;color:#52665d}td:first-child{width:32%}.warning{color:#8c4728}.good{color:#245940}.columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}.callout{border-left:4px solid #56896b;padding-left:16px}#history{max-height:220px;overflow:auto;font-size:14px}.mono{font-family:monospace;font-size:12px;overflow-wrap:anywhere}#walkButtons{margin-top:14px}@media(max-width:750px){.columns{grid-template-columns:1fr}body{padding:0 12px;margin:20px auto}h1{font-size:27px}section{padding:15px}table{font-size:12px}}
+</style>
+<span class="tag">Throwaway logic spike · synthetic observations · local only</span>
+<h1>What did the learner actually demonstrate?</h1>
+<p>Can a learning system reduce repeat practice without mistaking a correct answer, a hint, or a finished lab for evidence of every related skill?</p>
+<p class="muted">Working example: Kubernetes troubleshooting. These buttons inject invented observations; this page does not run a lab, assess a person, implement FSRS, or estimate learning gains. The comparator deliberately grants credit from graph connections. It is not a reproduction of any named product.</p>
+
+<section>
+ <h2>Current evidence</h2>
+ <p id="summary" aria-live="polite"></p>
+ <table><thead><tr><th>Capability and assessed mode</th><th>Topology-only comparator</th><th>Observed-evidence proposal</th></tr></thead><tbody id="rows"></tbody></table>
+ <p><small>“Observed pass” means a direct, unassisted result in this scenario—not durable mastery. “Check again” uses an illustrative 7-day freshness rule, not a fitted forgetting model. Every assessment mode keeps its own evidence.</small></p>
+ <p class="mono">Proposed prerequisites: context → event inspection → incident diagnosis; context → incident diagnosis; readiness explanation → incident diagnosis. Multiple paths do not create multiple observations.</p>
+</section>
+<section class="columns">
+ <div><h2>Choose the next practice</h2>
+  <label for="budget">Time available</label> <select id="budget"><option value="20">20 seconds</option><option value="60">1 minute</option><option value="180">3 minutes</option><option value="600" selected>10 minutes</option></select>
+  <p id="next" class="callout" aria-live="polite"></p>
+  <p><small>Policy: address unresolved diagnosis first; otherwise fill missing operational evidence with the shortest qualifying exercise. If none fits, show the unmet requirement. No weighted score or inferred learning gain.</small></p>
+ </div>
+ <div><h2>Free play</h2><div id="actions"></div><button id="duplicate">Replay the last submission</button><button id="advance">Advance 8 days</button><button id="reset">Reset everything</button></div>
+</section>
+<section>
+ <h2>Guided walkthroughs</h2><div role="tablist" aria-label="Evidence scenarios" id="tabs"></div><p id="walkText"></p><div id="walkButtons"></div>
+</section>
+<section><h2>Observation trail</h2><p><small>One attempt may contain several rubric observations. Replaying an attempt is idempotent. A hinted result is retained as assisted practice; a failed whole task does not identify which prerequisite failed.</small></p><ol id="history"></ol></section>
+
+<script id="model">
+// Pure, portable experiment logic. All parameters below are illustrative policy choices.
+const EvidenceSpike = (() => {
+ const slots = [
+  {id:'context:execute',cap:'context',label:'Check the intended cluster and namespace · execute'},
+  {id:'events:recall',cap:'events',label:'Produce an inspection command · recall'},
+  {id:'events:execute',cap:'events',label:'Inspect relevant workload events · execute'},
+  {id:'readiness:recognize',cap:'readiness',label:'Select a readiness explanation · recognize'},
+  {id:'readiness:explain',cap:'readiness',label:'Explain readiness and traffic · explain'},
+  {id:'incident:execute',cap:'incident',label:'Diagnose and verify an unfamiliar incident · execute'}
+ ];
+ const required = ['context:execute','events:execute','readiness:explain','incident:execute'];
+ const parents = {incident:['context','events','readiness'],events:['context'],context:[],readiness:[]};
+ const obs = (slot,pass=true,assisted=false) => ({slot,pass,assisted});
+ const templates = {
+  recognition:{label:'Recognize the correct answer',root:'readiness',pass:true,seconds:20,observations:[obs('readiness:recognize')],detail:'A correct multiple-choice answer; no explanation or execution was observed.'},
+  recall:{label:'Recall an inspection command',root:'events',pass:true,seconds:30,observations:[obs('events:recall')],detail:'The command was produced without a hint; execution remains unobserved.'},
+  outcome:{label:'Observe a successful final lab state',root:'incident',pass:true,seconds:180,observations:[],detail:'The system sees a healthy end state, but cannot attribute diagnosis or actions to the learner.'},
+  guided:{label:'Complete the lab with hints',root:'incident',pass:true,seconds:180,observations:[obs('context:execute',true,true),obs('events:execute',true,true),obs('incident:execute',true,true)],detail:'Assisted practice is recorded, with no claim of independent execution.'},
+  observed:{label:'Complete an observed independent scenario',root:'incident',pass:true,seconds:180,observations:[obs('context:execute'),obs('events:execute'),obs('readiness:explain'),obs('incident:execute')],detail:'Four separate rubric observations were recorded in a new scenario. This is one correlated attempt, not four independent trials.'},
+  ambiguous:{label:'Fail a lab without a clear cause',root:'incident',pass:false,seconds:180,ambiguous:true,observations:[],detail:'The task failed. No evidence yet says which capability caused the failure; request diagnosis.'},
+  miss:{label:'Miss the command-recall probe',root:'events',pass:false,seconds:30,diagnostic:true,observations:[obs('events:recall',false)],detail:'A direct command-recall failure localizes one weakness. Other possible causes of the failed lab remain unresolved.'},
+  explain:{label:'Explain the readiness relationship',root:'readiness',pass:true,seconds:45,observations:[obs('readiness:explain')],detail:'The causal relationship was explained without hints; execution remains a separate requirement.'}
+ };
+ function fresh(){return {day:0,attempts:[],naive:{},direct:{},diagnosis:false,seconds:0,note:'No observations yet.'};}
+ function ancestors(cap){return [...new Set([cap,...(parents[cap]||[]).flatMap(ancestors)])];}
+ function attempt(kind,id,day){return {...templates[kind],kind,id,day};}
+ function apply(state,event){
+  if(event.kind==='advance')return {...state,day:state.day+8,note:'Eight days passed. Old evidence remains visible but is due for a fresh check.'};
+  if(state.attempts.some(a=>a.id===event.id))return {...state,note:'Duplicate submission ignored. It supplies no new evidence or practice time.'};
+  const next={...state,attempts:[...state.attempts,event],naive:{...state.naive},direct:{...state.direct},seconds:state.seconds+event.seconds,note:event.detail};
+  const connected=ancestors(event.root);
+  for(const slot of slots.filter(s=>connected.includes(s.cap)))next.naive[slot.id]={pass:event.pass,assisted:false,day:event.day,attempt:event.id};
+  for(const o of event.observations)next.direct[o.slot]={...o,day:event.day,attempt:event.id};
+  if(event.ambiguous)next.diagnosis=true;
+  // An independent observed scenario resolves the task-level uncertainty; a probe alone does not.
+  if(event.kind==='observed')next.diagnosis=false;
+  return next;
+ }
+ function status(observation,day){
+  if(!observation)return 'Unobserved';
+  if(!observation.pass)return 'Needs practice';
+  if(observation.assisted)return 'Assisted only';
+  return day-observation.day>=7?'Check again':'Observed pass';
+ }
+ function choose(state,budget){
+  const unmet=required.filter(s=>status(state.direct[s],state.day)!=='Observed pass');
+  if(state.diagnosis){
+   const failedRecall=state.direct['events:recall']?.pass===false;
+   const seconds=failedRecall?180:30;
+   return {exercise:budget>=seconds?(failedRecall?'Guided diagnostic lab':'Command-recall diagnostic probe'):null,seconds:budget>=seconds?seconds:0,unmet,reason:budget>=seconds?(failedRecall?'Repair the observed recall weakness and investigate remaining causes. A whole-task failure is still unresolved.':'Use one narrow probe to distinguish a possible cause; do not blame every prerequisite.'):'No qualifying diagnostic fits. Keep the uncertainty visible and reserve a longer session.'};
+  }
+  if(!unmet.length)return {exercise:null,seconds:0,unmet,reason:'Stop for now. Operational evidence was observed recently; schedule a delayed unseen check. This is not proof of durable competence.'};
+  const executionMissing=unmet.some(s=>s.endsWith(':execute'));
+  const seconds=executionMissing?180:45;
+  if(budget>=seconds)return {exercise:executionMissing?'Observed independent scenario':'Readiness explanation',seconds,unmet,reason:'Collect the missing kind of evidence. Judge each capability separately; graph membership earns no review credit.'};
+  return {exercise:budget>=30?'Optional command-recall preparation':null,seconds:budget>=30?30:0,unmet,reason:'The required practice does not fit. Preparation cannot satisfy the missing operational evidence; keep a longer session due.'};
+ }
+ const walkthroughs=[
+  {name:'Recognition ≠ execution',text:'A cheap correct answer demonstrates recognition. Watch the explanation and execution requirements stay open.',steps:['recognition']},
+  {name:'A healthy lab is not a trace',text:'An end-state check cannot prove how the learner got there. Then compare a scenario with observable rubric evidence.',steps:['outcome','observed']},
+  {name:'Hints and a new attempt',text:'Hints count as practice. A later independent scenario changes the evidence status, while the two attempts remain distinct.',steps:['guided','observed']},
+  {name:'Failure and diagnosis',text:'Do not blame every prerequisite for a failed lab. A narrow failed probe identifies one weakness; an independent scenario checks the repair.',steps:['ambiguous','miss','observed']},
+  {name:'Duplicate and delay',text:'Replayed observations add no credit. Time makes even directly observed evidence due for another check.',steps:['observed','duplicate','advance']},
+  {name:'One-minute session',text:'A required three-minute task cannot fit in one minute. Short preparation remains preparation, and the execution requirement stays visible.',steps:['budget60','recall']}
+ ];
+ return {slots,required,templates,fresh,attempt,apply,status,choose,walkthroughs};
+})();
+</script>
+<script>
+const M=EvidenceSpike;let state=M.fresh(),sequence=0,walk=0,step=0;
+const $=id=>document.getElementById(id);
+function perform(kind){
+ if(kind==='budget60')$('budget').value='60';
+ else if(kind==='advance')state=M.apply(state,{kind:'advance'});
+ else if(kind==='duplicate'){if(state.attempts.length)state=M.apply(state,state.attempts.at(-1));}
+ else state=M.apply(state,M.attempt(kind,'attempt-'+(++sequence),state.day));
+ render();
+}
+function selectWalk(index){walk=index;step=0;state=M.fresh();sequence=0;$('budget').value='600';render();}
+function render(){
+ $('summary').textContent=`Day ${state.day} · ${state.attempts.length} unique attempts · ${state.seconds} seconds of illustrative practice. ${state.note}`;
+ $('rows').innerHTML=M.slots.map(s=>{const a=M.status(state.naive[s.id],state.day),b=M.status(state.direct[s.id],state.day);const o=state.direct[s.id];return `<tr><td>${s.label}</td><td class="${a!==b?'warning':''}">${a}${a==='Observed pass'?' (inferred)':''}</td><td class="${b==='Observed pass'?'good':''}">${b}${o?`<br><small>${o.attempt} · day ${o.day}</small>`:''}</td></tr>`;}).join('');
+ const decision=M.choose(state,Number($('budget').value));
+ $('next').textContent=(decision.exercise?`${decision.exercise} (${decision.seconds}s). `:'No exercise selected. ')+decision.reason+` Unmet operational requirements: ${decision.unmet.length}.`;
+ $('duplicate').disabled=!state.attempts.length;
+ $('tabs').innerHTML='';M.walkthroughs.forEach((w,i)=>{const b=document.createElement('button');b.textContent=w.name;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(walk===i));b.onclick=()=>selectWalk(i);$('tabs').append(b);});
+ const w=M.walkthroughs[walk];$('walkText').textContent=w.text;$('walkButtons').innerHTML='';
+ w.steps.forEach((kind,i)=>{const b=document.createElement('button');b.textContent=`${i+1}. `+(M.templates[kind]?.label||{duplicate:'Replay submission',advance:'Advance 8 days',budget60:'Set one-minute budget'}[kind]);b.disabled=i!==step;b.className=i===step?'primary':'';b.onclick=()=>{step++;perform(kind);};$('walkButtons').append(b);});
+ if(step===w.steps.length){const p=document.createElement('p');p.textContent='Walkthrough complete. Continue with free play, or select a tab to reset.';$('walkButtons').append(p);}
+ $('history').innerHTML='';state.attempts.forEach(a=>{const li=document.createElement('li');li.textContent=`${a.id} · day ${a.day} · ${a.label}: ${a.observations.length} direct rubric observations${a.observations.some(o=>o.assisted)?' (assisted)':''}. ${a.detail}`;$('history').append(li);});
+}
+Object.entries(M.templates).forEach(([kind,t])=>{const b=document.createElement('button');b.textContent=t.label;b.onclick=()=>perform(kind);$('actions').append(b);});
+$('budget').onchange=render;$('duplicate').onclick=()=>perform('duplicate');$('advance').onclick=()=>perform('advance');$('reset').onclick=()=>selectWalk(walk);render();
+</script>
+</html>

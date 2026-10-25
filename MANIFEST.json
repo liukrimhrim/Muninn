@@ -1,0 +1,1951 @@
+{
+  "package": "memorization-system-design",
+  "created_at": "2026-10-24T22:52:20.191813+00:00",
+  "source": "Current on-disk design snapshot",
+  "files": [
+    {
+      "path": ".scratch/skill-maintenance/README.md",
+      "bytes": 606,
+      "sha256": "3770ed6a7aabe20632a27e98bdb9c9a21f92220fa09541fb98427cb88ae91d2e",
+      "source_sha256": "3770ed6a7aabe20632a27e98bdb9c9a21f92220fa09541fb98427cb88ae91d2e"
+    },
+    {
+      "path": ".scratch/skill-maintenance/chinese-japanese-extension.md",
+      "bytes": 29001,
+      "sha256": "1207eff104ae7ac1214a5870f744e0412eac78c9307d01a71ff3aaa86f7fa1be",
+      "source_sha256": "1207eff104ae7ac1214a5870f744e0412eac78c9307d01a71ff3aaa86f7fa1be"
+    },
+    {
+      "path": ".scratch/skill-maintenance/compatibility-design.md",
+      "bytes": 51477,
+      "sha256": "8b20b81cc4a3c065b45dc148b99743ba7a44c083bf04fc9c4a72fe9b3aa66c1f",
+      "source_sha256": "8b20b81cc4a3c065b45dc148b99743ba7a44c083bf04fc9c4a72fe9b3aa66c1f"
+    },
+    {
+      "path": ".scratch/skill-maintenance/cross-contract-audit.md",
+      "bytes": 24139,
+      "sha256": "b4360f986c0cde6efd6ec7631c7780a05f0953a1e50006db3988fec7d6d3d9ce",
+      "source_sha256": "b4360f986c0cde6efd6ec7631c7780a05f0953a1e50006db3988fec7d6d3d9ce"
+    },
+    {
+      "path": ".scratch/skill-maintenance/cross-contract-closure.md",
+      "bytes": 13490,
+      "sha256": "81dd7241f271237dd7195fc5ef1792ca630084bbd00d865d5485428d9ab33a86",
+      "source_sha256": "81dd7241f271237dd7195fc5ef1792ca630084bbd00d865d5485428d9ab33a86"
+    },
+    {
+      "path": ".scratch/skill-maintenance/design-baseline.md",
+      "bytes": 13996,
+      "sha256": "e51f6c691392f3717eba87487e93987f5b0ba2841b3b2edc547445d533e4c259",
+      "source_sha256": "e51f6c691392f3717eba87487e93987f5b0ba2841b3b2edc547445d533e4c259"
+    },
+    {
+      "path": ".scratch/skill-maintenance/diagnosis-design.md",
+      "bytes": 25844,
+      "sha256": "6c66dd59e1bbaa9e93a382bb4f7f9b6cbc78d3df75648278bb3f3afccca19231",
+      "source_sha256": "6c66dd59e1bbaa9e93a382bb4f7f9b6cbc78d3df75648278bb3f3afccca19231"
+    },
+    {
+      "path": ".scratch/skill-maintenance/everyday-learning-cases.md",
+      "bytes": 14526,
+      "sha256": "ce30bec4faec485f281b9b9853730177fd9aa96a51003b92043d045870b0e356",
+      "source_sha256": "ce30bec4faec485f281b9b9853730177fd9aa96a51003b92043d045870b0e356"
+    },
+    {
+      "path": ".scratch/skill-maintenance/everyday-learning-design.md",
+      "bytes": 44968,
+      "sha256": "45fd609a26e6b72bc7c7ba40aede503d0844d3d895e305d25d174adf4df0c48e",
+      "source_sha256": "45fd609a26e6b72bc7c7ba40aede503d0844d3d895e305d25d174adf4df0c48e"
+    },
+    {
+      "path": ".scratch/skill-maintenance/first-build-plan.md",
+      "bytes": 50193,
+      "sha256": "11d6552f88900843f861f794ed8929747f840e7f26dd8d87cc7d7239206fea19",
+      "source_sha256": "11d6552f88900843f861f794ed8929747f840e7f26dd8d87cc7d7239206fea19"
+    },
+    {
+      "path": ".scratch/skill-maintenance/frontier.md",
+      "bytes": 5179,
+      "sha256": "634570148fc79e03034e728b67e51f51c0298fc44b33740ee267b7600a41ef38",
+      "source_sha256": "634570148fc79e03034e728b67e51f51c0298fc44b33740ee267b7600a41ef38"
+    },
+    {
+      "path": ".scratch/skill-maintenance/inference-design.md",
+      "bytes": 14361,
+      "sha256": "1f811b3e19c6f50ae28f0806a82d93c6e071d6e7f49367e492a54654bbdd9aef",
+      "source_sha256": "1f811b3e19c6f50ae28f0806a82d93c6e071d6e7f49367e492a54654bbdd9aef"
+    },
+    {
+      "path": ".scratch/skill-maintenance/integrated-design-audit.md",
+      "bytes": 18144,
+      "sha256": "fb1cb1605dca28ed8ce61eaec499e27cbeee58b4ca038f5c4e475d7d33ed3ed4",
+      "source_sha256": "fb1cb1605dca28ed8ce61eaec499e27cbeee58b4ca038f5c4e475d7d33ed3ed4"
+    },
+    {
+      "path": ".scratch/skill-maintenance/integrated-design-closure.md",
+      "bytes": 10996,
+      "sha256": "0ba62725edfb4bb19be0a8b6f84cc5352bf60424ab847792404bba2b8be61db5",
+      "source_sha256": "0ba62725edfb4bb19be0a8b6f84cc5352bf60424ab847792404bba2b8be61db5"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/01-existing-implementations.md",
+      "bytes": 1171,
+      "sha256": "511fbf26469e9aa6fbd7eda4254b5595dfe850cefe4c5874c1258108e666612a",
+      "source_sha256": "511fbf26469e9aa6fbd7eda4254b5595dfe850cefe4c5874c1258108e666612a"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/02-learning-evidence.md",
+      "bytes": 1200,
+      "sha256": "26f24b1b26fc5b7e2bad3af9969ffafb02a11bdaa172c692c387223f54f54051",
+      "source_sha256": "26f24b1b26fc5b7e2bad3af9969ffafb02a11bdaa172c692c387223f54f54051"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/03-memory-model.md",
+      "bytes": 1539,
+      "sha256": "916555be9b998d74ed699518f98da0ea8e467305fec8963791889b9d0de01f83",
+      "source_sha256": "916555be9b998d74ed699518f98da0ea8e467305fec8963791889b9d0de01f83"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/04-evidence-spike.md",
+      "bytes": 7668,
+      "sha256": "064ac37ec9784ee853dba2cef91422fc3c6b3e482f20e7eb67350b01fa445422",
+      "source_sha256": "064ac37ec9784ee853dba2cef91422fc3c6b3e482f20e7eb67350b01fa445422"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/05-pilot-outcome.md",
+      "bytes": 9264,
+      "sha256": "2501fd88dd06a3ed918c0f5548b1fe3de5ce4f35185359092ff7ac67ebcf6cb0",
+      "source_sha256": "2501fd88dd06a3ed918c0f5548b1fe3de5ce4f35185359092ff7ac67ebcf6cb0"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/06-evaluation-contract.md",
+      "bytes": 442,
+      "sha256": "2dbdc0fa80804c8251ec8969cb00df0e03d09d3f7f92d5c0e15f5cb81fe99284",
+      "source_sha256": "2dbdc0fa80804c8251ec8969cb00df0e03d09d3f7f92d5c0e15f5cb81fe99284"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/07-minimal-system.md",
+      "bytes": 5161,
+      "sha256": "bcef4eb35fb6758b112e247b7e1f289adb833ad164e68ec339ecd63b42ed24e5",
+      "source_sha256": "bcef4eb35fb6758b112e247b7e1f289adb833ad164e68ec339ecd63b42ed24e5"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/08-product-scope.md",
+      "bytes": 1331,
+      "sha256": "2837573e49113f151c95bc92b6c6ebce880e4fc58a2fb6b258d3eae59800776c",
+      "source_sha256": "2837573e49113f151c95bc92b6c6ebce880e4fc58a2fb6b258d3eae59800776c"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/09-learning-workflow.md",
+      "bytes": 3962,
+      "sha256": "f71d9fb1dd9dc89eab7d13250e5fa89d5515c3f1757025f1d4732639436e19e3",
+      "source_sha256": "f71d9fb1dd9dc89eab7d13250e5fa89d5515c3f1757025f1d4732639436e19e3"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/10-knowledge-representation.md",
+      "bytes": 5956,
+      "sha256": "6a20eb840d3f331090bbf88e82c44dc3875289978540029ecc71f7e21a9d3dcf",
+      "source_sha256": "6a20eb840d3f331090bbf88e82c44dc3875289978540029ecc71f7e21a9d3dcf"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/11-learner-inference.md",
+      "bytes": 7801,
+      "sha256": "110631f8520832732cceec1c54c292037a9c42fef9aa8d0800dd0a9dcebd6311",
+      "source_sha256": "110631f8520832732cceec1c54c292037a9c42fef9aa8d0800dd0a9dcebd6311"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/12-adaptive-review-selection.md",
+      "bytes": 5202,
+      "sha256": "4eac18ca2c6298f855449e194525000142ef2e13dfe7023104ce5bf698098dea",
+      "source_sha256": "4eac18ca2c6298f855449e194525000142ef2e13dfe7023104ce5bf698098dea"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/13-diagnosis-prototype.md",
+      "bytes": 6011,
+      "sha256": "cfe2fda300410756d067593633d1c61cedb09cf3689bd6318e674b873011b337",
+      "source_sha256": "cfe2fda300410756d067593633d1c61cedb09cf3689bd6318e674b873011b337"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/14-everyday-learning-policy.md",
+      "bytes": 6112,
+      "sha256": "c881a87faebe62064a2471635ff79aa38fcc9e3eb06e790be98ee028561ec5b6",
+      "source_sha256": "c881a87faebe62064a2471635ff79aa38fcc9e3eb06e790be98ee028561ec5b6"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/15-fresh-exercise-evidence.md",
+      "bytes": 1746,
+      "sha256": "5b1e1f493fae2a818a7a8d23ae3a3091097017e0b72b65a4a9fc283bd7627081",
+      "source_sha256": "5b1e1f493fae2a818a7a8d23ae3a3091097017e0b72b65a4a9fc283bd7627081"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/16-repair-budget-evidence.md",
+      "bytes": 1776,
+      "sha256": "d162b8360eb9b3eec9d9075712e9df223343a5405e2b04fa47dbeb429d5819df",
+      "source_sha256": "d162b8360eb9b3eec9d9075712e9df223343a5405e2b04fa47dbeb429d5819df"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/17-cross-contract-audit.md",
+      "bytes": 3084,
+      "sha256": "60fc4c14a7a2b1223d003a29edabb63c4f532d50f749afc161a9a8599060d74c",
+      "source_sha256": "60fc4c14a7a2b1223d003a29edabb63c4f532d50f749afc161a9a8599060d74c"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/18-integrated-design-audit.md",
+      "bytes": 2883,
+      "sha256": "756ea3cecdb9c484abaafe95abf445b2ac86c02eb5ff1596412fd3af148ab5fa",
+      "source_sha256": "756ea3cecdb9c484abaafe95abf445b2ac86c02eb5ff1596412fd3af148ab5fa"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/19-journey-and-invariant-audit.md",
+      "bytes": 2344,
+      "sha256": "1e346a641031515e3654347e523570ec4dca43181cf0a0ce07eb7b2bc9de0249",
+      "source_sha256": "1e346a641031515e3654347e523570ec4dca43181cf0a0ce07eb7b2bc9de0249"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/20-module-ownership.md",
+      "bytes": 2994,
+      "sha256": "13f39d0c4af626418f550d6442c601e1b751e09158bf10303d3cc99e338a1ce5",
+      "source_sha256": "13f39d0c4af626418f550d6442c601e1b751e09158bf10303d3cc99e338a1ce5"
+    },
+    {
+      "path": ".scratch/skill-maintenance/issues/21-design-baseline.md",
+      "bytes": 2225,
+      "sha256": "a37275e00664f74a052664df3a67f461a908613037643629734c6322e8725602",
+      "source_sha256": "a37275e00664f74a052664df3a67f461a908613037643629734c6322e8725602"
+    },
+    {
+      "path": ".scratch/skill-maintenance/journey-invariant-audit.md",
+      "bytes": 19568,
+      "sha256": "a9f6af5e5b4ccd2dbf7c1b94a40da82a54b55682950232eab168dccfb7484263",
+      "source_sha256": "a9f6af5e5b4ccd2dbf7c1b94a40da82a54b55682950232eab168dccfb7484263"
+    },
+    {
+      "path": ".scratch/skill-maintenance/journey-invariant-closure.md",
+      "bytes": 9999,
+      "sha256": "368894c2ead39bbac7b56b70978fde17f3d005bcd615ccce8cd10cf49fa00566",
+      "source_sha256": "368894c2ead39bbac7b56b70978fde17f3d005bcd615ccce8cd10cf49fa00566"
+    },
+    {
+      "path": ".scratch/skill-maintenance/learning-lifecycle-contract.md",
+      "bytes": 43920,
+      "sha256": "7b6687344f92fdc1bcc27cd459ce4ebf91670cd67a18ad75855e89fcf79b4f5b",
+      "source_sha256": "7b6687344f92fdc1bcc27cd459ce4ebf91670cd67a18ad75855e89fcf79b4f5b"
+    },
+    {
+      "path": ".scratch/skill-maintenance/map.md",
+      "bytes": 11245,
+      "sha256": "a98adf0d68c6b88a8631b64996a443e1fc633984f1a27d037d0b1950a3449e0b",
+      "source_sha256": "a98adf0d68c6b88a8631b64996a443e1fc633984f1a27d037d0b1950a3449e0b"
+    },
+    {
+      "path": ".scratch/skill-maintenance/material-workflow.md",
+      "bytes": 16100,
+      "sha256": "a0396c66d58a4060b1575fbc345fbffad770dc25b95bff4679a9134b194a68e1",
+      "source_sha256": "713c64868ca7923485d74b68bb80c39344b1b4bec0ce99b416767c33d4777d08"
+    },
+    {
+      "path": ".scratch/skill-maintenance/module-design-audit.md",
+      "bytes": 10970,
+      "sha256": "351806dc2daa622d19c171995db3dbe1c0c0ad40fdb9fb6538de9c1fcd34e514",
+      "source_sha256": "351806dc2daa622d19c171995db3dbe1c0c0ad40fdb9fb6538de9c1fcd34e514"
+    },
+    {
+      "path": ".scratch/skill-maintenance/module-design-review-response.md",
+      "bytes": 13620,
+      "sha256": "11b368ce268aee1783b4507911607b94a313f1f242ce9d56657291d9de4ea1ab",
+      "source_sha256": "11b368ce268aee1783b4507911607b94a313f1f242ce9d56657291d9de4ea1ab"
+    },
+    {
+      "path": ".scratch/skill-maintenance/module-design.md",
+      "bytes": 33073,
+      "sha256": "0d57641f7215984f2bcea5c5a481dd34880127d60b7c1477cf05c9c1b1cfe12a",
+      "source_sha256": "0d57641f7215984f2bcea5c5a481dd34880127d60b7c1477cf05c9c1b1cfe12a"
+    },
+    {
+      "path": ".scratch/skill-maintenance/observability-design.md",
+      "bytes": 42092,
+      "sha256": "33266e77e8adc6f0e15b7211c27fb0b505225b248d76322c5f34d7a8118228a6",
+      "source_sha256": "33266e77e8adc6f0e15b7211c27fb0b505225b248d76322c5f34d7a8118228a6"
+    },
+    {
+      "path": ".scratch/skill-maintenance/representation-design.md",
+      "bytes": 24733,
+      "sha256": "3383a13387576bd8837bc84fde5c9aee921137a5af715de72aa5a8e1afd96260",
+      "source_sha256": "4ae6c8dd77887f31c87c1be6198c3158c0fde2cc0bc7263ea4f2d1d61e452174"
+    },
+    {
+      "path": ".scratch/skill-maintenance/research/bounded-repair-and-practice-budget.md",
+      "bytes": 16529,
+      "sha256": "ffc5bed38dec3be80889c40122619c1804441cdc5627bef50d56f04bceef6454",
+      "source_sha256": "ffc5bed38dec3be80889c40122619c1804441cdc5627bef50d56f04bceef6454"
+    },
+    {
+      "path": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "bytes": 41506,
+      "sha256": "245c79739a0e3f492f3709f4ce95cc7970ff4a434f9d32dfc07feeb5c95484f1",
+      "source_sha256": "5ecd39ba4bf58b0b0b6bb73bf0d80b01b9cebd4e8f4e610be253e590a8d4f943"
+    },
+    {
+      "path": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "bytes": 12193,
+      "sha256": "ca354688209a608ffc5fa7cf09c6509bbbe8e2b0bb0224da1bdc5fc7f1ecc9cb",
+      "source_sha256": "a521213eae3419da050e512c4fec97163c50427c84d084bd3622d71849837d98"
+    },
+    {
+      "path": ".scratch/skill-maintenance/research/existing-implementations.md",
+      "bytes": 21376,
+      "sha256": "f27e83671cac315f352ebe53f0d471d3b0d631fa65670da9e6f8a75cd7cf3be4",
+      "source_sha256": "f27e83671cac315f352ebe53f0d471d3b0d631fa65670da9e6f8a75cd7cf3be4"
+    },
+    {
+      "path": ".scratch/skill-maintenance/research/fresh-checks-and-evidence-age.md",
+      "bytes": 17920,
+      "sha256": "1f7db37da077d64ea0a4c2800e29926a660922b419a080144e3cc386f346294e",
+      "source_sha256": "1f7db37da077d64ea0a4c2800e29926a660922b419a080144e3cc386f346294e"
+    },
+    {
+      "path": ".scratch/skill-maintenance/research/learning-evidence.md",
+      "bytes": 16555,
+      "sha256": "1200ff01a3b5a3338713954370c8aa2fab243aee0a89480811c7dfc3f18dbda8",
+      "source_sha256": "1200ff01a3b5a3338713954370c8aa2fab243aee0a89480811c7dfc3f18dbda8"
+    },
+    {
+      "path": ".scratch/skill-maintenance/research/memory-model.md",
+      "bytes": 17472,
+      "sha256": "5531ba0ea0c846e40c2472c2ee11a5ca8ac467a04369666e2397b44b59829fa3",
+      "source_sha256": "5531ba0ea0c846e40c2472c2ee11a5ca8ac467a04369666e2397b44b59829fa3"
+    },
+    {
+      "path": ".scratch/skill-maintenance/research/provenance.md",
+      "bytes": 12549,
+      "sha256": "3419ea5d1ed981da80f7694ee25362acecb58bc49b7367852da366b33774beb0",
+      "source_sha256": "e2ece80d2316069c3e4582b4c0676725327ce58c320b178b5f22067ca861d195"
+    },
+    {
+      "path": ".scratch/skill-maintenance/research/sparse-inference.md",
+      "bytes": 11771,
+      "sha256": "a8f42c67d80f793fe356fe97b83f4b7838d00617d3d8cdaa66fb0fdc6b404a12",
+      "source_sha256": "a8f42c67d80f793fe356fe97b83f4b7838d00617d3d8cdaa66fb0fdc6b404a12"
+    },
+    {
+      "path": ".scratch/skill-maintenance/selection-design.md",
+      "bytes": 10955,
+      "sha256": "b96fe0f3d702069262aa4450bd959efcc47063fad37cc4b1079ad84479816453",
+      "source_sha256": "b96fe0f3d702069262aa4450bd959efcc47063fad37cc4b1079ad84479816453"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spec.md",
+      "bytes": 47763,
+      "sha256": "974ddf9d59a76b2acf6f6a246016bd488591f844ce3048d8a4c25e9a21f035e8",
+      "source_sha256": "974ddf9d59a76b2acf6f6a246016bd488591f844ce3048d8a4c25e9a21f035e8"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/README.md",
+      "bytes": 5913,
+      "sha256": "fa73fc5bd7d0b8fa4869962e5489b5ab735c187f0d0f67ddf1052d014f83e663",
+      "source_sha256": "fa73fc5bd7d0b8fa4869962e5489b5ab735c187f0d0f67ddf1052d014f83e663"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/README.md",
+      "bytes": 8804,
+      "sha256": "b6c1421a5a0cf42b78023395f64a0c1b31962263c91ddbd9e4a37e69257fe428",
+      "source_sha256": "b6c1421a5a0cf42b78023395f64a0c1b31962263c91ddbd9e4a37e69257fe428"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/assessor-prompt-v2.md",
+      "bytes": 3266,
+      "sha256": "a87cf97adcd97eb229aaf8657c26ea9037523a20c51930067b611f6f5489f534",
+      "source_sha256": "a87cf97adcd97eb229aaf8657c26ea9037523a20c51930067b611f6f5489f534"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/bridge.mjs",
+      "bytes": 7643,
+      "sha256": "3f09515edd8a84050db0f25945c1804aa22c00829691d8c466ebb3468f02c534",
+      "source_sha256": "3f09515edd8a84050db0f25945c1804aa22c00829691d8c466ebb3468f02c534"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/clarification-before.json",
+      "bytes": 13892,
+      "sha256": "6e959f97f7e8366a8ca6d273047a6de49d54c5cdb7147da49799feeb010c123f",
+      "source_sha256": "6e959f97f7e8366a8ca6d273047a6de49d54c5cdb7147da49799feeb010c123f"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/clarification-cli-results.json",
+      "bytes": 709,
+      "sha256": "017af5b591dcbc890000245afd06c2b95780df966b69faff42f1d6fe62ce301b",
+      "source_sha256": "017af5b591dcbc890000245afd06c2b95780df966b69faff42f1d6fe62ce301b"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/clarification-notes.md",
+      "bytes": 5328,
+      "sha256": "941a851610fcf99b87e03aead69c66fffc019ae39ac574822dc4d0d70d9c16e5",
+      "source_sha256": "941a851610fcf99b87e03aead69c66fffc019ae39ac574822dc4d0d70d9c16e5"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/clarification-replay.mjs",
+      "bytes": 11295,
+      "sha256": "cf08e28fd6e16fce16908a7cdbaf6a534823aac0860b6b78930c1ae36990f580",
+      "source_sha256": "cf08e28fd6e16fce16908a7cdbaf6a534823aac0860b6b78930c1ae36990f580"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/clarification-results.json",
+      "bytes": 16868,
+      "sha256": "66a56f61ac008a6e1ea5e1cc8edcc55e5d3fe09f3b9e5efbaa2f017544f6f4da",
+      "source_sha256": "66a56f61ac008a6e1ea5e1cc8edcc55e5d3fe09f3b9e5efbaa2f017544f6f4da"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/clarification-shell.html",
+      "bytes": 5876,
+      "sha256": "ef325eff9932e0476677c5ebbe55d32150363e704058d8d865513e023730cd54",
+      "source_sha256": "ef325eff9932e0476677c5ebbe55d32150363e704058d8d865513e023730cd54"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/clarification.html",
+      "bytes": 44233,
+      "sha256": "ec15073775ed6b72702aac909254c60436ad7dc1777a83971718705139a9d3b8",
+      "source_sha256": "ec15073775ed6b72702aac909254c60436ad7dc1777a83971718705139a9d3b8"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/cli-verification.json",
+      "bytes": 619,
+      "sha256": "e760af03360901c588f9a80aa8b27977d7bf7f55fc9c01f7409c0ca7931d817e",
+      "source_sha256": "e760af03360901c588f9a80aa8b27977d7bf7f55fc9c01f7409c0ca7931d817e"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/index.html",
+      "bytes": 74267,
+      "sha256": "bc804b340a33ab35e5a0cedf0c2e5aba37c2733465ad8785ec88320c9704a5ce",
+      "source_sha256": "bc804b340a33ab35e5a0cedf0c2e5aba37c2733465ad8785ec88320c9704a5ce"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/inputs.json",
+      "bytes": 25745,
+      "sha256": "940c76fac7cdf9c810a62afdc9c2b9a6131bcd24184db8aad942d6358082d99d",
+      "source_sha256": "940c76fac7cdf9c810a62afdc9c2b9a6131bcd24184db8aad942d6358082d99d"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/judgments.json",
+      "bytes": 17829,
+      "sha256": "1b6b5b009b703fbde587b9c5c7d06e3e1259935672a9cd38fa8e949aaec99cba",
+      "source_sha256": "1b6b5b009b703fbde587b9c5c7d06e3e1259935672a9cd38fa8e949aaec99cba"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/replay.mjs",
+      "bytes": 13175,
+      "sha256": "0b68f91ca5d5c1f997160bef122eb361df069238f45efa700a4fac1c969b35db",
+      "source_sha256": "0b68f91ca5d5c1f997160bef122eb361df069238f45efa700a4fac1c969b35db"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/report.json",
+      "bytes": 20892,
+      "sha256": "f87a43336536794a76a7417926708f45c46e98ec78f0a142faed74c36f9b29b0",
+      "source_sha256": "f87a43336536794a76a7417926708f45c46e98ec78f0a142faed74c36f9b29b0"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/shell.html",
+      "bytes": 8495,
+      "sha256": "cbcbbf6d3a680243e18256d5362480c094b6ca0270f519a3fa22dc55620c1b30",
+      "source_sha256": "cbcbbf6d3a680243e18256d5362480c094b6ca0270f519a3fa22dc55620c1b30"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/answer-intake/verify-clarification-cli.mjs",
+      "bytes": 3710,
+      "sha256": "ea46fa2e0ac346cedb43e06a95dc10d3e5a2c3d9095a2d3941fa2ac4f1805191",
+      "source_sha256": "ea46fa2e0ac346cedb43e06a95dc10d3e5a2c3d9095a2d3941fa2ac4f1805191"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/README.md",
+      "bytes": 7044,
+      "sha256": "ab81731d195c1708021f933086e2aa82afe19b37aac93270a77067e683ab1f9f",
+      "source_sha256": "ab81731d195c1708021f933086e2aa82afe19b37aac93270a77067e683ab1f9f"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/assessed.json",
+      "bytes": 39510,
+      "sha256": "7566f6644c4ad4105545c7d0520201c04ba2a74d14c560a7a4ea95be07c5d65a",
+      "source_sha256": "7566f6644c4ad4105545c7d0520201c04ba2a74d14c560a7a4ea95be07c5d65a"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/assessor-prompt.md",
+      "bytes": 2494,
+      "sha256": "0bf86eed34cc309ee3563866f087a2c055ee1b170da66bdfe2b8ea6281811504",
+      "source_sha256": "0bf86eed34cc309ee3563866f087a2c055ee1b170da66bdfe2b8ea6281811504"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/cli-verification.json",
+      "bytes": 420,
+      "sha256": "b893496624d6e8d9453d6d7a1d33dcdfb2929321511fbbfab6924583b2e61b50",
+      "source_sha256": "b893496624d6e8d9453d6d7a1d33dcdfb2929321511fbbfab6924583b2e61b50"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/inputs.json",
+      "bytes": 4907,
+      "sha256": "aac46a73dfc5c47eedb1772015771ef94e9e2729551dac207ba8a146a64ab56d",
+      "source_sha256": "aac46a73dfc5c47eedb1772015771ef94e9e2729551dac207ba8a146a64ab56d"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/kubernetes-trial.md",
+      "bytes": 30626,
+      "sha256": "96ee10ea15ac15d7b81f22193c0581b77a9d04a64cdec8bcbccaa97923492d75",
+      "source_sha256": "96ee10ea15ac15d7b81f22193c0581b77a9d04a64cdec8bcbccaa97923492d75"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/learner-trial.md",
+      "bytes": 11426,
+      "sha256": "b5d1fe576007dc3e243d5b1c66a9fea6b2a519772f7b7c98e03d0739c94ce53f",
+      "source_sha256": "b5d1fe576007dc3e243d5b1c66a9fea6b2a519772f7b7c98e03d0739c94ce53f"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/model-output.json",
+      "bytes": 15994,
+      "sha256": "cafaea291c8bfeeae68b793aa5ca0961d2607d8e6d95aa15eef3a581e68e5638",
+      "source_sha256": "cafaea291c8bfeeae68b793aa5ca0961d2607d8e6d95aa15eef3a581e68e5638"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/probe.mjs",
+      "bytes": 4231,
+      "sha256": "6c74b179c74cf6f0af7b79a5940258bcaabcb54f93150f068938cc0e8a3e94be",
+      "source_sha256": "6c74b179c74cf6f0af7b79a5940258bcaabcb54f93150f068938cc0e8a3e94be"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/review-shell.html",
+      "bytes": 11660,
+      "sha256": "6df1871d2da08c21fc31c9054412669869b825216a2a10f01ebb14bb236964fa",
+      "source_sha256": "6df1871d2da08c21fc31c9054412669869b825216a2a10f01ebb14bb236964fa"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/review.html",
+      "bytes": 53167,
+      "sha256": "e21d91d61e35bb71f0a027b31745611abd33c90479342a73f8b2abda951d1c3d",
+      "source_sha256": "e21d91d61e35bb71f0a027b31745611abd33c90479342a73f8b2abda951d1c3d"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/run-report.json",
+      "bytes": 549,
+      "sha256": "754a92e8e68523b6cdb32bcfdd80bb1f740ceedf84c721ec7f60efe84e2bc8cf",
+      "source_sha256": "754a92e8e68523b6cdb32bcfdd80bb1f740ceedf84c721ec7f60efe84e2bc8cf"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/trial.mjs",
+      "bytes": 10376,
+      "sha256": "11d4de23d61a87f315c52219256007b4b44b0aa3c148ffb51217086d1832fed9",
+      "source_sha256": "11d4de23d61a87f315c52219256007b4b44b0aa3c148ffb51217086d1832fed9"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/assessment-trial/verification.json",
+      "bytes": 2432,
+      "sha256": "fa9ced05638a9610db207d05d1c03ec2b1b781979ebd352e763b1f5633a4143a",
+      "source_sha256": "fa9ced05638a9610db207d05d1c03ec2b1b781979ebd352e763b1f5633a4143a"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/diagnosis-notes.md",
+      "bytes": 9480,
+      "sha256": "52f740a77a87dad95cf0a6976bfdd94bfcaac07493740a341bc458b6ff4a8b6e",
+      "source_sha256": "52f740a77a87dad95cf0a6976bfdd94bfcaac07493740a341bc458b6ff4a8b6e"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/diagnosis-prototype.html",
+      "bytes": 39962,
+      "sha256": "879679085e28f25c36e5517d9d07e6ad779d863ef6289e1eebfd9613b18f60fe",
+      "source_sha256": "879679085e28f25c36e5517d9d07e6ad779d863ef6289e1eebfd9613b18f60fe"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/diagnosis-replay-results.json",
+      "bytes": 47157,
+      "sha256": "dd18f06929bfc6ef75726b08e19625c47a90fd3f3f30eed97c3d3f92a3f812ea",
+      "source_sha256": "dd18f06929bfc6ef75726b08e19625c47a90fd3f3f30eed97c3d3f92a3f812ea"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/diagnosis-replay.mjs",
+      "bytes": 3245,
+      "sha256": "c394c3904fc4c56de7f88f57361cb7f0528ba08f6f65605ec31112f56da68ac4",
+      "source_sha256": "c394c3904fc4c56de7f88f57361cb7f0528ba08f6f65605ec31112f56da68ac4"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/evidence-policy.html",
+      "bytes": 14531,
+      "sha256": "73aa590fc495de9a618e4e339c9b99ac493d49a09b4417abe18ebe33174c4aef",
+      "source_sha256": "73aa590fc495de9a618e4e339c9b99ac493d49a09b4417abe18ebe33174c4aef"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/.gitignore",
+      "bytes": 25,
+      "sha256": "56bc99504baea3e48d175e8c5fd04bf4a9523e15c70fcd95999ef187950a6ffa",
+      "source_sha256": "56bc99504baea3e48d175e8c5fd04bf4a9523e15c70fcd95999ef187950a6ffa"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/adapter.mjs",
+      "bytes": 945,
+      "sha256": "32d0462083238185c984f164ddb565aa611497ce13e55ccf6f9d2f083483f2b1",
+      "source_sha256": "32d0462083238185c984f164ddb565aa611497ce13e55ccf6f9d2f083483f2b1"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/assessment.json",
+      "bytes": 21859,
+      "sha256": "e073ac29aff7e755ea1718c09bbdb3407f7bf2e5b781e88f19223de284078dcd",
+      "source_sha256": "e073ac29aff7e755ea1718c09bbdb3407f7bf2e5b781e88f19223de284078dcd"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/blind-inputs.json",
+      "bytes": 26432,
+      "sha256": "d76a87c6a297cbcbd67f91a72894ca782adf7e9812bd81e0f1b33672a952f993",
+      "source_sha256": "d76a87c6a297cbcbd67f91a72894ca782adf7e9812bd81e0f1b33672a952f993"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/blind-validation.json",
+      "bytes": 1648,
+      "sha256": "01449e4d0e52f89830c260f326cc7c712eb354c6751b8942baede0dde40cea34",
+      "source_sha256": "01449e4d0e52f89830c260f326cc7c712eb354c6751b8942baede0dde40cea34"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/compare.mjs",
+      "bytes": 6920,
+      "sha256": "86904a17f1eb8e6084c4320bdc460335eeb8f8bcbb50ac34a9ffa765e4073db6",
+      "source_sha256": "86904a17f1eb8e6084c4320bdc460335eeb8f8bcbb50ac34a9ffa765e4073db6"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/comparison.json",
+      "bytes": 37249,
+      "sha256": "72ecd1a89ac927d3dfc4cdbb8964315d47afa49ace985c47f003d183cf1bc074",
+      "source_sha256": "72ecd1a89ac927d3dfc4cdbb8964315d47afa49ace985c47f003d183cf1bc074"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/freeze.json",
+      "bytes": 814,
+      "sha256": "d1044585c938af96c396f52837b4f552ca11e8061758e68316ec0d8cd05d803b",
+      "source_sha256": "d1044585c938af96c396f52837b4f552ca11e8061758e68316ec0d8cd05d803b"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/independent-audit.md",
+      "bytes": 5676,
+      "sha256": "c6eafd9c0e0d630dbbcdd3c045101fab7e4d810baa78c1f824fc11375ead6c66",
+      "source_sha256": "c6eafd9c0e0d630dbbcdd3c045101fab7e4d810baa78c1f824fc11375ead6c66"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/protocol.md",
+      "bytes": 6774,
+      "sha256": "d9105b04912e863dd4f29a4ae66bea37b98ab3caf433495940ab7aa64fd58ebc",
+      "source_sha256": "d9105b04912e863dd4f29a4ae66bea37b98ab3caf433495940ab7aa64fd58ebc"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/review.md",
+      "bytes": 14095,
+      "sha256": "845f3273f3cba849851c46e6ea942ce499894a4ee52830c0277d6e6b23ca33f1",
+      "source_sha256": "845f3273f3cba849851c46e6ea942ce499894a4ee52830c0277d6e6b23ca33f1"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/select_sample.py",
+      "bytes": 11552,
+      "sha256": "2f98a8248f4ae1bf4a23c126b551c7b92cc78fba3a718de3452e54811e7eb0d1",
+      "source_sha256": "2f98a8248f4ae1bf4a23c126b551c7b92cc78fba3a718de3452e54811e7eb0d1"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/source/LICENSE",
+      "bytes": 21065,
+      "sha256": "f257601c4d54b4748016ce74f671ae6be0dbb8e6b9face8f61f2d68019bee9fb",
+      "source_sha256": "f257601c4d54b4748016ce74f671ae6be0dbb8e6b9face8f61f2d68019bee9fb"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/source/README.md",
+      "bytes": 1344,
+      "sha256": "852ce1886bf902fe0ed8f3dfd0169b758d74078d12dc87a357e48fbaac1db140",
+      "source_sha256": "852ce1886bf902fe0ed8f3dfd0169b758d74078d12dc87a357e48fbaac1db140"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/source/semeval-5way.zip",
+      "bytes": 12983203,
+      "sha256": "57c14e5c260d8cfd774f3fb954985d94bcfa3407029bfe585179650b907dbf9b",
+      "source_sha256": "57c14e5c260d8cfd774f3fb954985d94bcfa3407029bfe585179650b907dbf9b"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/source-manifest.json",
+      "bytes": 4704,
+      "sha256": "0745c5fae5b2b86888f6672ec400bbf7238d3236d6b5ac32b7c5b6ed56321941",
+      "source_sha256": "0745c5fae5b2b86888f6672ec400bbf7238d3236d6b5ac32b7c5b6ed56321941"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/source-notes.md",
+      "bytes": 8708,
+      "sha256": "07aa7d923f52083459de2ffe157abf4e2e6364a311c39d0e1b15f2567ab11324",
+      "source_sha256": "07aa7d923f52083459de2ffe157abf4e2e6364a311c39d0e1b15f2567ab11324"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/independent-assessment/withheld-reference.json",
+      "bytes": 18825,
+      "sha256": "b34ff37773ac556c07fa3b149a7d1dd6ac43cd12b9240892c206f9f15372f81c",
+      "source_sha256": "b34ff37773ac556c07fa3b149a7d1dd6ac43cd12b9240892c206f9f15372f81c"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/inference/README.md",
+      "bytes": 5347,
+      "sha256": "e45d638f4785df350b86d70c24b4ff85a844805a42d20af0e0be1228718c0f8e",
+      "source_sha256": "e45d638f4785df350b86d70c24b4ff85a844805a42d20af0e0be1228718c0f8e"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/inference/probe.mjs",
+      "bytes": 9800,
+      "sha256": "33b5aaafad1e810df38be846f0a7c8576c1a443c9ef56be64f978e7b9402253e",
+      "source_sha256": "33b5aaafad1e810df38be846f0a7c8576c1a443c9ef56be64f978e7b9402253e"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/inference/results.json",
+      "bytes": 28826,
+      "sha256": "8579ca478fde225983751cd83b9682d822bed95f7a90cb4c762ccb9b6ee5545c",
+      "source_sha256": "8579ca478fde225983751cd83b9682d822bed95f7a90cb4c762ccb9b6ee5545c"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/material/README.md",
+      "bytes": 4976,
+      "sha256": "66cc056981904252f6576cf787657a28c1ff1bcd860eeaba2a13fc899e3a42c8",
+      "source_sha256": "66cc056981904252f6576cf787657a28c1ff1bcd860eeaba2a13fc899e3a42c8"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/material/examples.mjs",
+      "bytes": 5386,
+      "sha256": "7f7d30c006c7b32475166e266e1087b72780e4e18020922d70e348f4fd4d18c9",
+      "source_sha256": "7f7d30c006c7b32475166e266e1087b72780e4e18020922d70e348f4fd4d18c9"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/material/index.html",
+      "bytes": 87064,
+      "sha256": "1634e298f5fe42e80a8aa61d184b3092b97a6bf2290ea46e6570106fd70123cb",
+      "source_sha256": "1634e298f5fe42e80a8aa61d184b3092b97a6bf2290ea46e6570106fd70123cb"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/material/material.mjs",
+      "bytes": 11365,
+      "sha256": "2a05e2fff51b2bccd7810c740d5bf19eb49303c515831f582ba86a7722511590",
+      "source_sha256": "2a05e2fff51b2bccd7810c740d5bf19eb49303c515831f582ba86a7722511590"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/material/replay.mjs",
+      "bytes": 13746,
+      "sha256": "22f53a0cab8d18e63fba2d484e5a6ddab7c296fc2b73ff37a894871cb48f7381",
+      "source_sha256": "22f53a0cab8d18e63fba2d484e5a6ddab7c296fc2b73ff37a894871cb48f7381"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/material/report.json",
+      "bytes": 6414,
+      "sha256": "1068f326f9b8b6e5db0fba9a09ec3917e1fa3827e96d2bdb4e3b44ddb17c6798",
+      "source_sha256": "1068f326f9b8b6e5db0fba9a09ec3917e1fa3827e96d2bdb4e3b44ddb17c6798"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/material/shell.html",
+      "bytes": 6776,
+      "sha256": "d914bbb1f700494b3fc663fff67d9f0379068dcacabfef01cb7502d0c1402201",
+      "source_sha256": "d914bbb1f700494b3fc663fff67d9f0379068dcacabfef01cb7502d0c1402201"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/next-session-notes.md",
+      "bytes": 6124,
+      "sha256": "5570936606c0871f2177e8034a83b131c38be9b25b08fa706aedacbfca22ec79",
+      "source_sha256": "5570936606c0871f2177e8034a83b131c38be9b25b08fa706aedacbfca22ec79"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/next-session-replay-results.json",
+      "bytes": 12918,
+      "sha256": "2a068fd3556e3a1b328a37a0675264e564e92c3670eba5b46ea961728bf73f6d",
+      "source_sha256": "2a068fd3556e3a1b328a37a0675264e564e92c3670eba5b46ea961728bf73f6d"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/next-session.html",
+      "bytes": 22365,
+      "sha256": "7d39db55bae6404708d7f56e1398139e45e45a37b5d1a0243dcdb1065493a6b9",
+      "source_sha256": "7d39db55bae6404708d7f56e1398139e45e45a37b5d1a0243dcdb1065493a6b9"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/replay-next-session.mjs",
+      "bytes": 7337,
+      "sha256": "0706da6cf5a4628e21cdc7ac8528979453a94fb956de96755ce107275ad1799d",
+      "source_sha256": "0706da6cf5a4628e21cdc7ac8528979453a94fb956de96755ce107275ad1799d"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/replay-results.json",
+      "bytes": 10993,
+      "sha256": "db5e1b9f525503e52be0fc3756bcfe5c1e4eaa0c9b739e1e256185001eedf122",
+      "source_sha256": "db5e1b9f525503e52be0fc3756bcfe5c1e4eaa0c9b739e1e256185001eedf122"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/replay.mjs",
+      "bytes": 2497,
+      "sha256": "f45d40698ca045dda0eea0e249b61e3604d25b2db95bddd06e5d08e2e411ade5",
+      "source_sha256": "f45d40698ca045dda0eea0e249b61e3604d25b2db95bddd06e5d08e2e411ade5"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/representation/README.md",
+      "bytes": 8633,
+      "sha256": "d00b37e7d1767de8034480379d5f1f6a177bb08d614b965aa3f56f9b9e3a44a7",
+      "source_sha256": "d00b37e7d1767de8034480379d5f1f6a177bb08d614b965aa3f56f9b9e3a44a7"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/representation/before.json",
+      "bytes": 6281,
+      "sha256": "c4b7099d2e734140c53659bba7467aa0fb1b08ce6fcb7f6d8737242185c5e767",
+      "source_sha256": "c4b7099d2e734140c53659bba7467aa0fb1b08ce6fcb7f6d8737242185c5e767"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/representation/examples.mjs",
+      "bytes": 10741,
+      "sha256": "91e66db6ff4e725845259d35865169ac40510e506734f4fb6178be5a84ec3f9e",
+      "source_sha256": "91e66db6ff4e725845259d35865169ac40510e506734f4fb6178be5a84ec3f9e"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/representation/index.html",
+      "bytes": 91804,
+      "sha256": "8ba91682227447fe2905330344c0592819f56b2342c6ac7ca56d1f6a6ea7fe3d",
+      "source_sha256": "8ba91682227447fe2905330344c0592819f56b2342c6ac7ca56d1f6a6ea7fe3d"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/representation/replay.mjs",
+      "bytes": 14316,
+      "sha256": "1934b148a98e0cf4b67930ae87d1f51ce42fc0a07af9b3cf5233e8b6e03ac87b",
+      "source_sha256": "1934b148a98e0cf4b67930ae87d1f51ce42fc0a07af9b3cf5233e8b6e03ac87b"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/representation/report.json",
+      "bytes": 5353,
+      "sha256": "3ab423d1af20b629c346eb582403ce52f618b3477aa052967d5fa88cba0fd4bc",
+      "source_sha256": "3ab423d1af20b629c346eb582403ce52f618b3477aa052967d5fa88cba0fd4bc"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/representation/shell.html",
+      "bytes": 8197,
+      "sha256": "c79ee41be31a6a6a0e1bbd80b74da17fdfd2373334a7db4efacf04d1165973d4",
+      "source_sha256": "c79ee41be31a6a6a0e1bbd80b74da17fdfd2373334a7db4efacf04d1165973d4"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/selection/README.md",
+      "bytes": 4663,
+      "sha256": "b53ecfdc9f0239b7b8ba38114e4b8feb3c20476aefc24018748ae4408c17d5ee",
+      "source_sha256": "3a44ad273cc3b3aa874c38a89d703b54f290ac922de94a408b1f28e5c2d56fc8"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/selection/examples.mjs",
+      "bytes": 8753,
+      "sha256": "0b5fa0d05d5904886697de3c0e8927de5876099e310bed9f6a4c9847638d2302",
+      "source_sha256": "0b5fa0d05d5904886697de3c0e8927de5876099e310bed9f6a4c9847638d2302"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/selection/index.html",
+      "bytes": 196075,
+      "sha256": "7a071cede82d4c8ba2c4ba7c3853ada0aac7fbb23ba638c9e234ef8f2fa4495e",
+      "source_sha256": "7a071cede82d4c8ba2c4ba7c3853ada0aac7fbb23ba638c9e234ef8f2fa4495e"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/selection/replay.mjs",
+      "bytes": 13978,
+      "sha256": "82a45278b175f647b53a03bf676df2da8fb31a500a1cc5bbf315fbc1ea8cb602",
+      "source_sha256": "82a45278b175f647b53a03bf676df2da8fb31a500a1cc5bbf315fbc1ea8cb602"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/selection/report.json",
+      "bytes": 22528,
+      "sha256": "744aba54316222adb124a3588094e80417916f35197642a0ee0471747d747159",
+      "source_sha256": "744aba54316222adb124a3588094e80417916f35197642a0ee0471747d747159"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/selection/selector.mjs",
+      "bytes": 8721,
+      "sha256": "69a7c971d722709103294890673a4fe8bd732e067f402065f47ffbaa70ec61f4",
+      "source_sha256": "69a7c971d722709103294890673a4fe8bd732e067f402065f47ffbaa70ec61f4"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/selection/shell.html",
+      "bytes": 9681,
+      "sha256": "96983567a43a0e1c0fea978f6fd3fb99baf6cfeb2c2bc9211fb4328eae16d469",
+      "source_sha256": "96983567a43a0e1c0fea978f6fd3fb99baf6cfeb2c2bc9211fb4328eae16d469"
+    },
+    {
+      "path": ".scratch/skill-maintenance/spikes/source-probe-results.txt",
+      "bytes": 826,
+      "sha256": "749c92ae1339f76ffd5a1d7f65df0c1faec5f15dd6ffce035903f77b1a156b49",
+      "source_sha256": "749c92ae1339f76ffd5a1d7f65df0c1faec5f15dd6ffce035903f77b1a156b49"
+    },
+    {
+      "path": ".scratch/learning-observability/c-dashboard-contract.md",
+      "bytes": 31749,
+      "sha256": "6a34c4c47ccefb9ff7fa473693fb9cfd2deedd57d38b8031c4bacd972a856f20",
+      "source_sha256": "6a34c4c47ccefb9ff7fa473693fb9cfd2deedd57d38b8031c4bacd972a856f20"
+    },
+    {
+      "path": ".scratch/learning-observability/data-contract.md",
+      "bytes": 57936,
+      "sha256": "376ff3ee90c191cbdf3f5b6e051295d187558c10e4aace7e5a050ca6d32ee3e3",
+      "source_sha256": "376ff3ee90c191cbdf3f5b6e051295d187558c10e4aace7e5a050ca6d32ee3e3"
+    },
+    {
+      "path": ".scratch/learning-observability/deletion-design.md",
+      "bytes": 19699,
+      "sha256": "10cec4e6d17db8841aa641a5fcf2ecdfdc7029f3ab006da25a16869f2fd73a31",
+      "source_sha256": "10cec4e6d17db8841aa641a5fcf2ecdfdc7029f3ab006da25a16869f2fd73a31"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/01-measurement-validity.md",
+      "bytes": 1496,
+      "sha256": "3e151d4669d311d936cb2682ce7008d80c06b784f1fbc41a696d891ca27ad777",
+      "source_sha256": "3e151d4669d311d936cb2682ce7008d80c06b784f1fbc41a696d891ca27ad777"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/02-statistical-methods.md",
+      "bytes": 1570,
+      "sha256": "09ae8a79690c043d242b3ce509380f0ef21a5d5e9b785a9d10c6c6e8c656091f",
+      "source_sha256": "09ae8a79690c043d242b3ce509380f0ef21a5d5e9b785a9d10c6c6e8c656091f"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/03-dashboard-evidence.md",
+      "bytes": 1429,
+      "sha256": "e3086d6c5169a1a17fd463a8419450241dc275dc6a522ee942e2c8a64f662a23",
+      "source_sha256": "e3086d6c5169a1a17fd463a8419450241dc275dc6a522ee942e2c8a64f662a23"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/04-collection-integrity.md",
+      "bytes": 1504,
+      "sha256": "e5b3525194e1bab84e8ef0f15251750426c394e6b6f8b9928ce935e258237a56",
+      "source_sha256": "e5b3525194e1bab84e8ef0f15251750426c394e6b6f8b9928ce935e258237a56"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/05-analysis-spike.md",
+      "bytes": 4138,
+      "sha256": "3237e2ada3c9ee1a530e06709043ab4163154c0cd47aa8fb1db8970790857c63",
+      "source_sha256": "3237e2ada3c9ee1a530e06709043ab4163154c0cd47aa8fb1db8970790857c63"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/06-dashboard-spike.md",
+      "bytes": 2335,
+      "sha256": "de57c376d00b6c125bcf45ac44f5ec1d4df7be3d1fd52b64c5cce65dc138b3ce",
+      "source_sha256": "de57c376d00b6c125bcf45ac44f5ec1d4df7be3d1fd52b64c5cce65dc138b3ce"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/07-metric-contract.md",
+      "bytes": 4165,
+      "sha256": "f2761291c73bd1303500b245636d7b04ed6867bc5b362680290b4afac914229b",
+      "source_sha256": "f2761291c73bd1303500b245636d7b04ed6867bc5b362680290b4afac914229b"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/08-experiment-contract.md",
+      "bytes": 889,
+      "sha256": "f98d88d94b56d91f56723978c8d3bd3a5c6b91ee1c6a6d9a8304bd85ac29fd45",
+      "source_sha256": "f98d88d94b56d91f56723978c8d3bd3a5c6b91ee1c6a6d9a8304bd85ac29fd45"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/09-data-contract.md",
+      "bytes": 8911,
+      "sha256": "6d85ad607c0b792140b49ea9a27d24a21e0bae483d9f9385ff2f1be6ab8bb9b2",
+      "source_sha256": "6d85ad607c0b792140b49ea9a27d24a21e0bae483d9f9385ff2f1be6ab8bb9b2"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/10-design-readiness.md",
+      "bytes": 4324,
+      "sha256": "c4cc64e93aa13239776e5d949c4ee16a5a09a7813a38b3883644606dd9e9e568",
+      "source_sha256": "c4cc64e93aa13239776e5d949c4ee16a5a09a7813a38b3883644606dd9e9e568"
+    },
+    {
+      "path": ".scratch/learning-observability/issues/11-deletion-contract.md",
+      "bytes": 3544,
+      "sha256": "9cb9df562f5755bb7547082bfe389b250a1dfc11cbf0c416697f8315966d53e8",
+      "source_sha256": "9cb9df562f5755bb7547082bfe389b250a1dfc11cbf0c416697f8315966d53e8"
+    },
+    {
+      "path": ".scratch/learning-observability/map.md",
+      "bytes": 6488,
+      "sha256": "2e02a96ecf24fc6596b7f6b14ff81739501d556ace41fee00beb91297eb3f2e0",
+      "source_sha256": "2e02a96ecf24fc6596b7f6b14ff81739501d556ace41fee00beb91297eb3f2e0"
+    },
+    {
+      "path": ".scratch/learning-observability/plan.md",
+      "bytes": 19447,
+      "sha256": "6da130437f0a7709b6f63c07be06e959230fc898fe697d958b53f5169f14fbcc",
+      "source_sha256": "6da130437f0a7709b6f63c07be06e959230fc898fe697d958b53f5169f14fbcc"
+    },
+    {
+      "path": ".scratch/learning-observability/readiness-review.md",
+      "bytes": 14953,
+      "sha256": "470fe706bd95b81988a14a2b49e1758f148240199455030bfe773d1954c1f096",
+      "source_sha256": "470fe706bd95b81988a14a2b49e1758f148240199455030bfe773d1954c1f096"
+    },
+    {
+      "path": ".scratch/learning-observability/research/collection-integrity.md",
+      "bytes": 15819,
+      "sha256": "af5d550dbfeb6b3b0850a0d9e6c20797bde6ff8a568225086db48b859c468162",
+      "source_sha256": "af5d550dbfeb6b3b0850a0d9e6c20797bde6ff8a568225086db48b859c468162"
+    },
+    {
+      "path": ".scratch/learning-observability/research/dashboard-evidence.md",
+      "bytes": 16585,
+      "sha256": "d22b418a77a2422e5cc526730357ec4b265268ae8ed9c06eab6cfa503271ee4d",
+      "source_sha256": "d22b418a77a2422e5cc526730357ec4b265268ae8ed9c06eab6cfa503271ee4d"
+    },
+    {
+      "path": ".scratch/learning-observability/research/measurement-validity.md",
+      "bytes": 18297,
+      "sha256": "cfd86ee1a500ad4076df9bc94b560e709603bc5466b1e81d2cb414216a38e181",
+      "source_sha256": "cfd86ee1a500ad4076df9bc94b560e709603bc5466b1e81d2cb414216a38e181"
+    },
+    {
+      "path": ".scratch/learning-observability/research/statistical-methods.md",
+      "bytes": 19488,
+      "sha256": "90f998910d9b3ac9e7d89fd48b6cd294fdbd1bd766b0bd2cb6fafaf2c47f673a",
+      "source_sha256": "90f998910d9b3ac9e7d89fd48b6cd294fdbd1bd766b0bd2cb6fafaf2c47f673a"
+    },
+    {
+      "path": ".scratch/learning-observability/spec.md",
+      "bytes": 27950,
+      "sha256": "0bb5c7ad29cbba2eb368b9c3554122ff5dd4ef2d0d2b1eded93d01d2fc146e56",
+      "source_sha256": "0bb5c7ad29cbba2eb368b9c3554122ff5dd4ef2d0d2b1eded93d01d2fc146e56"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/README.md",
+      "bytes": 7741,
+      "sha256": "688a15d8dcbc3545182e62129483353b07e47c310ef3e7ef98fb40d254b44f06",
+      "source_sha256": "688a15d8dcbc3545182e62129483353b07e47c310ef3e7ef98fb40d254b44f06"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/analysis-probe.py",
+      "bytes": 6383,
+      "sha256": "32435225f8fa78b71769203d17e4d3e674a74c3bdaee2f42aa6f1ce3dd687b04",
+      "source_sha256": "32435225f8fa78b71769203d17e4d3e674a74c3bdaee2f42aa6f1ce3dd687b04"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/analysis-prototype.html",
+      "bytes": 13672,
+      "sha256": "dcca1438d6ec162fc1d63b40f6908f7b50d06baec5fe0cc96b0cf756765df7ac",
+      "source_sha256": "dcca1438d6ec162fc1d63b40f6908f7b50d06baec5fe0cc96b0cf756765df7ac"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/analysis-results.json",
+      "bytes": 4325,
+      "sha256": "002c8f5630b3ba83e1b35b26eaa01e5704ff84f1c88f02111b5b5156bf8f51b4",
+      "source_sha256": "002c8f5630b3ba83e1b35b26eaa01e5704ff84f1c88f02111b5b5156bf8f51b4"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/build-c.py",
+      "bytes": 453,
+      "sha256": "662671cc7be23c7dd1ef136c4a46e8841d1e871c07f2ef5ecb43541033f55d97",
+      "source_sha256": "662671cc7be23c7dd1ef136c4a46e8841d1e871c07f2ef5ecb43541033f55d97"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/build-prototypes.py",
+      "bytes": 27489,
+      "sha256": "82ab8523b18bfdd5c08b9637bc3424830b164cd8704000d3788cc9f9ae4315a0",
+      "source_sha256": "82ab8523b18bfdd5c08b9637bc3424830b164cd8704000d3788cc9f9ae4315a0"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/c-calculation-results.json",
+      "bytes": 30288,
+      "sha256": "b4d81bb33c258cd0b75e11d6d7397c5f5939873951c2bc5023c3c6ed88861d2e",
+      "source_sha256": "b4d81bb33c258cd0b75e11d6d7397c5f5939873951c2bc5023c3c6ed88861d2e"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/c-model.mjs",
+      "bytes": 18183,
+      "sha256": "6dda947768385a41ccc1d3a4cea8124a4633e39345ea95eabc8bd97dbec7e7cd",
+      "source_sha256": "6dda947768385a41ccc1d3a4cea8124a4633e39345ea95eabc8bd97dbec7e7cd"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/c-probe.mjs",
+      "bytes": 3794,
+      "sha256": "9c4741b163cc029b1422de19af46d3205108b83517b88fee4677582110a40525",
+      "source_sha256": "9c4741b163cc029b1422de19af46d3205108b83517b88fee4677582110a40525"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/c-shell.html",
+      "bytes": 42646,
+      "sha256": "f9c7d32e5af619fddfc8acf8cdd4fad762681b8510462162350451bd955ed7b2",
+      "source_sha256": "f9c7d32e5af619fddfc8acf8cdd4fad762681b8510462162350451bd955ed7b2"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/c-walkthrough.html",
+      "bytes": 60804,
+      "sha256": "acfb6c57689d2d4716c750683745d3758c1b7d7baeef33afd55ff23b0259e289",
+      "source_sha256": "acfb6c57689d2d4716c750683745d3758c1b7d7baeef33afd55ff23b0259e289"
+    },
+    {
+      "path": ".scratch/learning-observability/spikes/dashboard-prototype.html",
+      "bytes": 20154,
+      "sha256": "e2d84c911543b098424be0cb9f32e59e91ab14ea8dd7f02d5843b3a025f95ab4",
+      "source_sha256": "e2d84c911543b098424be0cb9f32e59e91ab14ea8dd7f02d5843b3a025f95ab4"
+    },
+    {
+      "path": ".scratch/learning-observability/tracking-contract.md",
+      "bytes": 22707,
+      "sha256": "63fb080abf64c56e5d209849b6f9368aa9812c679be4cef1c45c66e09f53853c",
+      "source_sha256": "63fb080abf64c56e5d209849b6f9368aa9812c679be4cef1c45c66e09f53853c"
+    },
+    {
+      "path": "CONTEXT.md",
+      "bytes": 7634,
+      "sha256": "b44bc4e2d1ac9894c82c4b964f5e13d44813dd0d91a2b8884e74c64a372e8267",
+      "source_sha256": "b44bc4e2d1ac9894c82c4b964f5e13d44813dd0d91a2b8884e74c64a372e8267"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2657,
+      "sha256": "48629b60f6a41ca016272a889f6b845c0ef62adc437b33f63baf5cb02523a59a",
+      "source_sha256": "48629b60f6a41ca016272a889f6b845c0ef62adc437b33f63baf5cb02523a59a"
+    },
+    {
+      "path": "sources/fsrs_learning_conversation.md",
+      "bytes": 84335,
+      "sha256": "f9518cb3d52b02eb6d975e120c80e7b919691ef050aae3bf2ba218c1b47f8c67",
+      "source_sha256": "f9518cb3d52b02eb6d975e120c80e7b919691ef050aae3bf2ba218c1b47f8c67"
+    },
+    {
+      "path": "START-HERE.md",
+      "bytes": 3865,
+      "sha256": "e805a9dfd02ffcc8791a47441afe38dfbc06c1f6ce41da86c198a8187a4467aa",
+      "generated": true
+    }
+  ],
+  "portable_link_changes": [
+    {
+      "file": ".scratch/skill-maintenance/material-workflow.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:204",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "204"
+    },
+    {
+      "file": ".scratch/skill-maintenance/material-workflow.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:610",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "610"
+    },
+    {
+      "file": ".scratch/skill-maintenance/material-workflow.md",
+      "from": "research/conversation-retrieval.md:182",
+      "to": "research/conversation-retrieval.md",
+      "source_line": "182"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:204",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "204"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:610",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "610"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "research/current-chat-retrieval.md:119",
+      "to": "research/current-chat-retrieval.md",
+      "source_line": "119"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "research/current-chat-retrieval.md:174",
+      "to": "research/current-chat-retrieval.md",
+      "source_line": "174"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:245",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "245"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:281",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "281"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:314",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "314"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:405",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "405"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:438",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "438"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:666",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "666"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:988",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "988"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1610",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "1610"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:602",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "602"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1379",
+      "to": "../../sources/fsrs_learning_conversation.md",
+      "source_line": "1379"
+    },
+    {
+      "file": ".scratch/skill-maintenance/representation-design.md",
+      "from": "spikes/next-session.html:29",
+      "to": "spikes/next-session.html",
+      "source_line": "29"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": null
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:9",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "9"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:204",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "204"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:336",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "336"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:610",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "610"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1038",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1038"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1411",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1411"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1610",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1610"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1874",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1874"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:9",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "9"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:43",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "43"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:73",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "73"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:111",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "111"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:145",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "145"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:178",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "178"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:204",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "204"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:259",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "259"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:294",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "294"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:336",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "336"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:380",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "380"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:422",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "422"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:468",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "468"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:530",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "530"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:658",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "658"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:982",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "982"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:592",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "592"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1361",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1361"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:514",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "514"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:717",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "717"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:756",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "756"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:699",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "699"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:898",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "898"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:976",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "976"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1126",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1126"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1375",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1375"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1777",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1777"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:610",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "610"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:810",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "810"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:824",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "824"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:853",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "853"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:892",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "892"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1264",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1264"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1287",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1287"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1100",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1100"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1110",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1110"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1610",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1610"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1620",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1620"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1638",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1638"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1646",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1646"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1673",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1673"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1693",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1693"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1743",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1743"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1777",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1777"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1805",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1805"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1829",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1829"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:346",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "346"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:556",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "556"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1038",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1038"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1052",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1052"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1126",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1126"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1162",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1162"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1198",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1198"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1409",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1409"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1361",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1361"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:49",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "49"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:83",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "83"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:229",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "229"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:422",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "422"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:672",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "672"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:764",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "764"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1088",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1088"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1136",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1136"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1268",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1268"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1377",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1377"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1622",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1622"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1701",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1701"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1779",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1779"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1842",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1842"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:39",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "39"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:67",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "67"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:534",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "534"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:466",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "466"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:713",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "713"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1054",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1054"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1128",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1128"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1546",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1546"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1202",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1202"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:354",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "354"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1439",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1439"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1170",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1170"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/conversation-retrieval.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1192",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1192"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "from": "/Users/jinxinliu/Documents/ChatGPT/mem-graph/.scratch/skill-maintenance/spec.md",
+      "to": "../spec.md",
+      "source_line": null
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "from": "/Users/jinxinliu/Documents/ChatGPT/mem-graph/.scratch/skill-maintenance/spikes/evidence-policy.html",
+      "to": "../spikes/evidence-policy.html",
+      "source_line": null
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "from": "/Users/jinxinliu/Documents/ChatGPT/mem-graph/.scratch/skill-maintenance/map.md",
+      "to": "../map.md",
+      "source_line": null
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "from": "/Users/jinxinliu/Documents/ChatGPT/mem-graph/.scratch/skill-maintenance/spikes/evidence-policy.html",
+      "to": "../spikes/evidence-policy.html",
+      "source_line": null
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "from": "/Users/jinxinliu/Documents/ChatGPT/mem-graph/.scratch/skill-maintenance/spec.md",
+      "to": "../spec.md",
+      "source_line": null
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "from": "/Users/jinxinliu/Documents/ChatGPT/mem-graph/.scratch/skill-maintenance/spec.md",
+      "to": "../spec.md",
+      "source_line": null
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "from": "/Users/jinxinliu/Documents/ChatGPT/mem-graph/.scratch/skill-maintenance/spec.md",
+      "to": "../spec.md",
+      "source_line": null
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "from": "/Users/jinxinliu/Documents/ChatGPT/mem-graph/.scratch/skill-maintenance/research/provenance.md",
+      "to": "provenance.md",
+      "source_line": null
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "from": "/Users/jinxinliu/Documents/ChatGPT/mem-graph/.scratch/skill-maintenance/spec.md:102",
+      "to": "../spec.md",
+      "source_line": "102"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:9",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "9"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:204",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "204"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:259",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "259"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:294",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "294"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:380",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "380"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:658",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "658"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:530",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "530"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:610",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "610"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:717",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "717"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:756",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "756"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:810",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "810"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:853",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "853"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:892",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "892"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:913",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "913"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1220",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1220"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:468",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "468"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1610",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1610"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1673",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1673"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1614",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1614"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1375",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1375"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/provenance.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1052",
+      "to": "../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1052"
+    },
+    {
+      "file": ".scratch/skill-maintenance/spikes/selection/README.md",
+      "from": "/Users/jinxinliu/Downloads/fsrs_learning_conversation.md:1268",
+      "to": "../../../../sources/fsrs_learning_conversation.md",
+      "source_line": "1268"
+    }
+  ],
+  "historical_skill_links_rendered_as_text": [
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "reference": "/Users/jinxinliu/.agents/skills/wayfinder/SKILL.md"
+    },
+    {
+      "file": ".scratch/skill-maintenance/research/current-chat-retrieval.md",
+      "reference": "/Users/jinxinliu/.agents/skills/wait-what/SKILL.md"
+    }
+  ]
+}

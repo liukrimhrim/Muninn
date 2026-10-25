@@ -1,0 +1,387 @@
+{
+  "scope": "One frozen real response and explicitly authored continuations. Pending checks are constructed, not a curriculum or retention result.",
+  "planner_sha256": "670f3293704721f1030f34d89956ec004c4883b2c638f98088047b8d0d7a3268",
+  "frozen_hashes": "verified",
+  "checks": [
+    {
+      "name": "Frozen thermometer conflict chooses one follow-up with no corrective help",
+      "met": false
+    },
+    {
+      "name": "The original wrong prediction and complete assessment remain unchanged",
+      "met": true
+    },
+    {
+      "name": "Clarification keeps the constructed later check pending",
+      "met": true
+    },
+    {
+      "name": "Planning the saved state directly makes the same action choice",
+      "met": true
+    },
+    {
+      "name": "A clear correct reply ends clarification and help but preserves the earlier error",
+      "met": true
+    },
+    {
+      "name": "A current correct reply does not establish delayed retention",
+      "met": true
+    },
+    {
+      "name": "A clear wrong reply releases focused help for the two observed errors",
+      "met": true
+    },
+    {
+      "name": "An unclear reply can stop questioning with unresolved assessment, without reviving help",
+      "met": false
+    },
+    {
+      "name": "Omitted evidence does not dismiss the outstanding question or release help",
+      "met": false
+    },
+    {
+      "name": "An unrelated error still receives help while the original clarification stays pending",
+      "met": false
+    },
+    {
+      "name": "A partial answer leaves only the unresolved target for assessment review",
+      "met": false
+    },
+    {
+      "name": "The same answer can clarify one concern and offer help for an unrelated error",
+      "met": false
+    },
+    {
+      "name": "An explicitly hypothetical later unhinted answer can clear the two checks",
+      "met": true
+    },
+    {
+      "name": "A hinted clarification retains only the helped target for a later check",
+      "met": true
+    },
+    {
+      "name": "Repeated delivery of the old answer cannot reopen a resolved clarification",
+      "met": true
+    },
+    {
+      "name": "The original state is unchanged by all continuations",
+      "met": true
+    }
+  ],
+  "initial": {
+    "proposal": {
+      "kind": "follow_up",
+      "targets": [
+        "SE_27b_f2",
+        "SE_27b_f4"
+      ],
+      "text": "Do you mean the reading stays the same, and what effect does your hand have on the bulb?",
+      "reason": "Clarifying the awkward wording can change whether temperature-change teaching is warranted.",
+      "branches": {
+        "correct": "Record the relationship actually shown and stop immediate diagnosis.",
+        "wrong": "Offer focused help only for the explicit mistaken relationship.",
+        "unclear": "Keep the interpretation unresolved; offer an example without claiming an exact gap."
+      }
+    },
+    "plan": {
+      "now": [
+        {
+          "kind": "help",
+          "targets": [
+            "SE_27b_f2"
+          ],
+          "reason": "Offer focused help for this observed error."
+        }
+      ],
+      "later": [
+        {
+          "kind": "combined_check",
+          "group": "pending",
+          "title": "Invented later check for the two clarified targets",
+          "targets": [
+            "SE_27b_f2",
+            "SE_27b_f4"
+          ],
+          "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+        }
+      ],
+      "perTarget": {
+        "SE_27b_f3": "No extra separate drill for this result.",
+        "SE_27b_f2": "Offer focused help for this observed error.",
+        "SE_27b_f6": "No demonstrated gap; ordinary scheduling is outside this demo.",
+        "SE_27b_f4": "Not observed; retain the planned check without claiming a gap.",
+        "arithmetic": "No demonstrated gap; ordinary scheduling is outside this demo."
+      },
+      "note": "Address the specific concern; retain the other observations."
+    }
+  },
+  "outcomes": {
+    "correct": {
+      "plan": {
+        "now": [],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "pending",
+            "title": "Invented later check for the two clarified targets",
+            "targets": [
+              "SE_27b_f2",
+              "SE_27b_f4"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "SE_27b_f3": "No extra separate drill for this result.",
+          "SE_27b_f2": "Include in the single later check.",
+          "SE_27b_f6": "No demonstrated gap; ordinary scheduling is outside this demo.",
+          "SE_27b_f4": "Include in the single later check.",
+          "arithmetic": "No demonstrated gap; ordinary scheduling is outside this demo."
+        },
+        "note": "Stop the current drill. The agreed combined check belongs in a later session."
+      },
+      "observations": [
+        {
+          "target": "SE_27b_f2",
+          "result": "demonstrated",
+          "quotes": [
+            "The reading rises because my hand transfers heat to the bulb."
+          ],
+          "reason": "Authored observation for checking action policy, not independent semantic validation.",
+          "assisted": false,
+          "help": "No task-specific help recorded; outside help is not established."
+        },
+        {
+          "target": "SE_27b_f4",
+          "result": "demonstrated",
+          "quotes": [
+            "The reading rises because my hand transfers heat to the bulb."
+          ],
+          "reason": "Authored observation for checking action policy, not independent semantic validation.",
+          "assisted": false,
+          "help": "No task-specific help recorded; outside help is not established."
+        }
+      ]
+    },
+    "wrong": {
+      "plan": {
+        "now": [
+          {
+            "kind": "help",
+            "targets": [
+              "SE_27b_f2"
+            ],
+            "reason": "Offer focused help for this observed error."
+          },
+          {
+            "kind": "help",
+            "targets": [
+              "SE_27b_f4"
+            ],
+            "reason": "Offer focused help for this observed error."
+          }
+        ],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "pending",
+            "title": "Invented later check for the two clarified targets",
+            "targets": [
+              "SE_27b_f2",
+              "SE_27b_f4"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "SE_27b_f3": "No extra separate drill for this result.",
+          "SE_27b_f2": "Offer focused help for this observed error.",
+          "SE_27b_f6": "No demonstrated gap; ordinary scheduling is outside this demo.",
+          "SE_27b_f4": "Offer focused help for this observed error.",
+          "arithmetic": "No demonstrated gap; ordinary scheduling is outside this demo."
+        },
+        "note": "Address the specific concern; retain the other observations."
+      },
+      "observations": [
+        {
+          "target": "SE_27b_f2",
+          "result": "error",
+          "quotes": [
+            "The reading falls because my hand takes heat away from the bulb."
+          ],
+          "reason": "Authored observation for checking action policy, not independent semantic validation.",
+          "assisted": false,
+          "help": "No task-specific help recorded; outside help is not established."
+        },
+        {
+          "target": "SE_27b_f4",
+          "result": "error",
+          "quotes": [
+            "The reading falls because my hand takes heat away from the bulb."
+          ],
+          "reason": "Authored observation for checking action policy, not independent semantic validation.",
+          "assisted": false,
+          "help": "No task-specific help recorded; outside help is not established."
+        }
+      ]
+    },
+    "unclear": {
+      "plan": {
+        "now": [
+          {
+            "kind": "help",
+            "targets": [
+              "SE_27b_f2"
+            ],
+            "reason": "Offer focused help for this observed error."
+          }
+        ],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "pending",
+            "title": "Invented later check for the two clarified targets",
+            "targets": [
+              "SE_27b_f2",
+              "SE_27b_f4"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "SE_27b_f3": "No extra separate drill for this result.",
+          "SE_27b_f2": "Offer focused help for this observed error.",
+          "SE_27b_f6": "No demonstrated gap; ordinary scheduling is outside this demo.",
+          "SE_27b_f4": "Not observed; retain the planned check without claiming a gap.",
+          "arithmetic": "No demonstrated gap; ordinary scheduling is outside this demo."
+        },
+        "note": "Address the specific concern; retain the other observations."
+      },
+      "observations": []
+    },
+    "omitted": {
+      "plan": {
+        "now": [
+          {
+            "kind": "help",
+            "targets": [
+              "SE_27b_f2"
+            ],
+            "reason": "Offer focused help for this observed error."
+          }
+        ],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "pending",
+            "title": "Invented later check for the two clarified targets",
+            "targets": [
+              "SE_27b_f2",
+              "SE_27b_f4"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "SE_27b_f3": "No extra separate drill for this result.",
+          "SE_27b_f2": "Offer focused help for this observed error.",
+          "SE_27b_f6": "No demonstrated gap; ordinary scheduling is outside this demo.",
+          "SE_27b_f4": "Not observed; retain the planned check without claiming a gap.",
+          "arithmetic": "No demonstrated gap; ordinary scheduling is outside this demo."
+        },
+        "note": "Address the specific concern; retain the other observations."
+      },
+      "observations": []
+    },
+    "partial": {
+      "plan": {
+        "now": [],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "pending",
+            "title": "Invented later check for the two clarified targets",
+            "targets": [
+              "SE_27b_f2",
+              "SE_27b_f4"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "SE_27b_f3": "No extra separate drill for this result.",
+          "SE_27b_f2": "Include in the single later check.",
+          "SE_27b_f6": "No demonstrated gap; ordinary scheduling is outside this demo.",
+          "SE_27b_f4": "Not observed; retain the planned check without claiming a gap.",
+          "arithmetic": "No demonstrated gap; ordinary scheduling is outside this demo."
+        },
+        "note": "Stop the current drill. The agreed combined check belongs in a later session."
+      },
+      "observations": [
+        {
+          "target": "SE_27b_f2",
+          "result": "demonstrated",
+          "quotes": [
+            "The reading rises."
+          ],
+          "reason": "Authored observation for checking action policy, not independent semantic validation.",
+          "assisted": false,
+          "help": "No task-specific help recorded; outside help is not established."
+        }
+      ]
+    },
+    "unrelated": {
+      "plan": {
+        "now": [
+          {
+            "kind": "help",
+            "targets": [
+              "SE_27b_f2"
+            ],
+            "reason": "Offer focused help for this observed error."
+          },
+          {
+            "kind": "help",
+            "targets": [
+              "arithmetic"
+            ],
+            "reason": "Offer focused help for this observed error."
+          }
+        ],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "pending",
+            "title": "Invented later check for the two clarified targets",
+            "targets": [
+              "SE_27b_f2",
+              "SE_27b_f4"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "SE_27b_f3": "No extra separate drill for this result.",
+          "SE_27b_f2": "Offer focused help for this observed error.",
+          "SE_27b_f6": "No demonstrated gap; ordinary scheduling is outside this demo.",
+          "SE_27b_f4": "Not observed; retain the planned check without claiming a gap.",
+          "arithmetic": "Offer focused help for this observed error."
+        },
+        "note": "Address the specific concern; retain the other observations."
+      },
+      "observations": [
+        {
+          "target": "arithmetic",
+          "result": "error",
+          "quotes": [
+            "Two plus two equals five."
+          ],
+          "reason": "Authored observation for checking action policy, not independent semantic validation.",
+          "assisted": false,
+          "help": "No task-specific help recorded; outside help is not established."
+        }
+      ]
+    }
+  },
+  "semantic_accuracy": null
+}

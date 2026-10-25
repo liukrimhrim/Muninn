@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>From an answer to a practice choice — throwaway prototype</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#202a31;background:#f4f6f5;line-height:1.55}body{max-width:1000px;margin:40px auto;padding:0 22px}h1{line-height:1.15;font-size:2rem}h2{font-size:1.2rem}section{background:white;padding:22px;margin:18px 0;border:1px solid #d6dfdb;border-radius:10px}button,select{font:inherit;padding:9px 13px;border:1px solid #9eaead;border-radius:6px;background:#fff;margin:4px;cursor:pointer}button:hover,button[aria-pressed=true]{background:#e3efea}button.primary{background:#195d4c;color:white}blockquote{white-space:pre-wrap;border-left:3px solid #195d4c;margin:12px 0;padding:10px 16px;background:#f5f8f6}.muted{color:#56635e}#result{font-weight:650}details{margin:12px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem}.badge{color:#195d4c;font-weight:650}li{margin:6px 0}
+</style>
+<body>
+<p class="badge">Throwaway design experiment · recorded responses and clearly marked invented contrasts</p>
+<h1>When does an answer justify changing practice?</h1>
+<p>This demo connects an answer and its assessment to the practice planner. Watch what happens when only one part is wrong, a hint was supplied, or the wording is too unclear to judge.</p>
+<p class="muted">Codex supplied these assessments in chat. This page checks and connects them; it does not grade new text. You are inspecting system behavior, not taking another exercise.</p>
+<section><h2>Guided examples</h2><div id="tabs" role="group" aria-label="Guided examples"></div><p id="walk"></p><label for="case">Inspect any answer:</label><select id="case"></select><button id="advance">Next answer</button></section>
+<section><p class="badge" id="origin"></p><h2 id="case-title"></h2><p id="prompt"></p><blockquote id="answer"></blockquote><h3>Context and help</h3><div id="context"></div><div id="help"></div><button id="apply" class="primary">Connect this assessment</button><button id="alter">Change answer, keep old assessment</button><button id="restore">Restore original answer</button><p id="result" aria-live="polite"></p></section>
+<section><h2>Evidence the planner receives</h2><p>Only demonstrated knowledge and explicit errors become observations. Missing evidence and grading uncertainty remain visible below.</p><ul id="observations"></ul><div id="unresolved"></div><div id="missing"></div><h3>Assessor’s proposed response</h3><p id="proposal"></p><p class="muted">This proposal is separate from the learning record. It has not been sent to a learner.</p></section>
+<section><h2>Next action and later practice</h2><div id="plan"></div><p class="muted">Clarification holds off corrective practice only for its targets. The original evidence stays in the record. A later check here is a design scenario, not a scheduled reminder or measured retention result.</p></section>
+<details><summary>Full input, assessment and connected state</summary><pre id="state"></pre></details>
+<footer><p id="provenance" class="muted"></p><p class="muted">Valid quotes and intact records do not prove a judgment is correct. Browser layout remains unverified. Everything stays in memory; reset by reloading.</p></footer>
+<script>
+/*MODEL*/
+const $=id=>document.getElementById(id),text=(tag,value)=>{const el=document.createElement(tag);el.textContent=value;return el;};
+const clone=x=>JSON.parse(JSON.stringify(x));
+const real=RECORDS.filter(r=>r.input.attempt.origin==='recorded');
+const base=real.reduce((s,r)=>B.connect(DATA,s,r.input,r).state,NextSession.empty());
+const walks=[
+ {title:'Recorded history',id:'L01-explanation',note:'Each real answer connects to the history before it. Next answer walks through the ten recorded responses.'},
+ {title:'One local error',id:'S-later-log-error',note:'The listing and source choice are correct. Only the log form should receive help.'},
+ {title:'A missing detail',id:'S-later-omission',note:'Omitting the source explanation adds no evidence of a gap and no immediate compulsory quiz.'},
+ {title:'Too unclear to grade',id:'S-later-ambiguous',note:'Clarify the source choice before deciding on practice. The question changes the next action, without labelling a component weak.'},
+ {title:'Help for one part',id:'S-later-hinted',note:'The source hint must not disappear or turn the correct commands into assisted responses.'},
+ {title:'A real wrong rule',id:'S-misread-wrong',note:'Saying “I misread” does not cancel an explicit wrong explanation.'}
+];
+let selected=0,input=clone(RECORDS[0].input),before=NextSession.empty(),connected=null;
+function choose(index){selected=index;input=clone(RECORDS[index].input);before=input.attempt.origin==='recorded'?real.slice(0,index).reduce((s,r)=>B.connect(DATA,s,r.input,r).state,NextSession.empty()):base;connected=null;$('case').value=String(index);render();}
+function render(){
+ const r=RECORDS[selected];$('case-title').textContent=input.case_id;
+ $('origin').textContent=input.attempt.origin==='recorded'?'Recorded learner answer · selected targets':'Invented contrast · no learner answered this';
+ $('prompt').textContent=input.exercise.prompt;$('answer').textContent=input.response;
+ $('context').replaceChildren(...input.context.map(c=>text('p',`${c.role}: ${c.text}`)));
+ $('help').replaceChildren(...(input.assistance.length?input.assistance.map(h=>text('p',`${h.timing==='current'?'Help for this answer':'Earlier teaching'} (${h.targets.map(t=>DATA.targets.find(x=>x.id===t).label).join(', ')}): ${h.text}`)):[text('p','No task-specific hint recorded in this packet.')]));
+ $('observations').replaceChildren(...(connected?.event?.observations||[]).map(o=>text('li',`${DATA.targets.find(t=>t.id===o.target).label}: ${o.result==='error'?'Observed error':o.assisted?'Correct with help':'Demonstrated here'}. ${o.reason} ${o.help}`)));
+ $('unresolved').replaceChildren(...(connected?.unresolved||[]).map(o=>text('p',`Cannot yet judge: ${o.reason}`)));
+ $('missing').replaceChildren(...(connected?.unobserved||[]).map(o=>text('p',`Not shown: ${DATA.targets.find(t=>t.id===o.criterion).label}. This is not a failure.`)));
+ $('proposal').textContent=connected?.proposal?`${connected.proposal.text} Reason: ${connected.proposal.reason}`:'Connect the assessment to inspect its proposed response.';
+ $('result').textContent=!connected?'Ready to connect.':connected.errors.length?'Rejected: '+connected.errors.join(' '):`Connected: ${connected.event.observations.length} observations, ${connected.unresolved.length} unresolved interpretations. Original answer and help retained.`;
+ const plan=connected?.plan||NextSession.plan(DATA,before);$('plan').replaceChildren();
+ if(!plan.now.length)$('plan').append(text('p','No immediate remedial drill indicated by the recorded observations.'));
+ for(const a of plan.now)$('plan').append(text('p',`${a.kind==='help'?'Focused help':a.kind==='review'?'Assessment unresolved':'Clarify'}: ${a.targets.map(t=>DATA.targets.find(x=>x.id===t).label).join(', ')}. ${a.text||a.reason}`));
+ for(const a of plan.later)$('plan').append(text('p',`One combined later check: ${a.targets.map(t=>DATA.targets.find(x=>x.id===t).label).join('; ')}.`));
+ if(!plan.later.length)$('plan').append(text('p','No extra check remains from the three approved targets in this example. Ordinary scheduling is outside this demo.'));
+ $('state').textContent=JSON.stringify({input,assessment:r.assessment,result:connected,historyBefore:before},null,2);
+}
+for(const w of walks){const b=text('button',w.title);b.onclick=()=>{for(const child of $('tabs').children)child.setAttribute('aria-pressed','false');b.setAttribute('aria-pressed','true');$('walk').textContent=w.note;choose(RECORDS.findIndex(r=>r.input.case_id===w.id));};$('tabs').append(b);}
+RECORDS.forEach((r,i)=>{const option=text('option',`${r.input.attempt.origin==='recorded'?'Recorded':'Invented'} · ${r.input.case_id}`);option.value=String(i);$('case').append(option);});
+$('case').onchange=()=>choose(Number($('case').value));
+$('advance').onclick=()=>choose((selected+1)%RECORDS.length);
+$('apply').onclick=()=>{connected=B.connect(DATA,before,input,RECORDS[selected]);render();};
+$('alter').onclick=()=>{input.response+=' [Changed after assessment]';connected=null;render();};
+$('restore').onclick=()=>choose(selected);
+$('provenance').textContent=ASSESSOR;
+$('tabs').children[0].onclick();
+</script>
+</body></html>

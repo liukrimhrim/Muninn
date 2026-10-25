@@ -1,0 +1,175 @@
+{
+  "scope": "Authored source and semantic proposals compiled into the real assessment bridge and selector. No arbitrary extraction, semantic validation, learner outcome or history migration is established.",
+  "hashes": {
+    "material.mjs": "2a05e2fff51b2bccd7810c740d5bf19eb49303c515831f582ba86a7722511590",
+    "examples.mjs": "7f7d30c006c7b32475166e266e1087b72780e4e18020922d70e348f4fd4d18c9",
+    "replay.mjs": "22f53a0cab8d18e63fba2d484e5a6ddab7c296fc2b73ff37a894871cb48f7381",
+    "shell.html": "d914bbb1f700494b3fc663fff67d9f0379068dcacabfef01cb7502d0c1402201",
+    "../selection/selector.mjs": "69a7c971d722709103294890673a4fe8bd732e067f402065f47ffbaa70ec61f4",
+    "../selection/examples.mjs": "0b5fa0d05d5904886697de3c0e8927de5876099e310bed9f6a4c9847638d2302",
+    "../representation/examples.mjs": "91e66db6ff4e725845259d35865169ac40510e506734f4fb6178be5a84ec3f9e",
+    "../answer-intake/bridge.mjs": "3f09515edd8a84050db0f25945c1804aa22c00829691d8c466ebb3468f02c534",
+    "../assessment-trial/trial.mjs": "11d4de23d61a87f315c52219256007b4b44b0aa3c148ffb51217086d1832fed9",
+    "../next-session.html": "7d39db55bae6404708d7f56e1398139e45e45a37b5d1a0243dcdb1065493a6b9"
+  },
+  "checks": [
+    {
+      "name": "Source capture preserves literal text and identical captures are idempotent",
+      "met": true
+    },
+    {
+      "name": "A source cannot be silently replaced under the same version",
+      "met": true
+    },
+    {
+      "name": "Incorrect quotes and unavailable source versions hold affected targets",
+      "met": true
+    },
+    {
+      "name": "Exact source quotes do not resolve a known unsupported claim",
+      "met": true
+    },
+    {
+      "name": "The goal selects explanation targets without inventing a timed recall requirement",
+      "met": true
+    },
+    {
+      "name": "The connected target includes actual versioned supporting claims without creating learner credit",
+      "met": true
+    },
+    {
+      "name": "Missing and conflicting content definitions cannot become a usable contract",
+      "met": true
+    },
+    {
+      "name": "An explicit dependency cycle terminates without multiplying references",
+      "met": true
+    },
+    {
+      "name": "Coverage with an unknown criterion is held instead of reaching the assessment bridge",
+      "met": true
+    },
+    {
+      "name": "Changing the target cannot stamp an old recall prompt as a newly reviewed recognition task",
+      "met": true
+    },
+    {
+      "name": "Invalid versions or missing total-cost fields cannot produce runnable exercises",
+      "met": true
+    },
+    {
+      "name": "A ready content target with no exercise remains visibly unserved",
+      "met": true
+    },
+    {
+      "name": "The new material contract runs a larger task then repairs only its observed connection error",
+      "met": true
+    },
+    {
+      "name": "An omitted connection asks for evidence without treating omission as a knowledge failure",
+      "met": true
+    },
+    {
+      "name": "The same pipeline accepts a simple fact with one target and one recall",
+      "met": true
+    },
+    {
+      "name": "Draft reuse retains both sources, refuses a scope conflict and creates no observation",
+      "met": true
+    },
+    {
+      "name": "Reuse versions derived claims instead of mutating the old content identity",
+      "met": true
+    },
+    {
+      "name": "Reusing an existing claim cannot erase a flagged source contradiction",
+      "met": true
+    },
+    {
+      "name": "Editing a supporting claim holds its transitive dependents and exercises while preserving independent content",
+      "met": true
+    },
+    {
+      "name": "Explicit author review makes revised exercises available without rewriting old evidence",
+      "met": true
+    }
+  ],
+  "traces": {
+    "math": [
+      {
+        "action": "material.math.combined",
+        "kind": "check",
+        "prompt": "Let n=2^k. Stop at size 1 and do constant local work per call. Explain the number of halvings, then compare the total calls with one versus two continuing half-size branches. Justify the difference.",
+        "outcome": "error",
+        "observations": [
+          {
+            "target": "material.math.explain",
+            "result": "demonstrated",
+            "assisted": false
+          },
+          {
+            "target": "material.math.work",
+            "result": "demonstrated",
+            "assisted": false
+          },
+          {
+            "target": "material.math.integrate",
+            "result": "error",
+            "assisted": false
+          }
+        ],
+        "next": "material.math.practice"
+      },
+      {
+        "action": "material.math.practice",
+        "kind": "practice",
+        "prompt": "Worked explanation: count every call, not only the depth. One path has k+1 calls; two continuing branches form a full binary tree with 2n-1 calls. Explain why matching depth does not imply matching work.",
+        "outcome": "correct",
+        "observations": [
+          {
+            "target": "material.math.integrate",
+            "result": "demonstrated",
+            "assisted": true
+          }
+        ],
+        "next": "material.math.integrate"
+      },
+      {
+        "action": "material.math.integrate",
+        "kind": "check",
+        "prompt": "Two procedures start at n=2^k, stop at size 1 and do constant local work per call. One continues in one half; the other continues in both halves. A colleague says equal depth means equal total work. Evaluate that claim, accounting for every call.",
+        "outcome": "correct",
+        "observations": [
+          {
+            "target": "material.math.integrate",
+            "result": "demonstrated",
+            "assisted": false
+          }
+        ],
+        "next": "stop"
+      }
+    ],
+    "fact": [
+      {
+        "action": "material.fact.recall",
+        "kind": "check",
+        "prompt": "In the invented vocabulary you studied, what does mavo mean? Answer without a hint.",
+        "outcome": "correct",
+        "observations": [
+          {
+            "target": "material.fact.recall",
+            "result": "demonstrated",
+            "assisted": false
+          }
+        ],
+        "next": "stop"
+      }
+    ]
+  },
+  "uiChecks": [
+    "Initial compiled task appears",
+    "Math walkthrough uses real corrective selection",
+    "Unsupported proposal remains visibly held",
+    "Single fact uses the same real path"
+  ]
+}

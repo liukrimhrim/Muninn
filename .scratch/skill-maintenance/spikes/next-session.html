@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From answers to next practice</title>
+<style>
+:root{font-family:system-ui,sans-serif;line-height:1.55;color:#20372d;background:#f4f6f2}*{box-sizing:border-box}body{max-width:1150px;margin:32px auto;padding:0 22px 45px}h1{font-size:36px;line-height:1.15}h2{font-size:22px;margin-top:0}h3{font-size:17px}section{background:white;border:1px solid #d1ddd3;border-radius:12px;margin:20px 0;padding:22px}.muted,small{color:#52655a}.tag{font-size:12px;text-transform:uppercase;letter-spacing:.08em}.notice{background:#e7f0e8;padding:12px;border-radius:7px}button{font:inherit;padding:9px 12px;margin:4px;border:1px solid #a8bbac;border-radius:7px;background:white;color:inherit;cursor:pointer}button:hover,button[aria-selected=true]{background:#e7f0e8}button:disabled{opacity:.5;cursor:default}button.primary{background:#245d42;color:white}:focus-visible{outline:3px solid #679b7a;outline-offset:2px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:12px 9px;text-align:left;vertical-align:top;border-bottom:1px solid #e0e7df}th{color:#52655a}blockquote{white-space:pre-wrap;overflow-wrap:anywhere;border-left:3px solid #94b09c;margin:10px 0;padding-left:14px}summary{cursor:pointer}li{margin:8px 0}.table-wrap{overflow:auto}#trail>details{border-top:1px solid #e0e7df;padding:12px 0}.warning{background:#fff3dd}@media(max-width:650px){body{padding:0 12px}h1{font-size:28px}section{padding:16px}th,td{min-width:145px}}
+</style>
+<main>
+<p class="tag">Throwaway planning prototype · real response records + labelled hypothetical cases</p>
+<h1>From answers to next practice</h1>
+<p>Can the recorded answers produce the next-session choices you agreed to, while keeping hints, misreads and missing evidence visible?</p>
+<p class="muted">This starts with your recorded answers and the assessments made in our chat. It does not grade new answers. The later-session buttons below invent outcomes for exploring the rules; they do not add real learner evidence.</p>
+<section>
+ <h2>Proposed practice</h2><p id="mode" class="notice" aria-live="polite"></p><div id="plan" aria-live="polite"></div>
+ <p class="muted">No date, duration or retention probability is calculated. These are the agreed checks for this example; ordinary long-term scheduling is outside this demo.</p>
+</section>
+<section><h2>What the record supports</h2><p id="counts"></p><div class="table-wrap"><table><thead><tr><th>Knowledge or action</th><th>Latest observation</th><th>Help on that response</th><th>Next action</th></tr></thead><tbody id="rows"></tbody></table></div><p class="muted">Several observations can come from one exercise. An exercise's overall outcome never assigns results to unobserved parts. Earlier help stays in the response trail.</p></section>
+<section><h2>Explore a possible next session</h2><p>These buttons add explicitly hypothetical assessments to the record. Reset restores the real history.</p><div id="actions"></div><button id="duplicate">Replay the last record</button><button id="undo">Undo the last record</button><button id="reset" class="primary">Restore the real record</button></section>
+<section><h2>Guided walkthroughs</h2><div id="tabs" role="tablist" aria-label="Planning examples"></div><p id="walkText"></p><div id="steps"></div></section>
+<section><h2>Response and assessment trail</h2><p class="muted">Open a row to inspect its exact learner excerpt or its hypothetical status. The assessment and its reason were supplied by Codex, not inferred by this page.</p><div id="trail"></div></section>
+<footer class="muted">Your “all agree” accepted three next-session choices. It did not establish assessment accuracy, useful learning gains, or durable mastery. This page has no network calls, saved progress, FSRS updates or background reminders.</footer>
+</main>
+<script id="records" type="application/json">
+{
+  "targets": [
+    {"id":"binary.halving","label":"Explain the halving–logarithm connection","kind":"Relationship"},
+    {"id":"binary.comparison","label":"Compare the halving counts for two list sizes","kind":"Application"},
+    {"id":"ops.list","label":"Choose and write a Pod-listing command","kind":"Command","group":"troubleshooting"},
+    {"id":"ops.logs","label":"Choose and write a log command","kind":"Command","group":"troubleshooting"},
+    {"id":"ops.source","label":"Locate a setting's source before choosing a repair","kind":"Selection","group":"troubleshooting"},
+    {"id":"ops.verify","label":"Distinguish process state from intended function","kind":"Relationship"}
+  ],
+  "groups": {"troubleshooting":"One short troubleshooting exercise, starting without the source-location hint"},
+  "events": [
+    {"id":"L01-explanation","attempt":"L01","origin":"recorded","source":"assessment-trial/learner-trial.md","quote":"So the question is: how many times we have divided the number by two until the result is 1? And by definition that's log2(n)","why":"The full recorded answer connects repeated halving to log₂(n). Its omission of the requested comparison was not a demonstrated knowledge error.","observations":[{"target":"binary.halving","result":"demonstrated","help":"Earlier conversation exposure; no answer supplied in this prompt."}]},
+    {"id":"L01-misread","attempt":"L01","origin":"recorded","source":"assessment-trial/learner-trial.md","quote":"log2(65,536) - log2(1,024). I misread the question. This is a good case to show you where you should tell that it is just a trivial misread and not a real knowledge gap","why":"The corrected comparison fits the preceding explanation. The accepted interpretation is a misread, with no extra remediation for this mismatch. This is not another demonstration of the halving–logarithm explanation.","observations":[{"target":"binary.comparison","result":"demonstrated","issue":"accepted_misread","help":"A focused comparison question was supplied."}]},
+    {"id":"L02-log-form","attempt":"L02-initial","origin":"recorded","source":"assessment-trial/kubernetes-trial.md","quote":"kubectl -n shop logs pod checkout-d9f6c8b5d-k2m7q","why":"Useful evidence choice; the extra pod token in this form required correction. This is one command-form error, not general operational weakness.","observations":[{"target":"ops.logs","result":"error","help":"No syntax correction supplied before this response."}]},
+    {"id":"L02-list-form","attempt":"L02-initial","origin":"recorded","source":"assessment-trial/kubernetes-trial.md","quote":"kubectl -n shop show po will show","why":"The listing intent was useful; get replaces show. The incomplete expectation was clarified separately.","observations":[{"target":"ops.list","result":"error","help":"No listing-verb correction supplied before this response."}]},
+    {"id":"L02-focused","attempt":"L02-focused","origin":"recorded","source":"assessment-trial/kubernetes-trial.md","quote":"1. kubectl -n billing get pods 2. kubectl -n billing logs invoice-abc123","why":"Both requested forms were correct after feedback. This is immediate focused practice.","observations":[{"target":"ops.list","result":"demonstrated","help":"Both command forms were recently corrected."},{"target":"ops.logs","result":"demonstrated","help":"Both command forms were recently corrected."}]},
+    {"id":"L02-fresh-list","attempt":"L02-fresh","origin":"recorded","source":"assessment-trial/kubernetes-trial.md","quote":"kubectl -n analytics get po, it will list out the pods and their status, i'll check if report-worker pod is in healthy state","why":"The learner selects a useful listing command in the fresh incident without a new syntax hint.","observations":[{"target":"ops.list","result":"demonstrated","help":"Recent practice; no new syntax hint in this step."}]},
+    {"id":"L02-fresh-logs","attempt":"L02-fresh","origin":"recorded","source":"assessment-trial/kubernetes-trial.md","quote":"the status shows that there is some error caused the container to crash. kubectl -n analytics logs report-worker-5b7c9d6f84-q2m8n, to check the error msg in the logs","why":"The learner selects logs to investigate the failure and writes the correct form.","observations":[{"target":"ops.logs","result":"demonstrated","help":"Recent practice; no new syntax hint in this step."}]},
+    {"id":"L02-source-question","attempt":"L02-fresh","origin":"recorded","source":"assessment-trial/kubernetes-trial.md","quote":"i think prob some command the app in the container runs has a invalid option --fast-mode. remove that option in the code, build a new image and deploy it to the k8s cluster","why":"The unsupported-option interpretation is sound. A code/image repair was proposed before its source was located; configuration knowledge remains uncertain.","observations":[{"target":"ops.source","result":"uncertain","help":"The log was provided; the source-location hint had not yet been given."}]},
+    {"id":"L02-source-hinted","attempt":"L02-fresh","origin":"recorded","source":"assessment-trial/kubernetes-trial.md","quote":"kubectl -n analytics edit deployment report-worker, and in the editor, search `--fast-mode` to see if it appears. if it does, edit it out and save","why":"Valid inspection and conditional remedy after the tutor named container configuration as another possible source.","observations":[{"target":"ops.source","result":"demonstrated","assisted":true,"help":"Tutor had just mentioned Deployment configuration as a possible source."}]},
+    {"id":"L02-function","attempt":"L02-fresh","origin":"recorded","source":"assessment-trial/kubernetes-trial.md","quote":"same command as before, kubectl -n analytics get po to check the status of the pod. but pod in running state doesn't mean it's functional as intended. should check logs to confirm that it's process reports","why":"The learner explicitly distinguishes Running from intended function and proposes application evidence. No new log-syntax repetition is needed.","observations":[{"target":"ops.verify","result":"demonstrated","help":"The distinction was taught in the first incident."}]}
+  ]
+}
+</script>
+<script id="next-session-model">
+// Pure planning functions. Input assessments are authored, not produced by this module.
+const NextSession = (() => {
+ const results={demonstrated:'Demonstrated in this response',error:'Observed error',uncertain:'Unresolved interpretation'};
+ const empty=()=>({events:[]});
+ const append=(state,event)=>state.events.some(e=>e.id===event.id)?state:{events:[...state.events,event]};
+ const recorded=data=>data.events.reduce(append,empty());
+ function evidence(state,target){return state.events.flatMap(event=>event.observations.filter(o=>o.target===target).map(o=>({...o,event})));}
+ function status(state,target){const history=evidence(state,target),last=history.at(-1);return {history,last,label:last?(last.result==='demonstrated'&&last.assisted?'Correct with a hint':results[last.result]):'Not observed'};}
+ function contractConflicts(data,state){
+  const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+  return data.targets.filter(t=>state.events.some(e=>(e.planningAssessment?.observations??e.observations).some(o=>(o.criterion??o.target)===t.id&&stable(o.contract)!==stable(t.contract)))).map(t=>t.id);
+ }
+ function plan(data,state){
+  const now=[],later=[],perTarget={};
+  if(!state.events.length)return {now,later,perTarget,note:'No response evidence loaded yet.'};
+  const conflicts=contractConflicts(data,state);
+  if(conflicts.length)return {now:[{kind:'review',targets:conflicts,text:'The capability definition changed. Review the retained evidence under its original contract before choosing practice.'}],later,perTarget,note:'Older observations have not been reinterpreted.'};
+  const bundles=data.practiceBundles??Object.entries(data.groups||{}).map(([id,title])=>({id,title,targets:data.targets.filter(t=>t.group===id).map(t=>t.id)}));
+  // Clarification changes the action, never the original knowledge observation.
+  // Rebuild pending questions from history so unrelated answers cannot dismiss them.
+  const pending=new Map();
+  for(const event of state.events){
+   for(const o of event.observations)if(['demonstrated','error'].includes(o.result))pending.delete(o.target);
+   const assessment=event.planningAssessment??event.assessmentRecord?.assessment,question=assessment?.next;
+   const review={kind:'review',text:'Interpretation remains unresolved. Pause this target for assessment review.',reason:'The reply did not settle the pending interpretation; do not infer a knowledge gap.'};
+   for(const o of assessment?.observations||[])if(o.status==='cannot_judge'&&pending.has(o.criterion))pending.set(o.criterion,review);
+   if(['clarify','follow_up'].includes(question?.kind))for(const target of question.targets)pending.set(target,question);
+  }
+  const questions=new Map();
+  for(const target of data.targets){
+   const question=pending.get(target.id);if(!question)continue;
+   if(!questions.has(question))questions.set(question,[]);
+   questions.get(question).push(target.id);
+  }
+  for(const [question,targets] of questions){
+   // A partially answered multi-target question needs narrowing, not verbatim repetition.
+   const partial=question.targets&&targets.length<question.targets.length;
+   now.push(partial?{kind:'review',targets,text:'Part of the question is answered. Review only the remaining interpretation before choosing practice.',reason:question.reason}:{...question,targets});
+  }
+  const lastEvent=state.events.at(-1);
+  if(lastEvent.outcome==='failed'&&!lastEvent.observations.length)now.push({kind:'clarify',targets:[],reason:'The whole task failed without target evidence. Clarify what happened; do not label every component weak.'});
+  for(const target of data.targets){
+   const {last}=status(state,target.id);let action;
+   if(pending.has(target.id))action='Resolve the pending interpretation before choosing corrective practice.';
+   else if(last?.result==='error'){action='Offer focused help for this observed error.';now.push({kind:'help',targets:[target.id],reason:action});}
+   else if(last?.result==='uncertain'){action='Ask one question that can change the repair choice.';now.push({kind:'clarify',targets:[target.id],reason:action});}
+   else if(last?.issue==='accepted_misread')action='No extra remediation for the accepted misread.';
+   else if(bundles.some(b=>b.targets.includes(target.id))&&!(last?.event.phase==='later'&&last.result==='demonstrated'&&!last.assisted))action=last?'Include in the single later check.':'Not observed; retain the planned check without claiming a gap.';
+   else action=last?'No extra separate drill for this result.':'No demonstrated gap; ordinary scheduling is outside this demo.';
+   perTarget[target.id]=action;
+  }
+  const scheduled=new Set();
+  for(const bundle of bundles){
+   const targets=data.targets.filter(t=>bundle.targets.includes(t.id)&&!scheduled.has(t.id)).filter(t=>{const {last}=status(state,t.id);return pending.has(t.id)||!(last?.event.phase==='later'&&last.result==='demonstrated'&&!last.assisted);}).map(t=>t.id);
+   if(targets.length){later.push({kind:'combined_check',group:bundle.id,title:bundle.title,targets,reason:'Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it.'});targets.forEach(t=>scheduled.add(t));}
+  }
+  return {now,later,perTarget,note:now.length?'Address the specific concern; retain the other observations.':later.length?'Stop the current drill. The agreed combined check belongs in a later session.':'The observed targets need no extra drills in this hypothetical session. Real retention is still untested.'};
+ }
+ function hypothetical(kind){
+  const pass=target=>({target,result:'demonstrated',help:'Hypothetical later response without a new hint.'});
+  let observations=['ops.list','ops.logs','ops.source'].map(pass),outcome='completed';
+  if(kind==='command_error')observations[1]={target:'ops.logs',result:'error',help:'Hypothetical error without a hint.'};
+  if(kind==='source_unclear')observations[2]={target:'ops.source',result:'uncertain',help:'Hypothetical response does not settle the source choice.'};
+  if(kind==='source_hint')observations[2]={...pass('ops.source'),assisted:true,help:'Hypothetical source-location hint supplied.'};
+  if(kind==='partial')observations=observations.slice(0,2);
+  if(kind==='outcome_only'){observations=[];outcome='failed';}
+  return {id:'hypothetical-'+kind,attempt:'imagined-later-session',origin:'hypothetical',phase:'later',outcome,observations,why:'Invented assessment for exploring the policy; no learner answered this case.'};
+ }
+ return {empty,append,recorded,evidence,status,plan,hypothetical,contractConflicts};
+})();
+</script>
+<script>
+const DATA=JSON.parse(document.getElementById('records').textContent),M=NextSession,$=id=>document.getElementById(id);
+const labels={success:'Later: all three targets shown',command_error:'Later: log-command error',source_unclear:'Later: source choice unclear',source_hint:'Later: source choice needed a hint',partial:'Later: only commands observed',outcome_only:'Later: failed task, no target evidence'};
+const recordLabels={'L01-explanation':'Explain binary search','L01-misread':'Correct the misread','L02-log-form':'Initial log command','L02-list-form':'Initial listing command','L02-focused':'Focused command practice','L02-fresh-list':'Choose a status check','L02-fresh-logs':'Choose logs to investigate','L02-source-question':'Propose a code change','L02-source-hinted':'Inspect configuration after a hint','L02-function':'Check intended function'};
+const attemptLabels={'L01':'Binary-search exercise','L02-initial':'First Kubernetes incident','L02-focused':'Command practice','L02-fresh':'Second Kubernetes incident','imagined-later-session':'Imagined later session'};
+const walks=[
+ {name:'Recorded history',text:'Replay the recorded answers and their assessments. Watch corrections and hints stay visible. These transitions replay past discussion, not a new learner session.',base:'empty',steps:DATA.events.map(e=>e.id)},
+ {name:'One combined check',text:'Start from the real record. An imagined later response demonstrates all three planned targets without a hint; separate drills stop.',steps:['success']},
+ {name:'A specific difficulty',text:'Only the log-command form is wrong. The source decision remains supported in this imagined response.',steps:['command_error']},
+ {name:'Keep uncertainty visible',text:'An unclear source choice calls for clarification. A hinted answer then stays distinct from an unhinted one.',steps:['source_unclear','source_hint']},
+ {name:'Outcome without evidence',text:'A failed task alone cannot identify a weak component. Replaying it must not create a second record.',steps:['outcome_only','duplicate']}
+];
+let state=M.recorded(DATA),walk=1,step=0;
+const text=(tag,value)=>{const e=document.createElement(tag);e.textContent=value;return e;};
+function act(kind){if(kind==='duplicate'){if(state.events.length)state=M.append(state,state.events.at(-1));}else state=M.append(state,DATA.events.find(e=>e.id===kind)||M.hypothetical(kind));render();}
+function start(index){walk=index;step=0;state=walks[index].base==='empty'?M.empty():M.recorded(DATA);render();}
+function render(){
+ const p=M.plan(DATA,state),imagined=state.events.some(e=>e.origin==='hypothetical');
+ $('mode').textContent=imagined?'Includes hypothetical outcomes — this is not your real learning record.':'Recorded chat history only — assessments were supplied in our conversation.';
+ $('mode').className='notice'+(imagined?' warning':'');$('plan').replaceChildren(text('p',p.note));
+ for(const action of p.now)$('plan').append(text('p',`${action.kind==='help'?'Focused help':action.kind==='review'?'Assessment unresolved':'Clarify'}: ${action.targets.map(id=>DATA.targets.find(t=>t.id===id).label).join(', ')||'the task outcome'}. ${action.text||action.reason}`));
+ for(const action of p.later){const box=document.createElement('div');box.append(text('h3',action.title));const list=document.createElement('ul');action.targets.forEach(id=>list.append(text('li',DATA.targets.find(t=>t.id===id).label)));box.append(list,text('p',action.reason));$('plan').append(box);}
+ $('counts').textContent=`${state.events.filter(e=>e.origin==='recorded').length} recorded response excerpts · ${state.events.filter(e=>e.origin==='hypothetical').length} hypothetical records · no retention estimate`;
+ $('rows').replaceChildren();for(const target of DATA.targets){const s=M.status(state,target.id),row=document.createElement('tr');[`${target.label} (${target.kind})`,s.label,s.last?.help||'No response evidence',p.perTarget[target.id]||'No decision yet'].forEach(value=>row.append(text('td',value)));$('rows').append(row);}
+ $('trail').replaceChildren();for(const event of state.events){const detail=document.createElement('details');detail.append(text('summary',`${event.origin==='recorded'?'Recorded':'Hypothetical'} · ${recordLabels[event.id]||labels[event.id.replace('hypothetical-','')]} · ${attemptLabels[event.attempt]}`));if(event.quote)detail.append(text('blockquote',event.quote));detail.append(text('p',event.why));for(const o of event.observations)detail.append(text('p',`${DATA.targets.find(t=>t.id===o.target).label}: ${M.status({events:[event]},o.target).label}. ${o.help}`));$('trail').append(detail);}
+ $('tabs').replaceChildren();walks.forEach((w,i)=>{const b=text('button',w.name);b.setAttribute('role','tab');b.setAttribute('aria-selected',String(i===walk));b.onclick=()=>start(i);$('tabs').append(b);});
+ $('walkText').textContent=walks[walk].text;$('steps').replaceChildren();walks[walk].steps.forEach((kind,i)=>{const b=text('button',`${i+1}. ${labels[kind]||({duplicate:'Replay the same record'}[kind])||recordLabels[kind]}`);b.disabled=i!==step;b.onclick=()=>{step++;act(kind);};$('steps').append(b);});
+ $('duplicate').disabled=!state.events.length;$('undo').disabled=!state.events.length;
+}
+Object.entries(labels).forEach(([kind,label])=>{const b=text('button',label);b.onclick=()=>act(kind);$('actions').append(b);});
+$('duplicate').onclick=()=>act('duplicate');$('undo').onclick=()=>{state={events:state.events.slice(0,-1)};render();};$('reset').onclick=()=>start(1);render();
+</script>
+</html>

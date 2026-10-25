@@ -1,0 +1,13 @@
+{
+  "frozen_at_utc": "2026-10-14T21:42:17.842Z",
+  "reference_revealed": false,
+  "note": "Assessments fixed before selected reference annotations or label counts were read. Reference digest supplied by the source researcher before reveal.",
+  "expected_reference_sha256": "b34ff37773ac556c07fa3b149a7d1dd6ac43cd12b9240892c206f9f15372f81c",
+  "files": {
+    "blind-inputs.json": "d76a87c6a297cbcbd67f91a72894ca782adf7e9812bd81e0f1b33672a952f993",
+    "protocol.md": "d9105b04912e863dd4f29a4ae66bea37b98ab3caf433495940ab7aa64fd58ebc",
+    "assessment.json": "e073ac29aff7e755ea1718c09bbdb3407f7bf2e5b781e88f19223de284078dcd",
+    "adapter.mjs": "32d0462083238185c984f164ddb565aa611497ce13e55ccf6f9d2f083483f2b1",
+    "blind-validation.json": "01449e4d0e52f89830c260f326cc7c712eb354c6751b8942baede0dde40cea34"
+  }
+}

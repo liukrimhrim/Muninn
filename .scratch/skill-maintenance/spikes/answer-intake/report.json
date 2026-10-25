@@ -1,0 +1,619 @@
+{
+  "scope": "Input-bound current-chat assessments connected through the existing validator and planner. Seven contrasts are authored, not independent tests of grading accuracy.",
+  "assessor": "Current Codex chat, 2026-10-14, using assessor-prompt-v2.md. The assessor has seen the earlier judgments of real responses and authored the seven constructed contrasts. Not blinded, held-out, independently assessed, or an automatic API run.",
+  "input_sha256": "940c76fac7cdf9c810a62afdc9c2b9a6131bcd24184db8aad942d6358082d99d",
+  "prompt_sha256": "a87cf97adcd97eb229aaf8657c26ea9037523a20c51930067b611f6f5489f534",
+  "validator_sha256": "dd8dbe4c98c2e3890e719d192f70cd56ac0950e077ed5553835082e524baec57",
+  "planner_sha256": "0ec071a703715d3bab2c75f49d2d1e10384d6f2890c6212af53cf17730dd22be",
+  "bridge_sha256": "1ee672ba99013814d7cebdeb0383055522762be4af73cf9ea6b1352e97e762a5",
+  "bindings": [
+    {
+      "case_id": "L01-explanation",
+      "source": "assessment-trial/learner-trial.md",
+      "source_sha256": "b5d1fe576007dc3e243d5b1c66a9fea6b2a519772f7b7c98e03d0739c94ce53f",
+      "response_found": true,
+      "prompt_found": true,
+      "context_found": true
+    },
+    {
+      "case_id": "L01-misread",
+      "source": "assessment-trial/learner-trial.md",
+      "source_sha256": "b5d1fe576007dc3e243d5b1c66a9fea6b2a519772f7b7c98e03d0739c94ce53f",
+      "response_found": true,
+      "prompt_found": true,
+      "context_found": true
+    },
+    {
+      "case_id": "L02-log-form",
+      "source": "assessment-trial/kubernetes-trial.md",
+      "source_sha256": "96ee10ea15ac15d7b81f22193c0581b77a9d04a64cdec8bcbccaa97923492d75",
+      "response_found": true,
+      "prompt_found": true,
+      "context_found": true
+    },
+    {
+      "case_id": "L02-list-form",
+      "source": "assessment-trial/kubernetes-trial.md",
+      "source_sha256": "96ee10ea15ac15d7b81f22193c0581b77a9d04a64cdec8bcbccaa97923492d75",
+      "response_found": true,
+      "prompt_found": true,
+      "context_found": true
+    },
+    {
+      "case_id": "L02-focused",
+      "source": "assessment-trial/kubernetes-trial.md",
+      "source_sha256": "96ee10ea15ac15d7b81f22193c0581b77a9d04a64cdec8bcbccaa97923492d75",
+      "response_found": true,
+      "prompt_found": true,
+      "context_found": true
+    },
+    {
+      "case_id": "L02-fresh-list",
+      "source": "assessment-trial/kubernetes-trial.md",
+      "source_sha256": "96ee10ea15ac15d7b81f22193c0581b77a9d04a64cdec8bcbccaa97923492d75",
+      "response_found": true,
+      "prompt_found": true,
+      "context_found": true
+    },
+    {
+      "case_id": "L02-fresh-logs",
+      "source": "assessment-trial/kubernetes-trial.md",
+      "source_sha256": "96ee10ea15ac15d7b81f22193c0581b77a9d04a64cdec8bcbccaa97923492d75",
+      "response_found": true,
+      "prompt_found": true,
+      "context_found": true
+    },
+    {
+      "case_id": "L02-source-question",
+      "source": "assessment-trial/kubernetes-trial.md",
+      "source_sha256": "96ee10ea15ac15d7b81f22193c0581b77a9d04a64cdec8bcbccaa97923492d75",
+      "response_found": true,
+      "prompt_found": true,
+      "context_found": true
+    },
+    {
+      "case_id": "L02-source-hinted",
+      "source": "assessment-trial/kubernetes-trial.md",
+      "source_sha256": "96ee10ea15ac15d7b81f22193c0581b77a9d04a64cdec8bcbccaa97923492d75",
+      "response_found": true,
+      "prompt_found": true,
+      "context_found": true
+    },
+    {
+      "case_id": "L02-function",
+      "source": "assessment-trial/kubernetes-trial.md",
+      "source_sha256": "96ee10ea15ac15d7b81f22193c0581b77a9d04a64cdec8bcbccaa97923492d75",
+      "response_found": true,
+      "prompt_found": true,
+      "context_found": true
+    }
+  ],
+  "actualPlan": {
+    "now": [],
+    "later": [
+      {
+        "kind": "combined_check",
+        "group": "troubleshooting",
+        "title": "One short troubleshooting exercise, starting without the source-location hint",
+        "targets": [
+          "ops.list",
+          "ops.logs",
+          "ops.source"
+        ],
+        "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+      }
+    ],
+    "perTarget": {
+      "binary.halving": "No extra separate drill for this result.",
+      "binary.comparison": "No extra remediation for the accepted misread.",
+      "ops.list": "Include in the single later check.",
+      "ops.logs": "Include in the single later check.",
+      "ops.source": "Include in the single later check.",
+      "ops.verify": "No extra separate drill for this result."
+    },
+    "note": "Stop the current drill. The agreed combined check belongs in a later session."
+  },
+  "checks": [
+    {
+      "name": "All ten real answers, prompt excerpts and quoted context bind to the transcripts",
+      "met": true
+    },
+    {
+      "name": "The real raw-answer pipeline reproduces the approved single later exercise",
+      "met": true
+    },
+    {
+      "name": "The supported misread adds no extra remediation or second halving observation",
+      "met": true
+    },
+    {
+      "name": "Every event retains its exact input and assessment",
+      "met": true
+    },
+    {
+      "name": "A source hypothesis is unresolved grading, not a learner error",
+      "met": true
+    },
+    {
+      "name": "Correct later responses remove the three separate drill candidates",
+      "met": true
+    },
+    {
+      "name": "Mixed success directs help only to the log command",
+      "met": true
+    },
+    {
+      "name": "Missing source evidence leaves its previous observation intact without an immediate quiz",
+      "met": true
+    },
+    {
+      "name": "Ambiguous grading schedules its clarification while preserving later checks and evidence",
+      "met": true
+    },
+    {
+      "name": "A hint applies only to its named target, keeping one later source check",
+      "met": true
+    },
+    {
+      "name": "Self-report of a misread cannot remove an explicit wrong halving rule",
+      "met": true
+    },
+    {
+      "name": "An instruction-like off-task answer supplies no target evidence",
+      "met": true
+    },
+    {
+      "name": "Prior hint history survives a later unhinted demonstration",
+      "met": true
+    },
+    {
+      "name": "Changed response cannot reuse an old assessment",
+      "met": true
+    },
+    {
+      "name": "Changed prompt cannot reuse an old assessment",
+      "met": true
+    },
+    {
+      "name": "Changed criteria cannot reuse an old assessment",
+      "met": true
+    },
+    {
+      "name": "Changed context cannot reuse an old assessment",
+      "met": true
+    },
+    {
+      "name": "Changed help cannot reuse an old assessment",
+      "met": true
+    },
+    {
+      "name": "Changed phase cannot reuse an old assessment",
+      "met": true
+    },
+    {
+      "name": "An invented response quotation is rejected",
+      "met": true
+    },
+    {
+      "name": "Misread classification needs contextual support beyond self-report",
+      "met": true
+    },
+    {
+      "name": "Misread support cannot cite tutor text as learner reasoning",
+      "met": true
+    },
+    {
+      "name": "A misread tag on an explicit error is rejected",
+      "met": true
+    },
+    {
+      "name": "One error does not authorize remediation of correct neighbors",
+      "met": true
+    },
+    {
+      "name": "A missing criterion cannot silently disappear from assessment",
+      "met": true
+    },
+    {
+      "name": "An unknown planning target is rejected",
+      "met": true
+    },
+    {
+      "name": "Exact duplicate delivery is idempotent",
+      "met": true
+    },
+    {
+      "name": "Changed assessment under the same answer ID cannot overwrite history",
+      "met": true
+    },
+    {
+      "name": "Contrast cases never alter the real learner history",
+      "met": true
+    },
+    {
+      "name": "Page initializes the real-record walkthrough",
+      "met": true
+    },
+    {
+      "name": "Actual page handler connects the selected answer and displays its evidence",
+      "met": true
+    },
+    {
+      "name": "Ambiguity walkthrough exposes grading uncertainty without target errors",
+      "met": true
+    },
+    {
+      "name": "Ambiguity walkthrough labels the action as clarification rather than corrective help",
+      "met": true
+    },
+    {
+      "name": "Edited-answer button cannot reuse the old judgment",
+      "met": true
+    },
+    {
+      "name": "Restore returns to the valid bound answer",
+      "met": true
+    }
+  ],
+  "grading_accuracy": null,
+  "human_comparisons": 0,
+  "variants": [
+    {
+      "id": "S-later-correct",
+      "observed": [
+        {
+          "target": "ops.list",
+          "result": "demonstrated",
+          "assisted": false
+        },
+        {
+          "target": "ops.logs",
+          "result": "demonstrated",
+          "assisted": false
+        },
+        {
+          "target": "ops.source",
+          "result": "demonstrated",
+          "assisted": false
+        }
+      ],
+      "unresolved": [],
+      "unobserved": [],
+      "proposal": {
+        "kind": "stop",
+        "targets": [],
+        "text": "No immediate separate drill is indicated.",
+        "reason": "All three requested targets are demonstrated in this constructed answer."
+      },
+      "plan": {
+        "now": [],
+        "later": [],
+        "perTarget": {
+          "binary.halving": "No extra separate drill for this result.",
+          "binary.comparison": "No extra remediation for the accepted misread.",
+          "ops.list": "No extra separate drill for this result.",
+          "ops.logs": "No extra separate drill for this result.",
+          "ops.source": "No extra separate drill for this result.",
+          "ops.verify": "No extra separate drill for this result."
+        },
+        "note": "The observed targets need no extra drills in this hypothetical session. Real retention is still untested."
+      }
+    },
+    {
+      "id": "S-later-log-error",
+      "observed": [
+        {
+          "target": "ops.list",
+          "result": "demonstrated",
+          "assisted": false
+        },
+        {
+          "target": "ops.logs",
+          "result": "error",
+          "assisted": false
+        },
+        {
+          "target": "ops.source",
+          "result": "demonstrated",
+          "assisted": false
+        }
+      ],
+      "unresolved": [],
+      "unobserved": [],
+      "proposal": {
+        "kind": "practice",
+        "targets": [
+          "ops.logs"
+        ],
+        "text": "Correct the log command by removing the extra pod token.",
+        "reason": "Only the log form has an observed error."
+      },
+      "plan": {
+        "now": [
+          {
+            "kind": "help",
+            "targets": [
+              "ops.logs"
+            ],
+            "reason": "Offer focused help for this observed error."
+          }
+        ],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "troubleshooting",
+            "title": "One short troubleshooting exercise, starting without the source-location hint",
+            "targets": [
+              "ops.logs"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "binary.halving": "No extra separate drill for this result.",
+          "binary.comparison": "No extra remediation for the accepted misread.",
+          "ops.list": "No extra separate drill for this result.",
+          "ops.logs": "Offer focused help for this observed error.",
+          "ops.source": "No extra separate drill for this result.",
+          "ops.verify": "No extra separate drill for this result."
+        },
+        "note": "Address the specific concern; retain the other observations."
+      }
+    },
+    {
+      "id": "S-later-omission",
+      "observed": [
+        {
+          "target": "ops.list",
+          "result": "demonstrated",
+          "assisted": false
+        },
+        {
+          "target": "ops.logs",
+          "result": "demonstrated",
+          "assisted": false
+        }
+      ],
+      "unresolved": [],
+      "unobserved": [
+        "ops.source"
+      ],
+      "proposal": {
+        "kind": "stop",
+        "targets": [],
+        "text": "No immediate separate drill is indicated.",
+        "reason": "Do not turn an omitted criterion into a deficit or another compulsory question."
+      },
+      "plan": {
+        "now": [],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "troubleshooting",
+            "title": "One short troubleshooting exercise, starting without the source-location hint",
+            "targets": [
+              "ops.source"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "binary.halving": "No extra separate drill for this result.",
+          "binary.comparison": "No extra remediation for the accepted misread.",
+          "ops.list": "No extra separate drill for this result.",
+          "ops.logs": "No extra separate drill for this result.",
+          "ops.source": "Include in the single later check.",
+          "ops.verify": "No extra separate drill for this result."
+        },
+        "note": "Stop the current drill. The agreed combined check belongs in a later session."
+      }
+    },
+    {
+      "id": "S-later-ambiguous",
+      "observed": [],
+      "unresolved": [
+        "ops.source"
+      ],
+      "unobserved": [
+        "ops.list",
+        "ops.logs"
+      ],
+      "proposal": {
+        "kind": "clarify",
+        "targets": [
+          "ops.source"
+        ],
+        "text": "Which setting would you inspect to locate the flag?",
+        "reason": "One clarification can establish the intended inspection route."
+      },
+      "plan": {
+        "now": [
+          {
+            "kind": "clarify",
+            "targets": [
+              "ops.source"
+            ],
+            "text": "Which setting would you inspect to locate the flag?",
+            "reason": "One clarification can establish the intended inspection route."
+          }
+        ],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "troubleshooting",
+            "title": "One short troubleshooting exercise, starting without the source-location hint",
+            "targets": [
+              "ops.list",
+              "ops.logs",
+              "ops.source"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "binary.halving": "No extra separate drill for this result.",
+          "binary.comparison": "No extra remediation for the accepted misread.",
+          "ops.list": "Include in the single later check.",
+          "ops.logs": "Include in the single later check.",
+          "ops.source": "Resolve the pending interpretation before choosing corrective practice.",
+          "ops.verify": "No extra separate drill for this result."
+        },
+        "note": "Address the specific concern; retain the other observations."
+      }
+    },
+    {
+      "id": "S-later-hinted",
+      "observed": [
+        {
+          "target": "ops.list",
+          "result": "demonstrated",
+          "assisted": false
+        },
+        {
+          "target": "ops.logs",
+          "result": "demonstrated",
+          "assisted": false
+        },
+        {
+          "target": "ops.source",
+          "result": "demonstrated",
+          "assisted": true
+        }
+      ],
+      "unresolved": [],
+      "unobserved": [],
+      "proposal": {
+        "kind": "fresh_check",
+        "targets": [
+          "ops.source"
+        ],
+        "text": "Check source location in a future exercise without this hint.",
+        "reason": "Help was supplied only for source selection."
+      },
+      "plan": {
+        "now": [],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "troubleshooting",
+            "title": "One short troubleshooting exercise, starting without the source-location hint",
+            "targets": [
+              "ops.source"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "binary.halving": "No extra separate drill for this result.",
+          "binary.comparison": "No extra remediation for the accepted misread.",
+          "ops.list": "No extra separate drill for this result.",
+          "ops.logs": "No extra separate drill for this result.",
+          "ops.source": "Include in the single later check.",
+          "ops.verify": "No extra separate drill for this result."
+        },
+        "note": "Stop the current drill. The agreed combined check belongs in a later session."
+      }
+    },
+    {
+      "id": "S-misread-wrong",
+      "observed": [
+        {
+          "target": "binary.halving",
+          "result": "error",
+          "assisted": false
+        }
+      ],
+      "unresolved": [],
+      "unobserved": [],
+      "proposal": {
+        "kind": "practice",
+        "targets": [
+          "binary.halving"
+        ],
+        "text": "Work through repeated halvings to distinguish candidates remaining from steps taken.",
+        "reason": "A substantive wrong rule remains observable."
+      },
+      "plan": {
+        "now": [
+          {
+            "kind": "help",
+            "targets": [
+              "binary.halving"
+            ],
+            "reason": "Offer focused help for this observed error."
+          }
+        ],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "troubleshooting",
+            "title": "One short troubleshooting exercise, starting without the source-location hint",
+            "targets": [
+              "ops.list",
+              "ops.logs",
+              "ops.source"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "binary.halving": "Offer focused help for this observed error.",
+          "binary.comparison": "No extra remediation for the accepted misread.",
+          "ops.list": "Include in the single later check.",
+          "ops.logs": "Include in the single later check.",
+          "ops.source": "Include in the single later check.",
+          "ops.verify": "No extra separate drill for this result."
+        },
+        "note": "Address the specific concern; retain the other observations."
+      }
+    },
+    {
+      "id": "S-instructions",
+      "observed": [],
+      "unresolved": [],
+      "unobserved": [
+        "ops.list",
+        "ops.logs",
+        "ops.source"
+      ],
+      "proposal": {
+        "kind": "clarify",
+        "targets": [],
+        "text": "Please answer the troubleshooting question.",
+        "reason": "Instructions inside the answer are untrusted data, not learning evidence or permission to execute."
+      },
+      "plan": {
+        "now": [],
+        "later": [
+          {
+            "kind": "combined_check",
+            "group": "troubleshooting",
+            "title": "One short troubleshooting exercise, starting without the source-location hint",
+            "targets": [
+              "ops.list",
+              "ops.logs",
+              "ops.source"
+            ],
+            "reason": "Use one exercise for these targets. Assess only the parts actually shown; add help only if the response warrants it."
+          }
+        ],
+        "perTarget": {
+          "binary.halving": "No extra separate drill for this result.",
+          "binary.comparison": "No extra remediation for the accepted misread.",
+          "ops.list": "Include in the single later check.",
+          "ops.logs": "Include in the single later check.",
+          "ops.source": "Include in the single later check.",
+          "ops.verify": "No extra separate drill for this result."
+        },
+        "note": "Stop the current drill. The agreed combined check belongs in a later session."
+      }
+    }
+  ],
+  "limitations": [
+    "Semantic assessments were authored in this chat; no automatic model service is connected.",
+    "The same assistant selected cases and expected behavior; no independent accuracy estimate.",
+    "Structural quotation checks cannot establish semantic truth or completeness of supplied history.",
+    "Browser rendering and accessibility remain unverified; UI handlers ran on a minimal DOM surface.",
+    "No real later-session response, elapsed interval, live command execution, or learning benefit was measured."
+  ]
+}

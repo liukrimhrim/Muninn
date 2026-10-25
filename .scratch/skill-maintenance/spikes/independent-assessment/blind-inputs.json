@@ -1,0 +1,997 @@
+{
+  "schema_version": 1,
+  "attribution": {
+    "dataset": "SEMEVAL 2013 Task 7 Dataset, SCIENTSBANK Extra",
+    "corpus_creators": [
+      "Rodney Nielsen",
+      "Myroslava Dzikovska"
+    ],
+    "repository": "https://github.com/myrosia/semeval-2013-task7",
+    "commit": "5157c69f914e8c581045c03e98f96398d40a91b8",
+    "citation": "Dzikovska et al. (2013). SemEval-2013 Task 7: The Joint Student Response Analysis and 8th Recognizing Textual Entailment Challenge. ACL, pp. 263–274.",
+    "paper": "https://aclanthology.org/S13-2045/",
+    "license": "CC-BY-SA-3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "license_copy": "source/LICENSE",
+    "changes": "Selected records; parsed XML into JSON; withheld response and prior-assumption annotations. Released wording, spelling and facet relations are unchanged."
+  },
+  "selection_seed": "mem-graph-independent-assessment-v1",
+  "task": "This is a selected-facet comparison, not a full grade of any answer. For every response, assess only the four entries in facets: does the response demonstrate that relationship, contradict it, not show it, or cannot it be judged from the provided context? context_facets contains all original reference facets solely to resolve linked propositions. Interpret facet terms in the full reference answer. Do not infer durable mastery or the cause of an omission.",
+  "text_policy": "Exact XML-decoded released text. No spelling correction, paraphrase, source repair, or generated facet gloss. Facet isAssumed attributes and all student annotations are withheld.",
+  "questions": [
+    {
+      "question_id": "SE_27b",
+      "module": "SE",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/SE-inv2-27b.xml",
+      "question": "If a student was holding a thermometer by the bulb (the round part at the bottom of the thermometer) when reading the temperature, would the temperature read the same? Why or why not?",
+      "reference_id": "SE_27b-a1",
+      "reference_answer": "No. The temperature would be higher because the student's finger would make the temperature warmer. [Heat would transfer from the student's finger to the thermometer bulb.]",
+      "reference_tokens": [
+        {
+          "id": "SE_27b_ra1",
+          "text": "No"
+        },
+        {
+          "id": "SE_27b_ra2",
+          "text": "."
+        },
+        {
+          "id": "SE_27b_ra3",
+          "text": "The"
+        },
+        {
+          "id": "SE_27b_ra4",
+          "text": "temperature"
+        },
+        {
+          "id": "SE_27b_ra5",
+          "text": "would"
+        },
+        {
+          "id": "SE_27b_ra6",
+          "text": "be"
+        },
+        {
+          "id": "SE_27b_ra7",
+          "text": "higher"
+        },
+        {
+          "id": "SE_27b_ra8",
+          "text": "because"
+        },
+        {
+          "id": "SE_27b_ra9",
+          "text": "the"
+        },
+        {
+          "id": "SE_27b_ra10",
+          "text": "student"
+        },
+        {
+          "id": "SE_27b_ra11",
+          "text": "'s"
+        },
+        {
+          "id": "SE_27b_ra12",
+          "text": "finger"
+        },
+        {
+          "id": "SE_27b_ra13",
+          "text": "would"
+        },
+        {
+          "id": "SE_27b_ra14",
+          "text": "make"
+        },
+        {
+          "id": "SE_27b_ra15",
+          "text": "the"
+        },
+        {
+          "id": "SE_27b_ra16",
+          "text": "temperature"
+        },
+        {
+          "id": "SE_27b_ra17",
+          "text": "warmer"
+        },
+        {
+          "id": "SE_27b_ra18",
+          "text": "."
+        },
+        {
+          "id": "SE_27b_ra19",
+          "text": "["
+        },
+        {
+          "id": "SE_27b_ra20",
+          "text": "Heat"
+        },
+        {
+          "id": "SE_27b_ra21",
+          "text": "would"
+        },
+        {
+          "id": "SE_27b_ra22",
+          "text": "transfer"
+        },
+        {
+          "id": "SE_27b_ra23",
+          "text": "from"
+        },
+        {
+          "id": "SE_27b_ra24",
+          "text": "the"
+        },
+        {
+          "id": "SE_27b_ra25",
+          "text": "student"
+        },
+        {
+          "id": "SE_27b_ra26",
+          "text": "'s"
+        },
+        {
+          "id": "SE_27b_ra27",
+          "text": "finger"
+        },
+        {
+          "id": "SE_27b_ra28",
+          "text": "to"
+        },
+        {
+          "id": "SE_27b_ra29",
+          "text": "the"
+        },
+        {
+          "id": "SE_27b_ra30",
+          "text": "thermometer"
+        },
+        {
+          "id": "SE_27b_ra31",
+          "text": "bulb"
+        },
+        {
+          "id": "SE_27b_ra32",
+          "text": "."
+        },
+        {
+          "id": "SE_27b_ra33",
+          "text": "]"
+        }
+      ],
+      "facets": [
+        {
+          "id": "SE_27b_f3",
+          "govNum": "SE_27b_ra12",
+          "modNum": "SE_27b_ra10",
+          "reltn": "NMod_pos",
+          "govText": "finger",
+          "modText": "student"
+        },
+        {
+          "id": "SE_27b_f2",
+          "govNum": "SE_27b_ra4",
+          "modNum": "SE_27b_ra7",
+          "reltn": "Be",
+          "govText": "temperature",
+          "modText": "higher"
+        },
+        {
+          "id": "SE_27b_f6",
+          "govNum": "SE_27b_ra14",
+          "modNum": "SE_27b_ra17",
+          "reltn": "Predicate",
+          "govText": "make",
+          "modText": "warmer"
+        },
+        {
+          "id": "SE_27b_f4",
+          "govNum": "SE_27b_ra14",
+          "modNum": "SE_27b_ra12",
+          "reltn": "Means",
+          "govText": "make",
+          "modText": "finger"
+        }
+      ],
+      "responses": [
+        {
+          "response_id": "SE.27b.116.1",
+          "response": "No, Because he will take some of the heat of the ball and if he does the temperature could go down 3 degrees."
+        },
+        {
+          "response_id": "SE.27b.333.1",
+          "response": "Yes, Because if you put your hand on the round part the air is not going to feel thermometer."
+        },
+        {
+          "response_id": "SE.27b.313.1",
+          "response": "No, It will not be the same because it would absorb the heat and increase the number."
+        }
+      ],
+      "context_facets": [
+        {
+          "id": "SE_27b_f1",
+          "govNum": "SE_27b_ra0",
+          "modNum": "SE_27b_ra1",
+          "reltn": "Root",
+          "govText": "root",
+          "modText": "No"
+        },
+        {
+          "id": "SE_27b_f2",
+          "govNum": "SE_27b_ra4",
+          "modNum": "SE_27b_ra7",
+          "reltn": "Be",
+          "govText": "temperature",
+          "modText": "higher"
+        },
+        {
+          "id": "SE_27b_f3",
+          "govNum": "SE_27b_ra12",
+          "modNum": "SE_27b_ra10",
+          "reltn": "NMod_pos",
+          "govText": "finger",
+          "modText": "student"
+        },
+        {
+          "id": "SE_27b_f4",
+          "govNum": "SE_27b_ra14",
+          "modNum": "SE_27b_ra12",
+          "reltn": "Means",
+          "govText": "make",
+          "modText": "finger"
+        },
+        {
+          "id": "SE_27b_f5",
+          "govNum": "SE_27b_ra14",
+          "modNum": "SE_27b_ra16",
+          "reltn": "Theme",
+          "govText": "make",
+          "modText": "temperature"
+        },
+        {
+          "id": "SE_27b_f6",
+          "govNum": "SE_27b_ra14",
+          "modNum": "SE_27b_ra17",
+          "reltn": "Predicate",
+          "govText": "make",
+          "modText": "warmer"
+        },
+        {
+          "id": "SE_27b_f7",
+          "govNum": "SE_27b_ra6",
+          "modNum": "SE_27b_ra14",
+          "reltn": "Cause_because",
+          "childProp2Facet2": "SE_27b_f6",
+          "childProp1Facet1": "SE_27b_f2",
+          "govText": "be",
+          "modText": "make",
+          "childProp2Facet1": "SE_27b_f4"
+        },
+        {
+          "id": "SE_27b_f8",
+          "govNum": "SE_27b_ra22",
+          "modNum": "SE_27b_ra20",
+          "reltn": "Theme",
+          "govText": "transfer",
+          "modText": "Heat"
+        },
+        {
+          "id": "SE_27b_f9",
+          "govNum": "SE_27b_ra22",
+          "modNum": "SE_27b_ra27",
+          "reltn": "Source_from",
+          "govText": "transfer",
+          "modText": "finger"
+        },
+        {
+          "id": "SE_27b_f10",
+          "govNum": "SE_27b_ra27",
+          "modNum": "SE_27b_ra25",
+          "reltn": "NMod_pos",
+          "govText": "finger",
+          "modText": "student"
+        },
+        {
+          "id": "SE_27b_f11",
+          "govNum": "SE_27b_ra22",
+          "modNum": "SE_27b_ra31",
+          "reltn": "Destination_to",
+          "govText": "transfer",
+          "modText": "bulb"
+        },
+        {
+          "id": "SE_27b_f12",
+          "govNum": "SE_27b_ra31",
+          "modNum": "SE_27b_ra30",
+          "reltn": "NMod",
+          "govText": "bulb",
+          "modText": "thermometer"
+        }
+      ]
+    },
+    {
+      "question_id": "MS_50b",
+      "module": "MS",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/MS-inv4-50b.xml",
+      "question": "Jen was talking on the phone with her Uncle Bill who lives in Canada. When she asked him how the weather was, he said it was nice and warm, about 28 degrees. Why is it important to have standard units of measurement?",
+      "reference_id": "MS_50b-a1",
+      "reference_answer": "To communicate the measurement to other people and have the people know exactly what is meant.",
+      "reference_tokens": [
+        {
+          "id": "MS_50b_ra1",
+          "text": "To"
+        },
+        {
+          "id": "MS_50b_ra2",
+          "text": "communicate"
+        },
+        {
+          "id": "MS_50b_ra3",
+          "text": "the"
+        },
+        {
+          "id": "MS_50b_ra4",
+          "text": "measurement"
+        },
+        {
+          "id": "MS_50b_ra5",
+          "text": "to"
+        },
+        {
+          "id": "MS_50b_ra6",
+          "text": "other"
+        },
+        {
+          "id": "MS_50b_ra7",
+          "text": "people"
+        },
+        {
+          "id": "MS_50b_ra8",
+          "text": "and"
+        },
+        {
+          "id": "MS_50b_ra9",
+          "text": "have"
+        },
+        {
+          "id": "MS_50b_ra10",
+          "text": "the"
+        },
+        {
+          "id": "MS_50b_ra11",
+          "text": "people"
+        },
+        {
+          "id": "MS_50b_ra12",
+          "text": "know"
+        },
+        {
+          "id": "MS_50b_ra13",
+          "text": "exactly"
+        },
+        {
+          "id": "MS_50b_ra14",
+          "text": "what"
+        },
+        {
+          "id": "MS_50b_ra15",
+          "text": "is"
+        },
+        {
+          "id": "MS_50b_ra16",
+          "text": "meant"
+        },
+        {
+          "id": "MS_50b_ra17",
+          "text": "."
+        }
+      ],
+      "facets": [
+        {
+          "id": "MS_50b_f4",
+          "govNum": "MS_50b_ra12",
+          "modNum": "MS_50b_ra11",
+          "reltn": "Agent",
+          "govText": "know",
+          "modText": "people"
+        },
+        {
+          "id": "MS_50b_f2",
+          "govNum": "MS_50b_ra2",
+          "modNum": "MS_50b_ra7",
+          "reltn": "Actor_to",
+          "govText": "communicate",
+          "modText": "people"
+        },
+        {
+          "id": "MS_50b_f1",
+          "govNum": "MS_50b_ra2",
+          "modNum": "MS_50b_ra4",
+          "reltn": "Theme",
+          "govText": "communicate",
+          "modText": "measurement"
+        },
+        {
+          "id": "MS_50b_f5",
+          "govNum": "MS_50b_ra12",
+          "modNum": "MS_50b_ra16",
+          "reltn": "Theme_what",
+          "govText": "know",
+          "modText": "meant"
+        }
+      ],
+      "responses": [
+        {
+          "response_id": "MS.50b.136.1",
+          "response": "A standard unit is important because you can get the same unit and the same measurement."
+        },
+        {
+          "response_id": "MS.50b.141.1",
+          "response": "A standard unit is a important thing to do."
+        },
+        {
+          "response_id": "MS.50b.311.1",
+          "response": "To know how to best way to do it."
+        }
+      ],
+      "context_facets": [
+        {
+          "id": "MS_50b_f1",
+          "govNum": "MS_50b_ra2",
+          "modNum": "MS_50b_ra4",
+          "reltn": "Theme",
+          "govText": "communicate",
+          "modText": "measurement"
+        },
+        {
+          "id": "MS_50b_f2",
+          "govNum": "MS_50b_ra2",
+          "modNum": "MS_50b_ra7",
+          "reltn": "Actor_to",
+          "govText": "communicate",
+          "modText": "people"
+        },
+        {
+          "id": "MS_50b_f3",
+          "govNum": "MS_50b_ra7",
+          "modNum": "MS_50b_ra6",
+          "reltn": "NMod",
+          "govText": "people",
+          "modText": "other"
+        },
+        {
+          "id": "MS_50b_f4",
+          "govNum": "MS_50b_ra12",
+          "modNum": "MS_50b_ra11",
+          "reltn": "Agent",
+          "govText": "know",
+          "modText": "people"
+        },
+        {
+          "id": "MS_50b_f5",
+          "govNum": "MS_50b_ra12",
+          "modNum": "MS_50b_ra16",
+          "reltn": "Theme_what",
+          "govText": "know",
+          "modText": "meant"
+        },
+        {
+          "id": "MS_50b_f6",
+          "govNum": "MS_50b_ra12",
+          "modNum": "MS_50b_ra13",
+          "reltn": "Manner",
+          "govText": "know",
+          "modText": "exactly"
+        }
+      ]
+    },
+    {
+      "question_id": "ME_36",
+      "module": "ME",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/ME-inv3-36.xml",
+      "question": "When you build a series circuit using 2 bulbs and one D-cell, the bulbs are very dim. When you build a parallel circuit with 2 bulbs and one D-cell, the bulbs are bright. Why are the bulbs dim in series and bright in parallel?",
+      "reference_id": "ME_36-a1",
+      "reference_answer": "In series, the 2 bulbs have to share one pathway, so the light is dim. In parallel each bulb has a direct path to the D-cell energy source so both bulbs shine brightly.",
+      "reference_tokens": [
+        {
+          "id": "ME_36_ra1",
+          "text": "In"
+        },
+        {
+          "id": "ME_36_ra2",
+          "text": "series"
+        },
+        {
+          "id": "ME_36_ra3",
+          "text": ","
+        },
+        {
+          "id": "ME_36_ra4",
+          "text": "the"
+        },
+        {
+          "id": "ME_36_ra5",
+          "text": "2"
+        },
+        {
+          "id": "ME_36_ra6",
+          "text": "bulbs"
+        },
+        {
+          "id": "ME_36_ra7",
+          "text": "have"
+        },
+        {
+          "id": "ME_36_ra8",
+          "text": "to"
+        },
+        {
+          "id": "ME_36_ra9",
+          "text": "share"
+        },
+        {
+          "id": "ME_36_ra10",
+          "text": "one"
+        },
+        {
+          "id": "ME_36_ra11",
+          "text": "pathway"
+        },
+        {
+          "id": "ME_36_ra12",
+          "text": ","
+        },
+        {
+          "id": "ME_36_ra13",
+          "text": "so"
+        },
+        {
+          "id": "ME_36_ra14",
+          "text": "the"
+        },
+        {
+          "id": "ME_36_ra15",
+          "text": "light"
+        },
+        {
+          "id": "ME_36_ra16",
+          "text": "is"
+        },
+        {
+          "id": "ME_36_ra17",
+          "text": "dim"
+        },
+        {
+          "id": "ME_36_ra18",
+          "text": "."
+        },
+        {
+          "id": "ME_36_ra19",
+          "text": "In"
+        },
+        {
+          "id": "ME_36_ra20",
+          "text": "parallel"
+        },
+        {
+          "id": "ME_36_ra21",
+          "text": "each"
+        },
+        {
+          "id": "ME_36_ra22",
+          "text": "bulb"
+        },
+        {
+          "id": "ME_36_ra23",
+          "text": "has"
+        },
+        {
+          "id": "ME_36_ra24",
+          "text": "a"
+        },
+        {
+          "id": "ME_36_ra25",
+          "text": "direct"
+        },
+        {
+          "id": "ME_36_ra26",
+          "text": "path"
+        },
+        {
+          "id": "ME_36_ra27",
+          "text": "to"
+        },
+        {
+          "id": "ME_36_ra28",
+          "text": "the"
+        },
+        {
+          "id": "ME_36_ra29",
+          "text": "D-cell"
+        },
+        {
+          "id": "ME_36_ra30",
+          "text": "energy"
+        },
+        {
+          "id": "ME_36_ra31",
+          "text": "source"
+        },
+        {
+          "id": "ME_36_ra32",
+          "text": "so"
+        },
+        {
+          "id": "ME_36_ra33",
+          "text": "both"
+        },
+        {
+          "id": "ME_36_ra34",
+          "text": "bulbs"
+        },
+        {
+          "id": "ME_36_ra35",
+          "text": "shine"
+        },
+        {
+          "id": "ME_36_ra36",
+          "text": "brightly"
+        },
+        {
+          "id": "ME_36_ra37",
+          "text": "."
+        }
+      ],
+      "facets": [
+        {
+          "id": "ME_36_f8",
+          "govNum": "ME_36_ra22",
+          "modNum": "ME_36_ra21",
+          "reltn": "Quantifier",
+          "govText": "bulb",
+          "modText": "each"
+        },
+        {
+          "id": "ME_36_f4",
+          "govNum": "ME_36_ra11",
+          "modNum": "ME_36_ra10",
+          "reltn": "NMod",
+          "govText": "pathway",
+          "modText": "one"
+        },
+        {
+          "id": "ME_36_f2",
+          "govNum": "ME_36_ra6",
+          "modNum": "ME_36_ra5",
+          "reltn": "NMod",
+          "govText": "bulbs",
+          "modText": "2"
+        },
+        {
+          "id": "ME_36_f18",
+          "govNum": "ME_36_ra35",
+          "modNum": "ME_36_ra23",
+          "reltn": "Cause_so",
+          "childProp2Facet2": "ME_36_f10",
+          "childProp1Facet1": "ME_36_f16",
+          "govText": "shine",
+          "childProp1Facet2": "ME_36_f17",
+          "modText": "has",
+          "childProp2Facet1": "ME_36_f9"
+        }
+      ],
+      "responses": [
+        {
+          "response_id": "ME.36.185.1",
+          "response": "In the series circuit there is a disconnection in the wiring. In a parallel circuit the energy flows straight to the bulb, goes through and keeps going in a circuit."
+        },
+        {
+          "response_id": "ME.36.226.1",
+          "response": "The bulbs are dim in a series and bright in a parallel because parallel is 2 or more and a series is only one way. So parallel is stronger."
+        },
+        {
+          "response_id": "ME.36.214.1",
+          "response": "The bulbs are dim in a series because they light bulbs are using each other's energy, the lights are bright in a parallel because the bulbs are not sharing energy with each other."
+        }
+      ],
+      "context_facets": [
+        {
+          "id": "ME_36_f1",
+          "govNum": "ME_36_ra9",
+          "modNum": "ME_36_ra6",
+          "reltn": "Means",
+          "govText": "share",
+          "modText": "bulbs"
+        },
+        {
+          "id": "ME_36_f2",
+          "govNum": "ME_36_ra6",
+          "modNum": "ME_36_ra5",
+          "reltn": "NMod",
+          "govText": "bulbs",
+          "modText": "2"
+        },
+        {
+          "id": "ME_36_f3",
+          "govNum": "ME_36_ra9",
+          "modNum": "ME_36_ra11",
+          "reltn": "Theme",
+          "govText": "share",
+          "modText": "pathway"
+        },
+        {
+          "id": "ME_36_f4",
+          "govNum": "ME_36_ra11",
+          "modNum": "ME_36_ra10",
+          "reltn": "NMod",
+          "govText": "pathway",
+          "modText": "one"
+        },
+        {
+          "id": "ME_36_f5",
+          "govNum": "ME_36_ra9",
+          "modNum": "ME_36_ra2",
+          "reltn": "Means_in",
+          "childProp1Facet1": "ME_36_f1",
+          "govText": "share",
+          "childProp1Facet2": "ME_36_f3",
+          "modText": "series"
+        },
+        {
+          "id": "ME_36_f6",
+          "govNum": "ME_36_ra15",
+          "modNum": "ME_36_ra17",
+          "reltn": "Be",
+          "govText": "light",
+          "modText": "dim"
+        },
+        {
+          "id": "ME_36_f7",
+          "govNum": "ME_36_ra16",
+          "modNum": "ME_36_ra9",
+          "reltn": "Cause_so",
+          "childProp2Facet2": "ME_36_f3",
+          "childProp1Facet1": "ME_36_f6",
+          "govText": "is",
+          "modText": "share",
+          "childProp2Facet1": "ME_36_f1"
+        },
+        {
+          "id": "ME_36_f8",
+          "govNum": "ME_36_ra22",
+          "modNum": "ME_36_ra21",
+          "reltn": "Quantifier",
+          "govText": "bulb",
+          "modText": "each"
+        },
+        {
+          "id": "ME_36_f9",
+          "govNum": "ME_36_ra22",
+          "modNum": "ME_36_ra26",
+          "reltn": "Have",
+          "govText": "bulb",
+          "modText": "path"
+        },
+        {
+          "id": "ME_36_f10",
+          "govNum": "ME_36_ra26",
+          "modNum": "ME_36_ra25",
+          "reltn": "NMod",
+          "govText": "path",
+          "modText": "direct"
+        },
+        {
+          "id": "ME_36_f11",
+          "govNum": "ME_36_ra26",
+          "modNum": "ME_36_ra31",
+          "reltn": "Destination_to",
+          "govText": "path",
+          "modText": "source"
+        },
+        {
+          "id": "ME_36_f12",
+          "govNum": "ME_36_ra31",
+          "modNum": "ME_36_ra30",
+          "reltn": "NMod",
+          "govText": "source",
+          "modText": "energy"
+        },
+        {
+          "id": "ME_36_f13",
+          "govNum": "ME_36_ra31",
+          "modNum": "ME_36_ra29",
+          "reltn": "NMod",
+          "govText": "source",
+          "modText": "D-cell"
+        },
+        {
+          "id": "ME_36_f14",
+          "govNum": "ME_36_ra23",
+          "modNum": "ME_36_ra20",
+          "reltn": "Means_in",
+          "childProp1Facet1": "ME_36_f9",
+          "govText": "has",
+          "childProp1Facet2": "ME_36_f10",
+          "modText": "parallel"
+        },
+        {
+          "id": "ME_36_f15",
+          "govNum": "ME_36_ra34",
+          "modNum": "ME_36_ra33",
+          "reltn": "Quantifier",
+          "govText": "bulbs",
+          "modText": "both"
+        },
+        {
+          "id": "ME_36_f16",
+          "govNum": "ME_36_ra35",
+          "modNum": "ME_36_ra34",
+          "reltn": "Theme",
+          "govText": "shine",
+          "modText": "bulbs"
+        },
+        {
+          "id": "ME_36_f17",
+          "govNum": "ME_36_ra35",
+          "modNum": "ME_36_ra36",
+          "reltn": "Manner",
+          "govText": "shine",
+          "modText": "brightly"
+        },
+        {
+          "id": "ME_36_f18",
+          "govNum": "ME_36_ra35",
+          "modNum": "ME_36_ra23",
+          "reltn": "Cause_so",
+          "childProp2Facet2": "ME_36_f10",
+          "childProp1Facet1": "ME_36_f16",
+          "govText": "shine",
+          "childProp1Facet2": "ME_36_f17",
+          "modText": "has",
+          "childProp2Facet1": "ME_36_f9"
+        }
+      ]
+    },
+    {
+      "question_id": "LF_13b",
+      "module": "LF",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/LF-post-13b.xml",
+      "question": "What happens to earth materials during erosion?",
+      "reference_id": "LF_13b-a1",
+      "reference_answer": "Earth materials are worn away and moved during erosion.",
+      "reference_tokens": [
+        {
+          "id": "LF_13b_ra1",
+          "text": "Earth"
+        },
+        {
+          "id": "LF_13b_ra2",
+          "text": "materials"
+        },
+        {
+          "id": "LF_13b_ra3",
+          "text": "are"
+        },
+        {
+          "id": "LF_13b_ra4",
+          "text": "worn"
+        },
+        {
+          "id": "LF_13b_ra5",
+          "text": "away"
+        },
+        {
+          "id": "LF_13b_ra6",
+          "text": "and"
+        },
+        {
+          "id": "LF_13b_ra7",
+          "text": "moved"
+        },
+        {
+          "id": "LF_13b_ra8",
+          "text": "during"
+        },
+        {
+          "id": "LF_13b_ra9",
+          "text": "erosion"
+        },
+        {
+          "id": "LF_13b_ra10",
+          "text": "."
+        }
+      ],
+      "facets": [
+        {
+          "id": "LF_13b_f2",
+          "govNum": "LF_13b_ra4",
+          "modNum": "LF_13b_ra2",
+          "reltn": "Theme",
+          "govText": "worn away",
+          "modText": "materials"
+        },
+        {
+          "id": "LF_13b_f4",
+          "govNum": "LF_13b_ra4",
+          "modNum": "LF_13b_ra9",
+          "reltn": "Time_during",
+          "govText": "worn away",
+          "modText": "erosion"
+        },
+        {
+          "id": "LF_13b_f3",
+          "govNum": "LF_13b_ra7",
+          "modNum": "LF_13b_ra2",
+          "reltn": "Theme",
+          "govText": "moved",
+          "modText": "materials"
+        },
+        {
+          "id": "LF_13b_f5",
+          "govNum": "LF_13b_ra7",
+          "modNum": "LF_13b_ra9",
+          "reltn": "Time_during",
+          "govText": "moved",
+          "modText": "erosion"
+        }
+      ],
+      "responses": [
+        {
+          "response_id": "LF.13b.478.1",
+          "response": "The earth material will get smaller and make new land."
+        },
+        {
+          "response_id": "LF.13b.737.1",
+          "response": "Earth materials get taken away from river banks, beaches, and island."
+        },
+        {
+          "response_id": "LF.13b.436.1",
+          "response": "Earth materials are worn away by I see ant other stuff."
+        }
+      ],
+      "context_facets": [
+        {
+          "id": "LF_13b_f1",
+          "govNum": "LF_13b_ra2",
+          "modNum": "LF_13b_ra1",
+          "reltn": "NMod",
+          "govText": "materials",
+          "modText": "Earth"
+        },
+        {
+          "id": "LF_13b_f2",
+          "govNum": "LF_13b_ra4",
+          "modNum": "LF_13b_ra2",
+          "reltn": "Theme",
+          "govText": "worn away",
+          "modText": "materials"
+        },
+        {
+          "id": "LF_13b_f3",
+          "govNum": "LF_13b_ra7",
+          "modNum": "LF_13b_ra2",
+          "reltn": "Theme",
+          "govText": "moved",
+          "modText": "materials"
+        },
+        {
+          "id": "LF_13b_f4",
+          "govNum": "LF_13b_ra4",
+          "modNum": "LF_13b_ra9",
+          "reltn": "Time_during",
+          "govText": "worn away",
+          "modText": "erosion"
+        },
+        {
+          "id": "LF_13b_f5",
+          "govNum": "LF_13b_ra7",
+          "modNum": "LF_13b_ra9",
+          "reltn": "Time_during",
+          "govText": "moved",
+          "modText": "erosion"
+        }
+      ]
+    }
+  ]
+}

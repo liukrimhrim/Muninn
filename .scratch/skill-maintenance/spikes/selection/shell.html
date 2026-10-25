@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choose useful practice within a budget — prototype</title>
+<style>
+body{font:16px/1.6 system-ui,sans-serif;max-width:1050px;margin:32px auto;padding:0 22px;color:#203c32;background:#f4f7f5}h1{font-size:32px;line-height:1.2}h2{font-size:23px}h3{font-size:18px}section{background:white;border:1px solid #ccdbd2;border-radius:9px;padding:22px;margin:18px 0}button{font:inherit;padding:8px 12px;margin:4px;border:1px solid #8da99b;border-radius:6px;background:white;color:inherit;cursor:pointer}button:hover,button[aria-pressed=true]{background:#e4f0e8}button:disabled{opacity:.45;cursor:default}:focus-visible{outline:3px solid #287b59;outline-offset:3px}blockquote{border-left:3px solid #568b70;padding:8px 18px;margin:12px 0;background:#f4f7f5;white-space:pre-wrap;overflow-wrap:anywhere}li{margin:10px 0}.muted{color:#52695e}.notice{padding:12px;background:#e7f0ea;border-radius:6px}.label{font-size:12px;text-transform:uppercase;letter-spacing:.08em}.numbers{display:flex;gap:25px;flex-wrap:wrap}details{margin:14px 0}summary{cursor:pointer}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:9px;border-bottom:1px solid #dbe4df;vertical-align:top}@media(max-width:650px){body{padding:0 12px}section{padding:16px}h1{font-size:27px}}
+</style>
+<body>
+<p class="label">Throwaway logic prototype · authored responses and timings</p>
+<h1>Choose useful practice within the time available</h1>
+<p>This comparison asks which question or exercise to choose next, and how the choice should change after an incomplete or unexpected answer.</p>
+<p class="notice"><strong>No exercise to answer or review form to complete.</strong> The page already shows the proposed next action. The buttons optionally play invented answers through the system. These are not assessments of you.</p>
+<p>In the five-target example, the earlier ordering costs seven illustrative minutes. Another combination covers the same targets in six. This is a coverage calculation; learning and real time savings have not been measured.</p>
+<nav id="scenarios" aria-label="Example situations"></nav>
+<section><h2 id="title"></h2><p id="description"></p><div class="numbers"><p id="budget"></p><p id="spent"></p><p id="remaining"></p></div></section>
+<section aria-live="polite"><h2>What the system would do next</h2><p id="next"></p><p id="reason"></p><p id="planned"></p><p id="hypothesis"></p><ul id="branches"></ul><p id="message"></p><h3>What the evidence shows</h3><ul id="evidence"></ul><p id="unresolved"></p><p id="later"></p></section>
+<section><h2>Optional walkthrough</h2><p>“Play the example” applies the listed sample answers automatically. Reset restores the starting evidence and budget.</p><p id="walk"></p><button id="play">Play the example</button><button id="reset">Reset this example</button><h3>Try a different sample answer</h3><div id="answers"></div><button id="overrun">The next correct answer takes twice the estimated time</button><button id="replay">Deliver the same answer again</button></section>
+<section><h2>What happened in this example</h2><ol id="history"></ol><blockquote id="answer"></blockquote><ul id="assessment"></ul></section>
+<details><summary>Inspect candidate costs and reasons</summary><p>Costs include the entire task, even when some targets were demonstrated earlier. Setup, answering and feedback are all included. Planned coverage earns no evidence.</p><table><thead><tr><th>Candidate</th><th>Total time</th><th>Targets</th><th>Eligibility</th></tr></thead><tbody id="candidates"></tbody></table></details>
+<details><summary>Change the illustrative budget</summary><p>These buttons change the total budget for this example; they do not set your study schedule.</p><div id="budgets"></div></details>
+<p class="muted">The examples use the existing assessment bridge and evidence planner. No automatic grading, actual elapsed delay, learning effect, numerical learner estimate, FSRS update or real review omission is involved. State stays in memory. After correction, an immediate check remains distinct from a future retention check.</p>
+<script>
+/*MODEL*/
+const $=id=>document.getElementById(id),el=(tag,value)=>{const e=document.createElement(tag);e.textContent=value;return e;};
+const clone=x=>JSON.parse(JSON.stringify(x)),duration=s=>s>=60?`${Math.floor(s/60)}m ${s%60}s`:`${s}s`;
+const labels={correct:'Correct sample answer',error:'Sample answer with an error',partial:'Sample answer omitting the connection',unclear:'Still unclear',hinted:'Correct after an answer hint'};
+let key='coverage',example,state,session,history=[],last=null,message='';
+const names=ids=>ids.map(id=>example.data.targets.find(t=>t.id===id)?.label||id).join('; ');
+const decision=()=>S.choose(example.data,state,example.catalog,session);
+function reset(){
+ example=clone(EXAMPLES[key]);state=NextSession.empty();
+ for(const r of example.seeds){const out=B.connect(example.data,state,r.input,r);if(out.errors.length)throw Error(out.errors.join('; '));state=out.state;}
+ session=S.start(example.budget,example.phase);history=[];last=null;message='Starting evidence loaded. No new answer or time charge has been added.';render();
+}
+function select(value){key=value;reset();}
+function apply(outcome,overrun=false){
+ const d=decision();if(!d.action)return;
+ const record=d.action.outcomes[outcome];if(!record)return;
+ const seconds=S.cost(d.action)*(overrun?2:1),out=S.complete(example.data,state,example.catalog,session,d.action.id,record,seconds);
+ state=out.state;session=out.session;last={action:d.action.id,record,seconds,event:out.event};
+ history.push(`${d.action.label} — ${labels[outcome]}; ${duration(seconds)} charged.`);
+ message='Sample answer recorded. The next choice was recomputed from the evidence and remaining time.';render();
+}
+function render(){
+ const d=decision(),future=[...new Set(NextSession.plan(example.data,state).later.flatMap(a=>a.targets))];
+ $('title').textContent=example.label;$('description').textContent=example.description;
+ $('budget').textContent='Budget: '+duration(session.budgetSeconds);$('spent').textContent='Used: '+duration(S.spent(session));$('remaining').textContent='Remaining: '+duration(d.remaining);
+ $('next').textContent=d.action?`${d.kind==='diagnose'?'Clarify':d.kind==='practice'?'Focused practice':'Check'}: ${d.action.label} (${duration(S.cost(d.action))})`:'Stop here for this example.';
+ $('reason').textContent=d.reason;
+ $('planned').textContent=d.planned?.length>1?'Affordable combination: '+d.planned.map(id=>example.catalog.find(a=>a.id===id).label).join(' → ')+'. Reconsider after the first answer.':'';
+ $('hypothesis').textContent=d.action?.hypothesis||'';$('branches').replaceChildren(...(d.action?.branches||[]).map(b=>el('li',`${b.if}: ${b.next==='stop'?'retain uncertainty and pause this target':b.next==='practice'?'practice the affected command':'continue with a combined check'}.`)));
+ $('message').textContent=message;
+ $('evidence').replaceChildren(...example.data.targets.map(t=>el('li',`${t.label}: ${NextSession.status(state,t.id).label}. ${session.checked.includes(t.id)?'Observed without a new hint in this session.':''}`)));
+ $('unresolved').textContent=d.needs.taskConcern?'The whole-task concern remains unresolved; no specific gap has been assigned.':d.unresolved.length?'Still pending now: '+names(d.unresolved):'No unresolved target remains for this illustrative session.';
+ $('later').textContent=session.repaired.length&&future.length?'Retain a future check after this immediate practice: '+names(future):'No actual retention interval was measured.';
+ $('walk').textContent='Sample sequence: '+example.walk.map(x=>labels[x]).join(' → ');
+ $('answers').replaceChildren();for(const outcome of Object.keys(d.action?.outcomes||{})){const b=el('button',labels[outcome]);b.onclick=()=>apply(outcome);$('answers').append(b);}
+ $('overrun').disabled=!d.action?.outcomes.correct;$('replay').disabled=!last;
+ $('history').replaceChildren(...history.map(x=>el('li',x)));$('answer').textContent=last?.event.quote||'No new sample answer yet.';
+ $('assessment').replaceChildren(...(last?.event.planningAssessment?.observations||[]).map(o=>el('li',`${names([o.criterion])}: ${o.status.replaceAll('_',' ')}${o.assisted?' (answer hint supplied)':''}.`)));
+ $('candidates').replaceChildren(...example.catalog.map(a=>{const row=el('tr',''),reason=d.declined.find(x=>x.id===a.id)?.reason||(a.id===d.action?.id?'Chosen next':'Not chosen for the current need and combination.');[a.label,duration(S.cost(a)),names(S.coverage(a)),reason].forEach(x=>row.append(el('td',x)));return row;}));
+ Array.from($('scenarios').children).forEach((b,i)=>b.setAttribute('aria-pressed',String(Object.keys(EXAMPLES)[i]===key)));
+}
+for(const [id,e] of Object.entries(EXAMPLES)){const b=el('button',e.label);b.onclick=()=>select(id);$('scenarios').append(b);}
+for(const seconds of [10,40,100,360]){const b=el('button',duration(seconds));b.onclick=()=>{session={...session,budgetSeconds:seconds};message='Illustrative total budget changed; observations are unchanged.';render();};$('budgets').append(b);}
+$('reset').onclick=reset;
+$('play').onclick=()=>{reset();for(const outcome of example.walk)apply(outcome);};
+$('overrun').onclick=()=>apply('correct',true);
+$('replay').onclick=()=>{if(!last)return;const out=S.complete(example.data,state,example.catalog,session,last.action,last.record,last.seconds);state=out.state;session=out.session;message='The same answer was delivered again. No extra time or evidence was added.';render();};
+reset();
+</script></body></html>

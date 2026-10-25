@@ -1,0 +1,99 @@
+{
+  "attribution": {
+    "dataset": "SEMEVAL 2013 Task 7 Dataset, SCIENTSBANK Extra",
+    "corpus_creators": [
+      "Rodney Nielsen",
+      "Myroslava Dzikovska"
+    ],
+    "repository": "https://github.com/myrosia/semeval-2013-task7",
+    "commit": "5157c69f914e8c581045c03e98f96398d40a91b8",
+    "citation": "Dzikovska et al. (2013). SemEval-2013 Task 7: The Joint Student Response Analysis and 8th Recognizing Textual Entailment Challenge. ACL, pp. 263–274.",
+    "paper": "https://aclanthology.org/S13-2045/",
+    "license": "CC-BY-SA-3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "license_copy": "source/LICENSE",
+    "changes": "Selected records; parsed XML into JSON; withheld response and prior-assumption annotations. Released wording, spelling and facet relations are unchanged."
+  },
+  "source_file_sha256": {
+    "LICENSE": "f257601c4d54b4748016ce74f671ae6be0dbb8e6b9face8f61f2d68019bee9fb",
+    "README.md": "852ce1886bf902fe0ed8f3dfd0169b758d74078d12dc87a357e48fbaac1db140",
+    "semeval-5way.zip": "57c14e5c260d8cfd774f3fb954985d94bcfa3407029bfe585179650b907dbf9b"
+  },
+  "selected_xml_members": [
+    {
+      "archive_member": "sciEntsBank/test-unseen-questions/Extra/SE-inv2-27b.xml",
+      "sha256": "48a3ba8700e5731d161ee98134aab4395491a6d25a116d6de1812bcf1f0075ab"
+    },
+    {
+      "archive_member": "sciEntsBank/test-unseen-questions/Core/SE-inv2-27b.xml",
+      "sha256": "ca7c652e13ebc51b836f7c08370ad48a99ceb2470af5b193571e530b6b09c057"
+    },
+    {
+      "archive_member": "sciEntsBank/test-unseen-questions/Extra/MS-inv4-50b.xml",
+      "sha256": "dc37f2a9b5e618356787dc9285b20e986fb9b76e3cd91b4da54f797f052ce7a0"
+    },
+    {
+      "archive_member": "sciEntsBank/test-unseen-questions/Core/MS-inv4-50b.xml",
+      "sha256": "d8c84e642328379a6d6d4719b3f1c086f416233d3e95aa0437df4f70942f7541"
+    },
+    {
+      "archive_member": "sciEntsBank/test-unseen-questions/Extra/ME-inv3-36.xml",
+      "sha256": "591b50b2815e1c7fc16395b288078d3348a0590d8bdc859cfdd12f7b1f20e79a"
+    },
+    {
+      "archive_member": "sciEntsBank/test-unseen-questions/Core/ME-inv3-36.xml",
+      "sha256": "f423b52ec6fabda5bd25dd30155dd06a2237b03d9779b76a08ab3fe6d96d5dea"
+    },
+    {
+      "archive_member": "sciEntsBank/test-unseen-questions/Extra/LF-post-13b.xml",
+      "sha256": "da169ee5d575f7c4ddc125ad515ac418a7425244ed6ec38297b6781733fd029c"
+    },
+    {
+      "archive_member": "sciEntsBank/test-unseen-questions/Core/LF-post-13b.xml",
+      "sha256": "618cc2e97ed37206aa2d222ea9c83cbc2fd5da10b9ce0fe559b7744969c66fd8"
+    }
+  ],
+  "seed": "mem-graph-independent-assessment-v1",
+  "pool": "sciEntsBank/test-unseen-questions/Extra/",
+  "selection_rule": "Exclude fruit-topic exposure, visual-context cue matches and multiple-reference questions; ascending SHA256(seed + '|' + question_id), first four distinct modules; within each, ascending SHA256(seed + '|' + response_id), first three responses. Within each selected question, ascending SHA256(seed + '|' + question_id + '|' + facet_id), first four facets. Ties break by exact ID. Retain all original reference facets as blind context only.",
+  "visual_context_regex": "\\b(diagram|picture|table|graph|shown|below|above|drawing|chart|illustration|figure|image|photograph)\\b",
+  "excluded_questions": [
+    {
+      "question_id": "LP_16c",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/LP-inv4-16c.xml",
+      "reasons": [
+        "question contains explicit cue for potentially unavailable visual/context material"
+      ]
+    },
+    {
+      "question_id": "ME_74b",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/ME-inv4-74b.xml",
+      "reasons": [
+        "question contains explicit cue for potentially unavailable visual/context material"
+      ]
+    },
+    {
+      "question_id": "MX_11b",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/MX-post-11b.xml",
+      "reasons": [
+        "question contains explicit cue for potentially unavailable visual/context material"
+      ]
+    },
+    {
+      "question_id": "VB_5c",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/VB-inv2-5c.xml",
+      "reasons": [
+        "question contains explicit cue for potentially unavailable visual/context material"
+      ]
+    }
+  ],
+  "questions": 4,
+  "responses": 12,
+  "reference_facets": 16,
+  "context_reference_facets": 41,
+  "facet_decisions": 48,
+  "annotation_erasure_invariance_check": "passed",
+  "selected_core_extra_text_equality_check": "passed",
+  "blind_inputs_sha256": "d76a87c6a297cbcbd67f91a72894ca782adf7e9812bd81e0f1b33672a952f993",
+  "withheld_reference_sha256": "b34ff37773ac556c07fa3b149a7d1dd6ac43cd12b9240892c206f9f15372f81c"
+}

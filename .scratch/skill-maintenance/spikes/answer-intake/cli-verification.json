@@ -1,0 +1,21 @@
+{
+  "scope": "CLI wiring using the existing constructed mixed-success case, not a new learner assessment. Temporary files only; no learner-state persistence.",
+  "checks": [
+    {
+      "name": "Single-answer packet preserves input and supplies both hashes",
+      "met": true
+    },
+    {
+      "name": "Single-answer command connects actual components and targets only the log error",
+      "met": true
+    },
+    {
+      "name": "Changed packet bytes reject the saved assessment",
+      "met": true
+    },
+    {
+      "name": "Changed assessment protocol rejects the saved assessment",
+      "met": true
+    }
+  ]
+}

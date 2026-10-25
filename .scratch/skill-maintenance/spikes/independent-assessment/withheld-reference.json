@@ -1,0 +1,681 @@
+{
+  "schema_version": 1,
+  "attribution": {
+    "dataset": "SEMEVAL 2013 Task 7 Dataset, SCIENTSBANK Extra",
+    "corpus_creators": [
+      "Rodney Nielsen",
+      "Myroslava Dzikovska"
+    ],
+    "repository": "https://github.com/myrosia/semeval-2013-task7",
+    "commit": "5157c69f914e8c581045c03e98f96398d40a91b8",
+    "citation": "Dzikovska et al. (2013). SemEval-2013 Task 7: The Joint Student Response Analysis and 8th Recognizing Textual Entailment Challenge. ACL, pp. 263–274.",
+    "paper": "https://aclanthology.org/S13-2045/",
+    "license": "CC-BY-SA-3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "license_copy": "source/LICENSE",
+    "changes": "Selected records; parsed XML into JSON; withheld response and prior-assumption annotations. Released wording, spelling and facet relations are unchanged."
+  },
+  "blind_inputs_sha256": "d76a87c6a297cbcbd67f91a72894ca782adf7e9812bd81e0f1b33672a952f993",
+  "notice": "Human source annotations only. Do not inspect until assessment and comparison mapping are frozen. Raw categories are preserved without an assessor output or imposed mapping.",
+  "questions": [
+    {
+      "question_id": "SE_27b",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/SE-inv2-27b.xml",
+      "source_xml_sha256": "48a3ba8700e5731d161ee98134aab4395491a6d25a116d6de1812bcf1f0075ab",
+      "reference_facet_annotations": [
+        {
+          "id": "SE_27b_f1",
+          "govNum": "SE_27b_ra0",
+          "modNum": "SE_27b_ra1",
+          "reltn": "Root",
+          "govText": "root",
+          "modText": "No"
+        },
+        {
+          "id": "SE_27b_f2",
+          "govNum": "SE_27b_ra4",
+          "modNum": "SE_27b_ra7",
+          "reltn": "Be",
+          "govText": "temperature",
+          "modText": "higher"
+        },
+        {
+          "id": "SE_27b_f3",
+          "govNum": "SE_27b_ra12",
+          "modNum": "SE_27b_ra10",
+          "reltn": "NMod_pos",
+          "govText": "finger",
+          "modText": "student"
+        },
+        {
+          "id": "SE_27b_f4",
+          "govNum": "SE_27b_ra14",
+          "modNum": "SE_27b_ra12",
+          "reltn": "Means",
+          "govText": "make",
+          "modText": "finger"
+        },
+        {
+          "id": "SE_27b_f5",
+          "govNum": "SE_27b_ra14",
+          "modNum": "SE_27b_ra16",
+          "reltn": "Theme",
+          "govText": "make",
+          "modText": "temperature"
+        },
+        {
+          "id": "SE_27b_f6",
+          "govNum": "SE_27b_ra14",
+          "modNum": "SE_27b_ra17",
+          "reltn": "Predicate",
+          "govText": "make",
+          "modText": "warmer"
+        },
+        {
+          "id": "SE_27b_f7",
+          "govNum": "SE_27b_ra6",
+          "modNum": "SE_27b_ra14",
+          "reltn": "Cause_because",
+          "childProp2Facet2": "SE_27b_f6",
+          "childProp1Facet1": "SE_27b_f2",
+          "govText": "be",
+          "modText": "make",
+          "childProp2Facet1": "SE_27b_f4"
+        },
+        {
+          "id": "SE_27b_f8",
+          "govNum": "SE_27b_ra22",
+          "modNum": "SE_27b_ra20",
+          "reltn": "Theme",
+          "govText": "transfer",
+          "modText": "Heat"
+        },
+        {
+          "id": "SE_27b_f9",
+          "govNum": "SE_27b_ra22",
+          "modNum": "SE_27b_ra27",
+          "reltn": "Source_from",
+          "govText": "transfer",
+          "modText": "finger"
+        },
+        {
+          "id": "SE_27b_f10",
+          "govNum": "SE_27b_ra27",
+          "modNum": "SE_27b_ra25",
+          "reltn": "NMod_pos",
+          "govText": "finger",
+          "modText": "student"
+        },
+        {
+          "id": "SE_27b_f11",
+          "govNum": "SE_27b_ra22",
+          "modNum": "SE_27b_ra31",
+          "reltn": "Destination_to",
+          "govText": "transfer",
+          "modText": "bulb"
+        },
+        {
+          "id": "SE_27b_f12",
+          "govNum": "SE_27b_ra31",
+          "modNum": "SE_27b_ra30",
+          "reltn": "NMod",
+          "govText": "bulb",
+          "isAssumed": "true",
+          "modText": "thermometer"
+        }
+      ],
+      "responses": [
+        {
+          "response_id": "SE.27b.116.1",
+          "source_answer_accuracy": "contradictory",
+          "facet_annotations": [
+            {
+              "facetID": "SE_27b_f2",
+              "label": "Contra-Expr"
+            },
+            {
+              "facetID": "SE_27b_f3",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "SE_27b_f4",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "SE_27b_f6",
+              "label": "Expressed"
+            }
+          ]
+        },
+        {
+          "response_id": "SE.27b.333.1",
+          "source_answer_accuracy": "contradictory",
+          "facet_annotations": [
+            {
+              "facetID": "SE_27b_f2",
+              "label": "Contra-Infr"
+            },
+            {
+              "facetID": "SE_27b_f3",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "SE_27b_f4",
+              "label": "Contra-Infr"
+            },
+            {
+              "facetID": "SE_27b_f6",
+              "label": "Contra-Infr"
+            }
+          ]
+        },
+        {
+          "response_id": "SE.27b.313.1",
+          "source_answer_accuracy": "correct",
+          "facet_annotations": [
+            {
+              "facetID": "SE_27b_f2",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "SE_27b_f3",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "SE_27b_f4",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "SE_27b_f6",
+              "label": "Inferred"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "question_id": "MS_50b",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/MS-inv4-50b.xml",
+      "source_xml_sha256": "dc37f2a9b5e618356787dc9285b20e986fb9b76e3cd91b4da54f797f052ce7a0",
+      "reference_facet_annotations": [
+        {
+          "id": "MS_50b_f1",
+          "govNum": "MS_50b_ra2",
+          "modNum": "MS_50b_ra4",
+          "reltn": "Theme",
+          "govText": "communicate",
+          "modText": "measurement"
+        },
+        {
+          "id": "MS_50b_f2",
+          "govNum": "MS_50b_ra2",
+          "modNum": "MS_50b_ra7",
+          "reltn": "Actor_to",
+          "govText": "communicate",
+          "isAssumed": "true",
+          "modText": "people"
+        },
+        {
+          "id": "MS_50b_f3",
+          "govNum": "MS_50b_ra7",
+          "modNum": "MS_50b_ra6",
+          "reltn": "NMod",
+          "govText": "people",
+          "isAssumed": "true",
+          "modText": "other"
+        },
+        {
+          "id": "MS_50b_f4",
+          "govNum": "MS_50b_ra12",
+          "modNum": "MS_50b_ra11",
+          "reltn": "Agent",
+          "govText": "know",
+          "modText": "people"
+        },
+        {
+          "id": "MS_50b_f5",
+          "govNum": "MS_50b_ra12",
+          "modNum": "MS_50b_ra16",
+          "reltn": "Theme_what",
+          "govText": "know",
+          "modText": "meant"
+        },
+        {
+          "id": "MS_50b_f6",
+          "govNum": "MS_50b_ra12",
+          "modNum": "MS_50b_ra13",
+          "reltn": "Manner",
+          "govText": "know",
+          "isAssumed": "true",
+          "modText": "exactly"
+        }
+      ],
+      "responses": [
+        {
+          "response_id": "MS.50b.136.1",
+          "source_answer_accuracy": "partially_correct_incomplete",
+          "facet_annotations": [
+            {
+              "facetID": "MS_50b_f1",
+              "label": "Unaddressed"
+            },
+            {
+              "facetID": "MS_50b_f2",
+              "label": "Assumed"
+            },
+            {
+              "facetID": "MS_50b_f4",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "MS_50b_f5",
+              "label": "Inferred"
+            }
+          ]
+        },
+        {
+          "response_id": "MS.50b.141.1",
+          "source_answer_accuracy": "irrelevant",
+          "facet_annotations": [
+            {
+              "facetID": "MS_50b_f1",
+              "label": "Unaddressed"
+            },
+            {
+              "facetID": "MS_50b_f2",
+              "label": "Assumed"
+            },
+            {
+              "facetID": "MS_50b_f4",
+              "label": "Unaddressed"
+            },
+            {
+              "facetID": "MS_50b_f5",
+              "label": "Unaddressed"
+            }
+          ]
+        },
+        {
+          "response_id": "MS.50b.311.1",
+          "source_answer_accuracy": "irrelevant",
+          "facet_annotations": [
+            {
+              "facetID": "MS_50b_f1",
+              "label": "Unaddressed"
+            },
+            {
+              "facetID": "MS_50b_f2",
+              "label": "Assumed"
+            },
+            {
+              "facetID": "MS_50b_f4",
+              "label": "Unaddressed"
+            },
+            {
+              "facetID": "MS_50b_f5",
+              "label": "Inferred"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "question_id": "ME_36",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/ME-inv3-36.xml",
+      "source_xml_sha256": "591b50b2815e1c7fc16395b288078d3348a0590d8bdc859cfdd12f7b1f20e79a",
+      "reference_facet_annotations": [
+        {
+          "id": "ME_36_f1",
+          "govNum": "ME_36_ra9",
+          "modNum": "ME_36_ra6",
+          "reltn": "Means",
+          "govText": "share",
+          "modText": "bulbs"
+        },
+        {
+          "id": "ME_36_f2",
+          "govNum": "ME_36_ra6",
+          "modNum": "ME_36_ra5",
+          "reltn": "NMod",
+          "govText": "bulbs",
+          "isAssumed": "true",
+          "modText": "2"
+        },
+        {
+          "id": "ME_36_f3",
+          "govNum": "ME_36_ra9",
+          "modNum": "ME_36_ra11",
+          "reltn": "Theme",
+          "govText": "share",
+          "modText": "pathway"
+        },
+        {
+          "id": "ME_36_f4",
+          "govNum": "ME_36_ra11",
+          "modNum": "ME_36_ra10",
+          "reltn": "NMod",
+          "govText": "pathway",
+          "modText": "one"
+        },
+        {
+          "id": "ME_36_f5",
+          "govNum": "ME_36_ra9",
+          "modNum": "ME_36_ra2",
+          "reltn": "Means_in",
+          "childProp1Facet1": "ME_36_f1",
+          "govText": "share",
+          "isAssumed": "true",
+          "childProp1Facet2": "ME_36_f3",
+          "modText": "series"
+        },
+        {
+          "id": "ME_36_f6",
+          "govNum": "ME_36_ra15",
+          "modNum": "ME_36_ra17",
+          "reltn": "Be",
+          "govText": "light",
+          "isAssumed": "true",
+          "modText": "dim"
+        },
+        {
+          "id": "ME_36_f7",
+          "govNum": "ME_36_ra16",
+          "modNum": "ME_36_ra9",
+          "reltn": "Cause_so",
+          "childProp2Facet2": "ME_36_f3",
+          "childProp1Facet1": "ME_36_f6",
+          "govText": "is",
+          "isAssumed": "true",
+          "modText": "share",
+          "childProp2Facet1": "ME_36_f1"
+        },
+        {
+          "id": "ME_36_f8",
+          "govNum": "ME_36_ra22",
+          "modNum": "ME_36_ra21",
+          "reltn": "Quantifier",
+          "govText": "bulb",
+          "isAssumed": "true",
+          "modText": "each"
+        },
+        {
+          "id": "ME_36_f9",
+          "govNum": "ME_36_ra22",
+          "modNum": "ME_36_ra26",
+          "reltn": "Have",
+          "govText": "bulb",
+          "modText": "path"
+        },
+        {
+          "id": "ME_36_f10",
+          "govNum": "ME_36_ra26",
+          "modNum": "ME_36_ra25",
+          "reltn": "NMod",
+          "govText": "path",
+          "modText": "direct"
+        },
+        {
+          "id": "ME_36_f11",
+          "govNum": "ME_36_ra26",
+          "modNum": "ME_36_ra31",
+          "reltn": "Destination_to",
+          "govText": "path",
+          "modText": "source"
+        },
+        {
+          "id": "ME_36_f12",
+          "govNum": "ME_36_ra31",
+          "modNum": "ME_36_ra30",
+          "reltn": "NMod",
+          "govText": "source",
+          "isAssumed": "true",
+          "modText": "energy"
+        },
+        {
+          "id": "ME_36_f13",
+          "govNum": "ME_36_ra31",
+          "modNum": "ME_36_ra29",
+          "reltn": "NMod",
+          "govText": "source",
+          "isAssumed": "true",
+          "modText": "D-cell"
+        },
+        {
+          "id": "ME_36_f14",
+          "govNum": "ME_36_ra23",
+          "modNum": "ME_36_ra20",
+          "reltn": "Means_in",
+          "childProp1Facet1": "ME_36_f9",
+          "govText": "has",
+          "isAssumed": "true",
+          "childProp1Facet2": "ME_36_f10",
+          "modText": "parallel"
+        },
+        {
+          "id": "ME_36_f15",
+          "govNum": "ME_36_ra34",
+          "modNum": "ME_36_ra33",
+          "reltn": "Quantifier",
+          "govText": "bulbs",
+          "isAssumed": "true",
+          "modText": "both"
+        },
+        {
+          "id": "ME_36_f16",
+          "govNum": "ME_36_ra35",
+          "modNum": "ME_36_ra34",
+          "reltn": "Theme",
+          "govText": "shine",
+          "isAssumed": "true",
+          "modText": "bulbs"
+        },
+        {
+          "id": "ME_36_f17",
+          "govNum": "ME_36_ra35",
+          "modNum": "ME_36_ra36",
+          "reltn": "Manner",
+          "govText": "shine",
+          "isAssumed": "true",
+          "modText": "brightly"
+        },
+        {
+          "id": "ME_36_f18",
+          "govNum": "ME_36_ra35",
+          "modNum": "ME_36_ra23",
+          "reltn": "Cause_so",
+          "childProp2Facet2": "ME_36_f10",
+          "childProp1Facet1": "ME_36_f16",
+          "govText": "shine",
+          "isAssumed": "true",
+          "childProp1Facet2": "ME_36_f17",
+          "modText": "has",
+          "childProp2Facet1": "ME_36_f9"
+        }
+      ],
+      "responses": [
+        {
+          "response_id": "ME.36.185.1",
+          "source_answer_accuracy": "irrelevant",
+          "facet_annotations": [
+            {
+              "facetID": "ME_36_f2",
+              "label": "Assumed"
+            },
+            {
+              "facetID": "ME_36_f4",
+              "label": "Unaddressed"
+            },
+            {
+              "facetID": "ME_36_f8",
+              "label": "Assumed"
+            },
+            {
+              "facetID": "ME_36_f18",
+              "label": "Assumed"
+            }
+          ]
+        },
+        {
+          "response_id": "ME.36.226.1",
+          "source_answer_accuracy": "partially_correct_incomplete",
+          "facet_annotations": [
+            {
+              "facetID": "ME_36_f2",
+              "label": "Assumed"
+            },
+            {
+              "facetID": "ME_36_f4",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "ME_36_f8",
+              "label": "Assumed"
+            },
+            {
+              "facetID": "ME_36_f18",
+              "label": "Assumed"
+            }
+          ]
+        },
+        {
+          "response_id": "ME.36.214.1",
+          "source_answer_accuracy": "correct",
+          "facet_annotations": [
+            {
+              "facetID": "ME_36_f2",
+              "label": "Assumed"
+            },
+            {
+              "facetID": "ME_36_f4",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "ME_36_f8",
+              "label": "Assumed"
+            },
+            {
+              "facetID": "ME_36_f18",
+              "label": "Assumed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "question_id": "LF_13b",
+      "source_path": "sciEntsBank/test-unseen-questions/Extra/LF-post-13b.xml",
+      "source_xml_sha256": "da169ee5d575f7c4ddc125ad515ac418a7425244ed6ec38297b6781733fd029c",
+      "reference_facet_annotations": [
+        {
+          "id": "LF_13b_f1",
+          "govNum": "LF_13b_ra2",
+          "modNum": "LF_13b_ra1",
+          "reltn": "NMod",
+          "govText": "materials",
+          "isAssumed": "true",
+          "modText": "Earth"
+        },
+        {
+          "id": "LF_13b_f2",
+          "govNum": "LF_13b_ra4",
+          "modNum": "LF_13b_ra2",
+          "reltn": "Theme",
+          "govText": "worn away",
+          "modText": "materials"
+        },
+        {
+          "id": "LF_13b_f3",
+          "govNum": "LF_13b_ra7",
+          "modNum": "LF_13b_ra2",
+          "reltn": "Theme",
+          "govText": "moved",
+          "modText": "materials"
+        },
+        {
+          "id": "LF_13b_f4",
+          "govNum": "LF_13b_ra4",
+          "modNum": "LF_13b_ra9",
+          "reltn": "Time_during",
+          "govText": "worn away",
+          "modText": "erosion"
+        },
+        {
+          "id": "LF_13b_f5",
+          "govNum": "LF_13b_ra7",
+          "modNum": "LF_13b_ra9",
+          "reltn": "Time_during",
+          "govText": "moved",
+          "modText": "erosion"
+        }
+      ],
+      "responses": [
+        {
+          "response_id": "LF.13b.478.1",
+          "source_answer_accuracy": "irrelevant",
+          "facet_annotations": [
+            {
+              "facetID": "LF_13b_f2",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "LF_13b_f3",
+              "label": "Unaddressed"
+            },
+            {
+              "facetID": "LF_13b_f4",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "LF_13b_f5",
+              "label": "Unaddressed"
+            }
+          ]
+        },
+        {
+          "response_id": "LF.13b.737.1",
+          "source_answer_accuracy": "partially_correct_incomplete",
+          "facet_annotations": [
+            {
+              "facetID": "LF_13b_f2",
+              "label": "Unaddressed"
+            },
+            {
+              "facetID": "LF_13b_f3",
+              "label": "Expressed"
+            },
+            {
+              "facetID": "LF_13b_f4",
+              "label": "Unaddressed"
+            },
+            {
+              "facetID": "LF_13b_f5",
+              "label": "Inferred"
+            }
+          ]
+        },
+        {
+          "response_id": "LF.13b.436.1",
+          "source_answer_accuracy": "partially_correct_incomplete",
+          "facet_annotations": [
+            {
+              "facetID": "LF_13b_f2",
+              "label": "Expressed"
+            },
+            {
+              "facetID": "LF_13b_f3",
+              "label": "Unaddressed"
+            },
+            {
+              "facetID": "LF_13b_f4",
+              "label": "Inferred"
+            },
+            {
+              "facetID": "LF_13b_f5",
+              "label": "Unaddressed"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

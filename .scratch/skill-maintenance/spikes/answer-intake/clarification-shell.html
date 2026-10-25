@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clarify before choosing practice — prototype</title>
+<style>
+body{font:16px/1.6 system-ui,sans-serif;max-width:900px;margin:40px auto;padding:0 22px;color:#253831;background:#f5f7f5}h1{line-height:1.2}section{background:white;border:1px solid #cddbd2;border-radius:10px;padding:20px;margin:18px 0}button{font:inherit;padding:8px 12px;margin:4px;border:1px solid #91a99c;background:white;border-radius:6px;cursor:pointer}button:hover{background:#e5f0e9}blockquote{border-left:3px solid #25654c;padding-left:18px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem}.muted{color:#52655b}li{margin:8px 0}
+</style>
+<body><p class="muted">Throwaway logic experiment · no new exercise for you</p>
+<h1>Clarify before choosing practice</h1>
+<p>Can the system keep a possible error in the record while first checking what the answer means? This starts with an archived student answer and its frozen assessment. The follow-up answers are invented to let you explore the decision.</p>
+<section><h2>The original answer</h2><p id="prompt"></p><blockquote id="original"></blockquote><p class="muted">The pending later check is invented too. These selected assessment details are not an agreed curriculum.</p></section>
+<section><h2>Current decision</h2><p id="mode"></p><div id="decision" aria-live="polite"></div><h3>Evidence retained</h3><ul id="evidence"></ul><h3>Latest answer</h3><blockquote id="latest"></blockquote></section>
+<section><h2>Explore an outcome</h2><p>Each button adds a labelled example. Use Reset to try another branch from the original answer; adding the identical example twice adds no evidence.</p><div id="actions"></div><button id="reset">Reset to the archived answer</button></section>
+<section><h2>Guided examples</h2><div id="tabs"></div><p id="walk"></p><div id="steps"></div></section>
+<details><summary>Original records and full current state</summary><pre id="state"></pre></details>
+<footer class="muted"><p>Archived question and response: <a href="https://github.com/myrosia/semeval-2013-task7/tree/5157c69f914e8c581045c03e98f96398d40a91b8">SCIEntsBank, Dzikovska and Nielsen</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>. The selected and reformatted dataset material retains that license. Assessments and invented continuations are identified separately; no endorsement is implied.</p><p>This checks planning behavior, not assessment accuracy or learning benefit. No hints, responses or questions are sent to a learner. Browser layout remains unverified.</p></footer>
+<script>
+/*MODEL*/
+const $=id=>document.getElementById(id),text=(tag,value)=>{const e=document.createElement(tag);e.textContent=value;return e;};
+const labels={correct:'Clear correct answer',wrong:'Clear wrong answer',unclear:'Meaning still unclear',partial:'Only one part answered',omitted:'No clarification supplied',unrelated:'An unrelated error',later:'Invented later answer',hinted:'Invented later answer with help'};
+const walks=[{title:'Clarify first',note:'The apparent error stays visible, but the question comes first. A correct explanation ends the immediate intervention.',steps:['correct']},{title:'A confirmed error',note:'A clearly wrong explanation now supports focused help.',steps:['wrong']},{title:'Still uncertain',note:'An unclear reply can stop questioning and leave the assessment unresolved. It does not revive corrective practice.',steps:['unclear']},{title:'Help elsewhere',note:'Clarification for the thermometer does not block help for a separate arithmetic error.',steps:['unrelated']}];
+let state,last,walk=0,step=0;
+function apply(key){const r=RECORDS[key];last=B.connect(DATA,state,r.input,r);if(last.errors.length)throw Error(last.errors.join('; '));state=last.state;render();}
+function reset(){state=NextSession.empty();step=0;apply('original');}
+function render(){
+ const plan=NextSession.plan(DATA,state),names=ids=>ids.map(id=>DATA.targets.find(t=>t.id===id).label).join('; ');
+ $('mode').textContent=state.events.length===1?'Archived response only; frozen assessment.':'Includes invented continuations; no new learner result.';
+ $('decision').replaceChildren();
+ if(!plan.now.length)$('decision').append(text('p','No immediate clarification or corrective practice remains.'));
+ for(const a of plan.now)$('decision').append(text('p',`${a.kind==='help'?'Focused help':a.kind==='review'?'Assessment unresolved':'Clarify first'}: ${names(a.targets)}. ${a.text||a.reason}`));
+ for(const a of plan.later)$('decision').append(text('p',`Constructed later check still includes: ${names(a.targets)}.`));
+ if(!plan.later.length)$('decision').append(text('p','The constructed later check has no remaining targets. This is not a measured retention result.'));
+ $('evidence').replaceChildren(...DATA.targets.map(t=>{const s=NextSession.status(state,t.id);return text('li',`${t.label}: ${s.label}. ${s.history.length} observations retained${s.history.some(o=>o.result==='error')?'; earlier error remains in history':''}.`);}));
+ $('latest').textContent=last.event.quote;$('state').textContent=JSON.stringify({plan,state},null,2);
+ $('walk').textContent=walks[walk].note;$('steps').replaceChildren();
+ walks[walk].steps.forEach((key,i)=>{const b=text('button',`${i+1}. ${labels[key]}`);b.disabled=i!==step;b.onclick=()=>{step++;apply(key);};$('steps').append(b);});
+}
+$('prompt').textContent=RECORDS.original.input.exercise.prompt;$('original').textContent=RECORDS.original.input.response;
+for(const [key,label] of Object.entries(labels)){const b=text('button',label);b.onclick=()=>apply(key);$('actions').append(b);}
+walks.forEach((w,i)=>{const b=text('button',w.title);b.onclick=()=>{walk=i;reset();};$('tabs').append(b);});
+$('reset').onclick=reset;reset();
+</script></body></html>

@@ -1,0 +1,1344 @@
+{
+  "scope": "Synthetic fixed-state sensitivity probe; actual bridge inspected only for shared evidence identity. No learner model calibration, practice effect, timing, review omissions or FSRS updates.",
+  "hashes": {
+    "probe.mjs": "33b5aaafad1e810df38be846f0a7c8576c1a443c9ef56be64f978e7b9402253e",
+    "../representation/examples.mjs": "91e66db6ff4e725845259d35865169ac40510e506734f4fb6178be5a84ec3f9e",
+    "../answer-intake/bridge.mjs": "3f09515edd8a84050db0f25945c1804aa22c00829691d8c466ebb3468f02c534",
+    "../assessment-trial/trial.mjs": "11d4de23d61a87f315c52219256007b4b44b0aa3c148ffb51217086d1832fed9",
+    "../next-session.html": "7d39db55bae6404708d7f56e1398139e45e45a37b5d1a0243dcdb1065493a6b9"
+  },
+  "checks": [
+    "Independent control matches all three initial marginals",
+    "Chain update agrees with hand-calculated state weights 1:1:1:9",
+    "Independent C success leaves untested A and B at their priors",
+    "Contradiction agrees with hand-calculated state weights 9:1:1:9",
+    "Independent model preserves C success while revising A after its failure",
+    "Zero-noise contradiction reports incompatible chain instead of normalizing zero",
+    "Exact replay is one effective observation; counterfeit independence inflates certainty",
+    "A revised grade replaces the original effective likelihood and keeps source history external",
+    "Conflicting same-revision assessments are refused",
+    "Distinct criteria in one episode are not silently multiplied",
+    "Omitted, ambiguous and assisted judgments remain visible without unassisted numeric updates",
+    "Every compatible scenario has normalized nonnegative mass and retains supplied observations",
+    "Asymmetric error assumptions change which contradictory answer is attributed to noise",
+    "Real math bridge yields five references to four criteria from one answer"
+  ],
+  "scenarios": [
+    {
+      "model": "strict-chain-uniform",
+      "condition": "prior",
+      "states": [
+        [],
+        [
+          "A"
+        ],
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "B",
+          "C"
+        ]
+      ],
+      "prior": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "parameters": {
+        "slip": 0.1,
+        "guess": 0.1
+      },
+      "status": "ok",
+      "sequenceLikelihood": 1,
+      "posterior": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "marginals": {
+        "A": 0.75,
+        "B": 0.5,
+        "C": 0.25
+      },
+      "included": [],
+      "excluded": []
+    },
+    {
+      "model": "strict-chain-uniform",
+      "condition": "C correct",
+      "states": [
+        [],
+        [
+          "A"
+        ],
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "B",
+          "C"
+        ]
+      ],
+      "prior": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "parameters": {
+        "slip": 0.1,
+        "guess": 0.1
+      },
+      "status": "ok",
+      "sequenceLikelihood": 0.30000000000000004,
+      "posterior": [
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.7499999999999999
+      ],
+      "marginals": {
+        "A": 0.9166666666666665,
+        "B": 0.8333333333333333,
+        "C": 0.7499999999999999
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "model": "strict-chain-uniform",
+      "condition": "C correct then A incorrect",
+      "states": [
+        [],
+        [
+          "A"
+        ],
+        [
+          "A",
+          "B"
+        ],
+        [
+          "A",
+          "B",
+          "C"
+        ]
+      ],
+      "prior": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "parameters": {
+        "slip": 0.1,
+        "guess": 0.1
+      },
+      "status": "ok",
+      "sequenceLikelihood": 0.049999999999999996,
+      "posterior": [
+        0.45000000000000007,
+        0.05,
+        0.05,
+        0.4499999999999999
+      ],
+      "marginals": {
+        "A": 0.5499999999999999,
+        "B": 0.4999999999999999,
+        "C": 0.4499999999999999
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "model": "independent-matched-marginals",
+      "condition": "prior",
+      "states": [
+        [],
+        [
+          "A"
+        ],
+        [
+          "B"
+        ],
+        [
+          "A",
+          "B"
+        ],
+        [
+          "C"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "A",
+          "B",
+          "C"
+        ]
+      ],
+      "prior": [
+        0.09375,
+        0.28125,
+        0.09375,
+        0.28125,
+        0.03125,
+        0.09375,
+        0.03125,
+        0.09375
+      ],
+      "parameters": {
+        "slip": 0.1,
+        "guess": 0.1
+      },
+      "status": "ok",
+      "sequenceLikelihood": 1,
+      "posterior": [
+        0.09375,
+        0.28125,
+        0.09375,
+        0.28125,
+        0.03125,
+        0.09375,
+        0.03125,
+        0.09375
+      ],
+      "marginals": {
+        "A": 0.75,
+        "B": 0.5,
+        "C": 0.25
+      },
+      "included": [],
+      "excluded": []
+    },
+    {
+      "model": "independent-matched-marginals",
+      "condition": "C correct",
+      "states": [
+        [],
+        [
+          "A"
+        ],
+        [
+          "B"
+        ],
+        [
+          "A",
+          "B"
+        ],
+        [
+          "C"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "A",
+          "B",
+          "C"
+        ]
+      ],
+      "prior": [
+        0.09375,
+        0.28125,
+        0.09375,
+        0.28125,
+        0.03125,
+        0.09375,
+        0.03125,
+        0.09375
+      ],
+      "parameters": {
+        "slip": 0.1,
+        "guess": 0.1
+      },
+      "status": "ok",
+      "sequenceLikelihood": 0.30000000000000004,
+      "posterior": [
+        0.03125,
+        0.09374999999999999,
+        0.03125,
+        0.09374999999999999,
+        0.09374999999999999,
+        0.28125,
+        0.09374999999999999,
+        0.28125
+      ],
+      "marginals": {
+        "A": 0.75,
+        "B": 0.5,
+        "C": 0.75
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "model": "independent-matched-marginals",
+      "condition": "C correct then A incorrect",
+      "states": [
+        [],
+        [
+          "A"
+        ],
+        [
+          "B"
+        ],
+        [
+          "A",
+          "B"
+        ],
+        [
+          "C"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "A",
+          "B",
+          "C"
+        ]
+      ],
+      "prior": [
+        0.09375,
+        0.28125,
+        0.09375,
+        0.28125,
+        0.03125,
+        0.09375,
+        0.03125,
+        0.09375
+      ],
+      "parameters": {
+        "slip": 0.1,
+        "guess": 0.1
+      },
+      "status": "ok",
+      "sequenceLikelihood": 0.09000000000000001,
+      "posterior": [
+        0.09375,
+        0.03124999999999999,
+        0.09375,
+        0.03124999999999999,
+        0.28125,
+        0.09374999999999999,
+        0.28125,
+        0.09374999999999999
+      ],
+      "marginals": {
+        "A": 0.24999999999999994,
+        "B": 0.5,
+        "C": 0.75
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "model": "independent-uniform",
+      "condition": "prior",
+      "states": [
+        [],
+        [
+          "A"
+        ],
+        [
+          "B"
+        ],
+        [
+          "A",
+          "B"
+        ],
+        [
+          "C"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "A",
+          "B",
+          "C"
+        ]
+      ],
+      "prior": [
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125
+      ],
+      "parameters": {
+        "slip": 0.1,
+        "guess": 0.1
+      },
+      "status": "ok",
+      "sequenceLikelihood": 1,
+      "posterior": [
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125
+      ],
+      "marginals": {
+        "A": 0.5,
+        "B": 0.5,
+        "C": 0.5
+      },
+      "included": [],
+      "excluded": []
+    },
+    {
+      "model": "independent-uniform",
+      "condition": "C correct",
+      "states": [
+        [],
+        [
+          "A"
+        ],
+        [
+          "B"
+        ],
+        [
+          "A",
+          "B"
+        ],
+        [
+          "C"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "A",
+          "B",
+          "C"
+        ]
+      ],
+      "prior": [
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125
+      ],
+      "parameters": {
+        "slip": 0.1,
+        "guess": 0.1
+      },
+      "status": "ok",
+      "sequenceLikelihood": 0.5,
+      "posterior": [
+        0.025,
+        0.025,
+        0.025,
+        0.025,
+        0.225,
+        0.225,
+        0.225,
+        0.225
+      ],
+      "marginals": {
+        "A": 0.5,
+        "B": 0.5,
+        "C": 0.9
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "model": "independent-uniform",
+      "condition": "C correct then A incorrect",
+      "states": [
+        [],
+        [
+          "A"
+        ],
+        [
+          "B"
+        ],
+        [
+          "A",
+          "B"
+        ],
+        [
+          "C"
+        ],
+        [
+          "A",
+          "C"
+        ],
+        [
+          "B",
+          "C"
+        ],
+        [
+          "A",
+          "B",
+          "C"
+        ]
+      ],
+      "prior": [
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125
+      ],
+      "parameters": {
+        "slip": 0.1,
+        "guess": 0.1
+      },
+      "status": "ok",
+      "sequenceLikelihood": 0.25,
+      "posterior": [
+        0.045000000000000005,
+        0.004999999999999999,
+        0.045000000000000005,
+        0.004999999999999999,
+        0.405,
+        0.04499999999999999,
+        0.405,
+        0.04499999999999999
+      ],
+      "marginals": {
+        "A": 0.09999999999999998,
+        "B": 0.5,
+        "C": 0.9
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    }
+  ],
+  "zeroNoise": [
+    {
+      "model": "strict-chain-uniform",
+      "status": "incompatible",
+      "sequenceLikelihood": 0,
+      "posterior": null,
+      "marginals": null,
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "model": "independent-matched-marginals",
+      "status": "ok",
+      "sequenceLikelihood": 0.0625,
+      "posterior": [
+        0,
+        0,
+        0,
+        0,
+        0.5,
+        0,
+        0.5,
+        0
+      ],
+      "marginals": {
+        "A": 0,
+        "B": 0.5,
+        "C": 1
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    }
+  ],
+  "duplicates": {
+    "once": {
+      "status": "ok",
+      "sequenceLikelihood": 0.30000000000000004,
+      "posterior": [
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.7499999999999999
+      ],
+      "marginals": {
+        "A": 0.9166666666666665,
+        "B": 0.8333333333333333,
+        "C": 0.7499999999999999
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    "duplicate": {
+      "status": "ok",
+      "sequenceLikelihood": 0.30000000000000004,
+      "posterior": [
+        0.08333333333333333,
+        0.08333333333333333,
+        0.08333333333333333,
+        0.7499999999999999
+      ],
+      "marginals": {
+        "A": 0.9166666666666665,
+        "B": 0.8333333333333333,
+        "C": 0.7499999999999999
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    "counterfeit": {
+      "status": "ok",
+      "sequenceLikelihood": 0.21000000000000002,
+      "posterior": [
+        0.011904761904761906,
+        0.011904761904761906,
+        0.011904761904761906,
+        0.9642857142857143
+      ],
+      "marginals": {
+        "A": 0.9880952380952381,
+        "B": 0.9761904761904762,
+        "C": 0.9642857142857143
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "counterfeit",
+          "revision": 1,
+          "episode": "counterfeit",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    }
+  },
+  "sensitivity": [
+    {
+      "priorName": "uniform",
+      "prior": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "slip": 0.01,
+      "guess": 0.01,
+      "status": "ok",
+      "sequenceLikelihood": 0.005000000000000002,
+      "posterior": [
+        0.4949999999999999,
+        0.005000000000000003,
+        0.005000000000000003,
+        0.49500000000000033
+      ],
+      "marginals": {
+        "A": 0.5050000000000003,
+        "B": 0.5000000000000003,
+        "C": 0.49500000000000033
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "priorName": "uniform",
+      "prior": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "slip": 0.1,
+      "guess": 0.1,
+      "status": "ok",
+      "sequenceLikelihood": 0.049999999999999996,
+      "posterior": [
+        0.45000000000000007,
+        0.05,
+        0.05,
+        0.4499999999999999
+      ],
+      "marginals": {
+        "A": 0.5499999999999999,
+        "B": 0.4999999999999999,
+        "C": 0.4499999999999999
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "priorName": "uniform",
+      "prior": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "slip": 0.3,
+      "guess": 0.3,
+      "status": "ok",
+      "sequenceLikelihood": 0.15000000000000002,
+      "posterior": [
+        0.34999999999999987,
+        0.15,
+        0.15,
+        0.35000000000000003
+      ],
+      "marginals": {
+        "A": 0.65,
+        "B": 0.5,
+        "C": 0.35000000000000003
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "priorName": "empty-heavy",
+      "prior": [
+        0.7,
+        0.1,
+        0.1,
+        0.1
+      ],
+      "slip": 0.01,
+      "guess": 0.01,
+      "status": "ok",
+      "sequenceLikelihood": 0.00794,
+      "posterior": [
+        0.8727959697732998,
+        0.0012594458438287168,
+        0.0012594458438287168,
+        0.12468513853904295
+      ],
+      "marginals": {
+        "A": 0.12720403022670038,
+        "B": 0.12594458438287168,
+        "C": 0.12468513853904295
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "priorName": "empty-heavy",
+      "prior": [
+        0.7,
+        0.1,
+        0.1,
+        0.1
+      ],
+      "slip": 0.1,
+      "guess": 0.1,
+      "status": "ok",
+      "sequenceLikelihood": 0.07399999999999998,
+      "posterior": [
+        0.8513513513513514,
+        0.013513513513513516,
+        0.013513513513513516,
+        0.12162162162162166
+      ],
+      "marginals": {
+        "A": 0.14864864864864868,
+        "B": 0.13513513513513517,
+        "C": 0.12162162162162166
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "priorName": "empty-heavy",
+      "prior": [
+        0.7,
+        0.1,
+        0.1,
+        0.1
+      ],
+      "slip": 0.3,
+      "guess": 0.3,
+      "status": "ok",
+      "sequenceLikelihood": 0.186,
+      "posterior": [
+        0.7903225806451613,
+        0.04838709677419356,
+        0.04838709677419356,
+        0.11290322580645161
+      ],
+      "marginals": {
+        "A": 0.20967741935483875,
+        "B": 0.16129032258064518,
+        "C": 0.11290322580645161
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "priorName": "full-heavy",
+      "prior": [
+        0.1,
+        0.1,
+        0.1,
+        0.7
+      ],
+      "slip": 0.01,
+      "guess": 0.01,
+      "status": "ok",
+      "sequenceLikelihood": 0.007940000000000006,
+      "posterior": [
+        0.12468513853904274,
+        0.0012594458438287158,
+        0.0012594458438287158,
+        0.8727959697732999
+      ],
+      "marginals": {
+        "A": 0.8753148614609573,
+        "B": 0.8740554156171286,
+        "C": 0.8727959697732999
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "priorName": "full-heavy",
+      "prior": [
+        0.1,
+        0.1,
+        0.1,
+        0.7
+      ],
+      "slip": 0.1,
+      "guess": 0.1,
+      "status": "ok",
+      "sequenceLikelihood": 0.07399999999999998,
+      "posterior": [
+        0.12162162162162167,
+        0.013513513513513514,
+        0.013513513513513514,
+        0.8513513513513513
+      ],
+      "marginals": {
+        "A": 0.8783783783783783,
+        "B": 0.8648648648648648,
+        "C": 0.8513513513513513
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "priorName": "full-heavy",
+      "prior": [
+        0.1,
+        0.1,
+        0.1,
+        0.7
+      ],
+      "slip": 0.3,
+      "guess": 0.3,
+      "status": "ok",
+      "sequenceLikelihood": 0.18599999999999997,
+      "posterior": [
+        0.11290322580645161,
+        0.048387096774193554,
+        0.048387096774193554,
+        0.7903225806451614
+      ],
+      "marginals": {
+        "A": 0.8870967741935485,
+        "B": 0.8387096774193549,
+        "C": 0.7903225806451614
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    }
+  ],
+  "asymmetricNoise": [
+    {
+      "prior": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "slip": 0.01,
+      "guess": 0.3,
+      "status": "ok",
+      "sequenceLikelihood": 0.05647499999999999,
+      "posterior": [
+        0.9296148738379814,
+        0.013280212483399747,
+        0.013280212483399747,
+        0.043824701195219175
+      ],
+      "marginals": {
+        "A": 0.07038512616201867,
+        "B": 0.05710491367861892,
+        "C": 0.043824701195219175
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "prior": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "slip": 0.3,
+      "guess": 0.01,
+      "status": "ok",
+      "sequenceLikelihood": 0.056475000000000004,
+      "posterior": [
+        0.04382470119521912,
+        0.013280212483399736,
+        0.013280212483399736,
+        0.9296148738379814
+      ],
+      "marginals": {
+        "A": 0.9561752988047808,
+        "B": 0.9428950863213811,
+        "C": 0.9296148738379814
+      },
+      "included": [
+        {
+          "id": "c-pass",
+          "revision": 1,
+          "episode": "c-pass",
+          "family": "synthetic-distinct-prompts",
+          "target": "C",
+          "outcome": "correct",
+          "assisted": false
+        },
+        {
+          "id": "a-fail",
+          "revision": 1,
+          "episode": "a-fail",
+          "family": "synthetic-distinct-prompts",
+          "target": "A",
+          "outcome": "incorrect",
+          "assisted": false
+        }
+      ],
+      "excluded": []
+    }
+  ],
+  "coverage": {
+    "answer": "math-later",
+    "projectedCapabilities": 3,
+    "referenceOccurrences": 5,
+    "uniqueCriterionReferences": 4,
+    "distinctAnswers": 1,
+    "references": [
+      {
+        "answer": "math-later",
+        "attempt": "math-later",
+        "exercise": "math.exercise",
+        "exerciseVersion": 1,
+        "rubricVersion": 1,
+        "criterion": "reductions"
+      },
+      {
+        "answer": "math-later",
+        "attempt": "math-later",
+        "exercise": "math.exercise",
+        "exerciseVersion": 1,
+        "rubricVersion": 1,
+        "criterion": "logarithm"
+      },
+      {
+        "answer": "math-later",
+        "attempt": "math-later",
+        "exercise": "math.exercise",
+        "exerciseVersion": 1,
+        "rubricVersion": 1,
+        "criterion": "work"
+      },
+      {
+        "answer": "math-later",
+        "attempt": "math-later",
+        "exercise": "math.exercise",
+        "exerciseVersion": 1,
+        "rubricVersion": 1,
+        "criterion": "integration"
+      }
+    ]
+  }
+}

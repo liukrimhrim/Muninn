@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# local learner data (the SQLite store and its backups)
+data/
+# the original chat transcript stays on this machine only
+sources/fsrs_learning_conversation.md
+# a verbatim transcript of the design chat; stays on this machine too
+.scratch/skill-maintenance/research/current-chat-retrieval.md

@@ -1,0 +1,112 @@
+{
+  "scope": "Structural validation, input binding, comparison arithmetic and generated script syntax only. No real browser, human reviewer, semantic accuracy or learning outcome is tested.",
+  "results": [
+    {
+      "name": "Saved batch matches exact inputs and evidence contract",
+      "expected": true,
+      "actual": true,
+      "met": true
+    },
+    {
+      "name": "Reject invented quotation",
+      "expected": true,
+      "actual": true,
+      "met": true
+    },
+    {
+      "name": "Reject repeated criterion hiding an omitted criterion",
+      "expected": true,
+      "actual": true,
+      "met": true
+    },
+    {
+      "name": "Reject remedial practice from only missing evidence",
+      "expected": true,
+      "actual": true,
+      "met": true
+    },
+    {
+      "name": "Reject follow-up with identical branches",
+      "expected": true,
+      "actual": true,
+      "met": true
+    },
+    {
+      "name": "Reject stale assessment after response changes",
+      "expected": true,
+      "actual": true,
+      "met": true
+    },
+    {
+      "name": "Reject stale assessment after assistance changes",
+      "expected": true,
+      "actual": true,
+      "met": true
+    },
+    {
+      "name": "Reject stale assessment after prompt changes",
+      "expected": true,
+      "actual": true,
+      "met": true
+    },
+    {
+      "name": "Reject stale assessment after criterion changes",
+      "expected": true,
+      "actual": true,
+      "met": true
+    },
+    {
+      "name": "Synthetic matching review comparison",
+      "expected": [
+        4,
+        4,
+        true,
+        true
+      ],
+      "actual": [
+        4,
+        4,
+        true,
+        true
+      ],
+      "met": true
+    },
+    {
+      "name": "Synthetic disagreement remains disagreement, not accuracy",
+      "expected": [
+        3,
+        1,
+        false,
+        false,
+        false
+      ],
+      "actual": [
+        3,
+        1,
+        false,
+        false,
+        false
+      ],
+      "met": true
+    },
+    {
+      "name": "Incomplete human review rejected",
+      "expected": true,
+      "actual": true,
+      "met": true
+    },
+    {
+      "name": "Unblinded flag is retained",
+      "expected": false,
+      "actual": false,
+      "met": true
+    },
+    {
+      "name": "Generated HTML contains the exact pure model and frozen data",
+      "expected": true,
+      "actual": true,
+      "met": true
+    }
+  ],
+  "all_met": true
+}
