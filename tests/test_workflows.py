@@ -178,14 +178,23 @@ def test_first_independent_success_schedules_a_check_a_day_after_the_answer(make
     clock.advance(minutes=20)
     assessed = app.run_operation(submitted["operation"]["id"])
     assert assessed["acceptance"] == "accepted"
-    for t in targets(app, op):
-        history = app.store.read(lambda tx, t=t: practice.schedule_history(tx, t))
-        assert history[-2]["obligation"]["status"] == "consumed"
-        assert history[-1]["obligation"]["kind"] == "later"
-        assert (history[-1]["need"], history[-1]["due_at"]) == (
-            "independent_check",
-            "2026-10-25T10:00:00.000Z",
-        )
+    fact, connection = targets(app, op)
+    history = app.store.read(lambda tx: practice.schedule_history(tx, connection))
+    assert history[-2]["obligation"]["status"] == "consumed"
+    assert history[-1]["obligation"]["kind"] == "later"
+    assert (history[-1]["need"], history[-1]["due_at"]) == (
+        "independent_check",
+        "2026-10-25T10:00:00.000Z",
+    )
+    # the recall fact follows FSRS: no capability rule manufactures its first review
+    recall = app.store.read(lambda tx: practice.schedule_view(tx, fact))
+    assert (recall["type"], recall["need"], recall["hold_reason"], recall["due_at"]) == (
+        "recall",
+        "held",
+        "waiting for your recall rating",
+        None,
+    )
+    for t in (fact, connection):
         assert (
             app.store.read(lambda tx, t=t: evidence.target_evidence(tx, t)["label"])
             == "independent"
@@ -199,7 +208,7 @@ def test_mixed_outcomes_resolve_each_target_separately(make_app):
     _, submitted = answer(app, op)
     app.run_operation(submitted["operation"]["id"])
     t1, t2 = targets(app, op)
-    assert need(app, t1) == "independent_check"
+    assert need(app, t1) == "held"  # the recall fact stands; it waits for its rating
     t2_schedule = app.store.read(lambda tx: practice.schedule_view(tx, t2))
     assert (t2_schedule["need"], t2_schedule["due_at"]) == ("repair", None)
     concerns = app.store.read(practice.open_concerns)

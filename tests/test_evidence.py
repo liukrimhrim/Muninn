@@ -215,3 +215,28 @@ def test_a_scoped_outcome_looks_only_at_the_repaired_requirement():
     )
     assert scoped(CONNECTION_ERROR, misread={"c3"})[0] == "inconclusive"
     assert scoped(CONNECTION_ERROR | {"c3": "not_shown"})[0] == "inconclusive"
+
+
+# --- the delayed-check claim (DELAYED_CHECK) ---------------------------------------------
+
+
+def test_a_delayed_check_starts_24_hours_after_the_latest_relevant_end():
+    from muninn.evidence import Delay
+
+    gap = Delay(since="2026-10-24T10:00:00.000Z", open=[], basis=[])
+    assert gap.eligible_at == "2026-10-25T10:00:00.000Z"
+    assert gap.state("2026-10-25T09:59:59.999Z") == "ineligible"
+    assert gap.state("2026-10-25T10:00:00.000Z") == "eligible"  # due at equality
+
+
+def test_a_view_with_no_known_end_certifies_no_delay_however_long_ago():
+    from muninn.evidence import Delay
+
+    view = {"kind": "exposure", "id": "x", "revision": 1}
+    gap = Delay(since="2026-10-01T10:00:00.000Z", open=[view], basis=[])
+    assert (gap.known, gap.eligible_at, gap.state("2026-12-01T10:00:00.000Z")) == (
+        False,
+        None,
+        "uncertain",
+    )
+    assert Delay(since=None, open=[], basis=[]).state("2026-10-24T10:00:00.000Z") == "eligible"

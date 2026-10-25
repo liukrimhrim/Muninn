@@ -11,15 +11,22 @@ Slice 3: "This judgment is wrong" is reviewed as all criteria shown (a reason co
 "keep" leaves the judgment as it was). Material starting "Notes on searching"
 (``tests.drafts.NOTES_SOURCE``) proposes reusing the binary-search claims, and
 ``tests.drafts.VOCAB_SOURCE`` adds an unrelated curriculum.
+
+Slice 4: the store clock can be moved forward to cross due boundaries:
+``curl -X POST 'http://127.0.0.1:8766/dev/clock?hours=25'``. The Tarvi exercise is a
+recall item (FSRS): an answer containing "blue" is judged correct, anything else wrong.
 """
 
 import json
 import tempfile
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import uvicorn
+from fastapi import FastAPI
 
+from muninn.library import utc
 from muninn.web import create_app
 from muninn.workflows import OUTPUTS, ProviderResult
 from tests.drafts import (
@@ -56,6 +63,8 @@ def assess(user: str) -> dict[str, Any]:
     prompt = user.split("<prompt>\n", 1)[1].split("\n</prompt>", 1)[0]
     answer = user.split("<answer>\n", 1)[1].rsplit("\n</answer>", 1)[0]
     quote = answer[: min(len(answer), 12)]
+    if "mavo" in prompt:
+        return judged({"c1": "demonstrated" if "blue" in answer.lower() else "error"}, quote)
     if prompt.startswith("With 32 candidates"):
         if "not sure" in answer:
             return judged({"c1": "not_shown"}, quote)
@@ -115,6 +124,29 @@ class ScreenProvider:
         return ProviderResult(output=parsed, raw=json.dumps(output), model=self.model)
 
 
+class DevClock:
+    """The real clock plus an offset the UI check can move forward."""
+
+    def __init__(self) -> None:
+        self.offset = timedelta()
+
+    def __call__(self) -> datetime:
+        return datetime.now(UTC) + self.offset
+
+
+def dev_app(data: Path) -> FastAPI:
+    clock = DevClock()
+    outer = FastAPI()
+
+    @outer.post("/dev/clock")
+    def advance(hours: float = 0, minutes: float = 0) -> dict[str, str]:
+        clock.offset += timedelta(hours=hours, minutes=minutes)
+        return {"now": utc(clock())}
+
+    outer.mount("/", create_app(data, provider=ScreenProvider(), clock=clock))
+    return outer
+
+
 if __name__ == "__main__":
     data = Path(tempfile.mkdtemp(prefix="muninn-ui-"))
-    uvicorn.run(create_app(data, provider=ScreenProvider()), host="127.0.0.1", port=8766)
+    uvicorn.run(dev_app(data), host="127.0.0.1", port=8766)

@@ -93,3 +93,21 @@ def test_the_check_catches_seeded_violations():
     assert "evidence accesses records as 'practice'" in found
     assert "measurement accesses records as who" in found
     assert "web reaches into the store via .store" in found
+
+
+def test_the_fsrs_adapter_is_private_to_practice():
+    # module-design.md: the browser, Evidence and Measurement never touch engine state
+    def imports_fsrs(node):
+        if isinstance(node, ast.Import):
+            return any(a.name.split(".")[0] == "fsrs" for a in node.names)
+        return isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[0] == "fsrs"
+
+    importers = {
+        p.stem
+        for p in PACKAGE.glob("*.py")
+        for node in ast.walk(ast.parse(p.read_text()))
+        if imports_fsrs(node)
+    }
+    assert importers == {"practice"}
+    static = (PACKAGE / "static" / "app.js").read_text()
+    assert "engine_state" not in static

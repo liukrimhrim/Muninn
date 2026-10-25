@@ -153,6 +153,54 @@ class Dispute(Cmd):
     reason: str
 
 
+class SessionStart(Cmd):
+    """A session over curricula in the learner's order, with an optional budget."""
+
+    curricula: list[str] = []
+    budget_seconds: int | None = None
+
+
+class Budget(Cmd):
+    """A changed session budget."""
+
+    base: int
+    budget_seconds: int | None
+
+
+class NextChoice(Cmd):
+    """The learner's own choice of what to practise next (an override), if any."""
+
+    exercise_id: str | None = None
+    new_material: bool = False
+
+
+class Rating(Cmd):
+    """The learner's recall rating of one goal in one answer."""
+
+    target: dict[str, Any]
+    choice: str
+
+
+class MaterialView(Cmd):
+    """Answer-bearing material opened for these goals."""
+
+    targets: list[dict[str, Any]]
+    what: str
+
+
+class Closed(Cmd):
+    """Goals whose earlier answer-bearing views the learner confirms are closed."""
+
+    targets: list[dict[str, Any]]
+
+
+class Tracking(Cmd):
+    """Why a tracking plan is stopped."""
+
+    base: int
+    reason: str
+
+
 class Acceptance(Cmd):
     """Accept a reviewed judgment exactly as its preview showed it."""
 
@@ -232,6 +280,26 @@ def create_app(  # noqa: C901, PLR0915 - one route table
     @api.get("/api/operations/{operation_id}/correction")
     def correction(operation_id: str) -> Any:  # noqa: ANN401
         return core.correction_preview(operation_id)
+
+    @api.get("/api/proposal")
+    def proposal(curricula: str, budget: int | None = None) -> Any:  # noqa: ANN401
+        return read(workflows.session_proposal_view, curricula.split(","), budget)
+
+    @api.get("/api/sessions/{session_id}/choices")
+    def choices(session_id: str) -> Any:  # noqa: ANN401
+        return read(workflows.choices_view, session_id)
+
+    @api.get("/api/curricula/{curriculum_id}/checks")
+    def later_checks(curriculum_id: str) -> Any:  # noqa: ANN401
+        return read(workflows.later_checks_view, curriculum_id)
+
+    @api.get("/api/curricula/{curriculum_id}/tracking")
+    def tracking_preview(curriculum_id: str) -> Any:  # noqa: ANN401
+        return read(workflows.tracking_preview_view, curriculum_id)
+
+    @api.get("/api/tracking/{cohort_id}")
+    def tracking(cohort_id: str) -> Any:  # noqa: ANN401
+        return read(workflows.tracking_view, cohort_id)
 
     @api.get("/api/targets/{target_id}/history")
     def target_history(target_id: str) -> Any:  # noqa: ANN401
@@ -319,12 +387,34 @@ def create_app(  # noqa: C901, PLR0915 - one route table
         return core.keep_judgment(body.request_id, operation_id=operation_id)
 
     @api.post("/api/curricula/{curriculum_id}/sessions")
-    def start(curriculum_id: str, body: Cmd) -> Any:  # noqa: ANN401
-        return core.start_session(body.request_id, curriculum_id=curriculum_id)
+    def start(curriculum_id: str, body: SessionStart) -> Any:  # noqa: ANN401
+        return core.start_session(
+            body.request_id, curriculum_id=curriculum_id, budget_seconds=body.budget_seconds
+        )
+
+    @api.post("/api/sessions")
+    def start_many(body: SessionStart) -> Any:  # noqa: ANN401
+        return core.start_session(
+            body.request_id, curriculum_ids=body.curricula, budget_seconds=body.budget_seconds
+        )
+
+    @api.post("/api/sessions/{session_id}/budget")
+    def budget(session_id: str, body: Budget) -> Any:  # noqa: ANN401
+        return core.change_budget(
+            body.request_id,
+            session_id=session_id,
+            base=body.base,
+            budget_seconds=body.budget_seconds,
+        )
 
     @api.post("/api/sessions/{session_id}/next")
-    def next_exercise(session_id: str, body: Cmd, background: BackgroundTasks) -> Any:  # noqa: ANN401
-        result = core.next_exercise(body.request_id, session_id=session_id)
+    def next_exercise(session_id: str, body: NextChoice, background: BackgroundTasks) -> Any:  # noqa: ANN401
+        result = core.next_exercise(
+            body.request_id,
+            session_id=session_id,
+            exercise_id=body.exercise_id,
+            new_material=body.new_material,
+        )
         if result["kind"] == "preparing" and result["operation"]["status"] == "pending":
             background.add_task(core.run_operation, result["operation"]["id"])
         return result
@@ -390,6 +480,34 @@ def create_app(  # noqa: C901, PLR0915 - one route table
     @api.post("/api/attempts/{attempt_id}/feedback-viewed")
     def viewed(attempt_id: str, body: Cmd) -> Any:  # noqa: ANN401
         return core.view_feedback(body.request_id, attempt_id=attempt_id)
+
+    @api.post("/api/attempts/{attempt_id}/rate")
+    def rate_recall(attempt_id: str, body: Rating) -> Any:  # noqa: ANN401
+        return core.rate_recall(
+            body.request_id, attempt_id=attempt_id, target=body.target, choice=body.choice
+        )
+
+    @api.post("/api/exposures")
+    def material_view(body: MaterialView) -> Any:  # noqa: ANN401
+        return core.read_material(body.request_id, targets=body.targets, what=body.what)
+
+    @api.post("/api/exposures/{exposure_id}/close")
+    def close_view(exposure_id: str, body: Cmd) -> Any:  # noqa: ANN401
+        return core.close_view(body.request_id, exposure_id=exposure_id)
+
+    @api.post("/api/closed")
+    def confirm_closed(body: Closed) -> Any:  # noqa: ANN401
+        return core.confirm_closed(body.request_id, targets=body.targets)
+
+    @api.post("/api/curricula/{curriculum_id}/tracking")
+    def start_tracking(curriculum_id: str, body: Cmd) -> Any:  # noqa: ANN401
+        return core.start_tracking(body.request_id, curriculum_id=curriculum_id)
+
+    @api.post("/api/tracking/{cohort_id}/stop")
+    def stop_tracking(cohort_id: str, body: Tracking) -> Any:  # noqa: ANN401
+        return core.stop_tracking(
+            body.request_id, cohort_id=cohort_id, base=body.base, reason=body.reason
+        )
 
     @api.post("/api/timer")
     def timer(body: TimerClaim) -> Any:  # noqa: ANN401

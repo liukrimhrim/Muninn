@@ -29,6 +29,19 @@ const NEED = {
   clarify: "Needs clarifying",
   held: "On hold",
 };
+const CHOICE = { forgot: "Forgot", difficult: "Remembered with difficulty", remembered: "Remembered", easy: "Easy" };
+const BUCKET = {
+  QN: "Planned for later", QM: "No answer for this check", QU: "Not enough grading evidence",
+  QH: "Answered with help", QX: "Does not establish this result", QS: "Correct", QE: "Incorrect",
+};
+const RAW = { S: "correct", E: "incorrect", H: "with help", U: "not gradable", M: "missing", N: "not yet" };
+const WAITING = {
+  first_check_pending: "First later check pending", after_repair_pending: "Later check after repair pending",
+  unresolved: "Something is still unresolved", grading: "An answer is still being graded",
+  due: "A later check is due", not_started: "Some goals are not started yet", paused: "Some goals are paused",
+  held: "Some goals are on hold",
+};
+const DURATIONS = [[5, "5 minutes"], [10, "10 minutes"], [15, "15 minutes"], [30, "30 minutes"], [60, "an hour"], [0, "no limit"]];
 const PURPOSE = {
   initial: "Practice — answer in your own words. Help is always available and is recorded.",
   clarification: "One question to tell which help fits. Your answer changes what comes next; it is not a test.",
@@ -88,8 +101,28 @@ const fmtMs = (ms) => {
   const s = Math.round(ms / 1000);
   return s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${s % 60} s`;
 };
+// A span names its enrollment only when the session has exactly one; over several curricula
+// the server keeps unattributed time as uncertain rather than guessing (cost-membership-1).
+const oneEnrollment = (session) => (session.enrollments.length === 1 ? session.enrollments[0] : null);
 const tag = (cls, text) => `<span class="tag ${esc(cls)}">${esc(text)}</span>`;
 const go = (hash) => { if (location.hash === hash) route(); else location.hash = hash; };
+
+// --- answer-bearing views this page opened: closed when left, so the wait can start ----
+
+const views = {
+  open: new Set(),
+  async show(targets, what) {
+    const { exposure } = await api("/exposures", { targets, what });
+    this.open.add(exposure.id);
+    return exposure.id;
+  },
+  track(id) { this.open.add(id); },
+  close(id) {
+    if (this.open.delete(id)) api(`/exposures/${id}/close`, {}).catch(() => {});
+  },
+  closeAll() { for (const id of [...this.open]) this.close(id); },
+};
+window.addEventListener("pagehide", () => views.closeAll());
 
 // --- timer: foreground spans, durations from the monotonic clock --------------------
 
@@ -171,15 +204,21 @@ let leave = () => {};
 async function route() {
   leave();
   leave = () => {};
+  views.closeAll();
   const [, page, id, sub] = location.hash.split("/");
   try {
-    if (page === "c") await outlinePage(id);
+    if (page === "start") await startPage(id);
+    else if (page === "c" && sub === "checks") await checksPage(id);
+    else if (page === "c" && sub === "track") await trackPage(id);
+    else if (page === "tr") await reportPage(id);
+    else if (page === "c") await outlinePage(id);
     else if (page === "t") await historyPage(id);
     else if (page === "r") await proposalsPage(id);
     else if (page === "d") await disputePage(id);
     else if (page === "rv") await reviewPage(id);
     else if (page === "s" && sub === "summary") await summaryPage(id);
     else if (page === "s" && sub === "next") await nextStep(id);
+    else if (page === "s" && sub === "choose") await choosePage(id);
     else if (page === "s") await practicePage(id);
     else if (page === "a") await feedbackPage(id);
     else await homePage();
@@ -211,9 +250,15 @@ function libraryLists(home) {
   const curricula = home.curricula.map((c) => `<div class="card">
       <a href="#/c/${esc(c.id)}"><strong>${esc(c.title)}</strong></a>
       <div class="muted small">${esc(c.purpose)}</div>
-      <div class="small">${c.started} of ${c.goals} goals started · next check: ${esc(fmtTime(c.next_check))}</div>
+      <div class="small">${c.started} of ${c.goals} goals started · ${c.due_now ? `<strong>${c.due_now} due now</strong>` : `next check: ${esc(fmtTime(c.next_check))}`}${c.repairs ? ` · ${c.repairs} repair${c.repairs > 1 ? "s" : ""} waiting` : ""}</div>
     </div>`).join("");
-  return `${drafting ? `<h2>Being drafted</h2>${drafting}` : ""}
+  const due = home.due;
+  const dueCard = due.checks || due.repairs || due.blocked ? `<div class="card"><strong>Due now:</strong>
+      ${due.checks ? `${due.checks} check${due.checks > 1 ? "s" : ""}` : ""}${due.checks && due.repairs ? " and " : ""}${due.repairs ? `${due.repairs} repair${due.repairs > 1 ? "s" : ""}` : ""}
+      ${due.oldest ? `<span class="muted small">· waiting since ${esc(fmtTime(due.oldest))}</span>` : ""}
+      ${due.blocked ? `<div class="small">${due.blocked}${due.checks || due.repairs ? " more" : ""} cannot be offered yet; the session says why and what would let it start.</div>` : ""}
+      <div class="row"><a href="#/start/${esc(due.curricula.join(","))}"><button type="button">Practice what's due</button></a></div></div>` : "";
+  return `${dueCard}${drafting ? `<h2>Being drafted</h2>${drafting}` : ""}
     <h2>Curricula</h2>${curricula || '<p class="muted">Nothing yet. Add some material below.</p>'}
     <p class="small muted">Time recorded in this library, including preparation not tied to a curriculum:
       ${esc(fmtMs(home.effort.total_ms))}</p>`;
@@ -316,10 +361,14 @@ async function outlinePage(id) {
   const targetCard = (t) => `<div class="card">
       <div>${tag(t.evidence.label, LABEL[t.evidence.label])} <strong>${esc(t.action)}</strong></div>
       <div class="small muted">${esc(t.mode.replace("_", " "))}${t.conditions.length ? ` · ${esc(t.conditions.join("; "))}` : ""}
-        · ${esc(t.state)}${t.schedule ? ` · ${esc(NEED[t.schedule.need])}${t.schedule.due_at ? `, due ${esc(fmtTime(t.schedule.due_at))}` : ""}` : ""}</div>
+        · ${esc(t.state)}${t.schedule ? ` · ${t.schedule.type === "recall" ? "recall reviews" : "later checks"} · ${esc(NEED[t.schedule.need])}${t.schedule.due_at ? `, due ${esc(fmtTime(t.schedule.due_at))}` : ""}` : ""}</div>
+      ${t.schedule?.hold_reason ? `<div class="small">${esc(capital(t.schedule.hold_reason))}.</div>` : ""}
+      ${t.schedule?.next_offer ? `<div class="small muted">${t.schedule.next_offer.at
+        ? `Offered again from ${esc(fmtTime(t.schedule.next_offer.at))}, 24 hours after you last saw the answer.`
+        : "An earlier view of the answer may still be open; the next check waits for you to confirm it is closed."}</div>` : ""}
       ${t.hold ? `<div class="small error-text">On hold: ${esc(sentence(t.hold))}${t.schedule ? " Its evidence and due check are kept." : ""}</div>`
         : o.without_exercise.includes(t.ref.id) ? '<div class="small error-text">No exercise can check this yet.</div>' : ""}
-      <details><summary class="small">What this rests on</summary>
+      <details data-reveal="${esc(t.ref.id)}"><summary class="small">What this rests on <span class="muted">(shows the answer)</span></summary>
         ${t.knowledge.map(claimLine).join("")}
         <p class="small muted">An answer should show: ${t.requirements.map((r) => esc(r.statement)).join("; ")}</p>
       </details>
@@ -334,6 +383,7 @@ async function outlinePage(id) {
     <div class="row">
       <button type="button" id="practice">${counts.active ? "Continue practice" : "Start practice"}</button>
       <button type="button" class="secondary" id="edit">Edit titles</button>
+      <a href="#/c/${esc(id)}/checks">Later checks</a> <a href="#/c/${esc(id)}/track">Follow these goals over time</a>
     </div>
     <p class="small muted">${counts.selected} goals: ${counts.unstarted} not started · ${counts.independent} correct without help ·
       ${counts.helped} with help · ${counts.errors} with a mistake · ${counts.unresolved} not settled · next check ${esc(fmtTime(o.next_check))}<br>
@@ -345,12 +395,19 @@ async function outlinePage(id) {
       ${e.hold ? `<div class="small error-text">On hold: ${esc(sentence(e.hold))}</div>
         ${e.rebindable ? `<div class="row"><button type="button" class="secondary" data-rebind="${esc(e.ref.id)}" data-base="${e.ref.revision}">It still checks the edited goal</button></div>` : ""}` : ""}</div>`).join("")}
     ${c.omitted.length ? `<details><summary>Left out of the outline</summary><ul>${c.omitted.map((m) => `<li>${esc(m.detail)} — ${esc(m.reason)}</li>`).join("")}</ul></details>` : ""}
-    <details><summary>Source text</summary><div class="card small" style="white-space:pre-wrap">${esc(o.source.text)}</div></details>`;
+    <details data-reveal="source"><summary>Source text <span class="muted small">(shows the answers)</span></summary><div class="card small" style="white-space:pre-wrap">${esc(o.source.text)}</div></details>`;
   timer.set(counts.active ? "progress_inspection" : "authoring", { enrollment: o.enrollment, context: [c.ref] });
-  document.getElementById("practice").addEventListener("click", async () => {
-    const { session } = await api(`/curricula/${id}/sessions`, {});
-    location.hash = `#/s/${session.id}`;
-  });
+  document.getElementById("practice").addEventListener("click", () => { location.hash = `#/start/${id}`; });
+  // Opening answer-bearing material is exposure: a later check of those goals waits 24 h.
+  view.querySelectorAll("details[data-reveal]").forEach((d) => d.addEventListener("toggle", async () => {
+    if (d.open) {
+      const targets = d.dataset.reveal === "source" ? o.targets.map((t) => t.ref) : [byId[d.dataset.reveal].ref];
+      d.dataset.exposure = await views.show(targets, d.dataset.reveal === "source" ? "source text" : "claims");
+    } else if (d.dataset.exposure) {
+      views.close(d.dataset.exposure);
+      delete d.dataset.exposure;
+    }
+  }));
   document.getElementById("edit").addEventListener("click", () => editOutline(o));
   view.querySelectorAll("[data-goal]").forEach((b) => b.addEventListener("click", () => editGoal(o, byId[b.dataset.goal])));
   view.querySelectorAll("[data-flag]").forEach((b) => b.addEventListener("click", () => flagClaim(o, claims[b.dataset.flag])));
@@ -639,7 +696,7 @@ function editOutline(o) {
 async function nextStep(sessionId) {
   const p = await api(`/sessions/${sessionId}`);
   const step = await api(`/sessions/${sessionId}/next`, {});
-  const ctx = { session: p.session.ref, enrollment: p.session.enrollments[0], context: [] };
+  const ctx = { session: p.session.ref, enrollment: oneEnrollment(p.session), context: [] };
   const finishButton = '<button type="button" class="secondary" id="finish">Finish session</button>';
   const onFinish = () => document.getElementById("finish")?.addEventListener("click", () => finish(p.session));
   const c = step.concern;
@@ -682,11 +739,102 @@ async function nextStep(sessionId) {
     });
     return onFinish();
   }
-  view.innerHTML = `<h1>Nothing more to practice right now</h1>
-    <p>Every exercise in this curriculum has an answer. Later checks appear when they are due.</p>
-    <button type="button" id="finish">See this session's summary</button>`;
+  const leftList = step.left?.length ? `<ul class="plain">${step.left.map((x) => `<li class="card small">${esc(x.action)}
+      <div class="muted">${esc(capital(x.reason))}.</div>
+      ${x.confirm_closed ? `<button type="button" class="secondary" data-closed="${esc(JSON.stringify(x.target))}">It's closed now — start a later check from here</button>` : ""}</li>`).join("")}</ul>` : "";
+  const more = `<button type="button" class="secondary" id="more">Add 10 minutes</button>`;
+  const choose = `<a href="#/s/${esc(sessionId)}/choose">Choose something to practise anyway</a>`;
+  if (step.kind === "budget_spent") {
+    view.innerHTML = `<h1>This session's time is used</h1>
+      <p>Your answers and feedback are kept. These are still waiting, with their original times:</p>${leftList}
+      <div class="row">${more}${finishButton}</div>`;
+  } else if (step.kind === "nothing_fits") {
+    view.innerHTML = `<h1>Nothing fits in the time left</h1>
+      <p>Nothing was skipped or marked done; each need keeps its waiting time.${step.new_material_waits ? " New material is available but takes longer than the time left." : ""}</p>${leftList}
+      <div class="row">${more}${finishButton} ${choose}</div>`;
+  } else {
+    view.innerHTML = `<h1>Nothing more to practise right now</h1>
+      <p>${step.upcoming?.length ? `The next check is offered from ${esc(fmtTime(step.upcoming[0]))}.` : "Later checks appear here when they are due."}</p>
+      ${leftList ? `<h2>Waiting</h2>${leftList}` : ""}
+      <div class="row"><button type="button" id="finish">See this session's summary</button> ${choose}</div>`;
+  }
   timer.set("progress_inspection", ctx);
+  document.getElementById("more")?.addEventListener("click", async () => {
+    const budget = (p.session.budget_seconds || 0) + 600;
+    await api(`/sessions/${sessionId}/budget`, { base: p.session.ref.revision, budget_seconds: budget });
+    route();
+  });
+  view.querySelectorAll("[data-closed]").forEach((b) => b.addEventListener("click", async () => {
+    await api("/closed", { targets: [JSON.parse(b.dataset.closed)] });
+    route();
+  }));
   onFinish();
+}
+
+// --- the learner's own choice of what to practise (a recorded override) ---------------------
+
+async function choosePage(sessionId) {
+  const c = await api(`/sessions/${sessionId}/choices`);
+  view.innerHTML = `<p><a href="#/s/${esc(sessionId)}/next">← Back</a></p><h1>Choose what to practise</h1>
+    <p class="muted small">Your choice is recorded as yours. A goal whose check is not due counts as extra practice: its scheduled check stays as it is.</p>
+    ${c.exercises.map((e) => `<div class="card">${esc(e.prompt)}
+      <div class="small muted">about ${Math.round(e.seconds / 60) || 1} min</div>
+      <ul class="small">${e.targets.map((t) => `<li>${esc(t.action)} — ${t.role === "owner" ? "its scheduled check" : "extra practice"}${t.blocked ? ` (${esc(t.blocked)})` : ""}</li>`).join("")}</ul>
+      <button type="button" data-pick="${esc(e.exercise.id)}">Practise this</button></div>`).join("") || '<p class="muted">No exercise can be practised now.</p>'}
+    <div class="row"><button type="button" class="secondary" id="fresh">Start new material instead</button></div>`;
+  timer.set("progress_inspection", { session: c.session.ref });
+  const pick = async (body) => {
+    try {
+      const step = await api(`/sessions/${sessionId}/next`, body);
+      go(step.kind === "exercise" || step.resumed ? `#/s/${sessionId}` : `#/s/${sessionId}/next`);
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+  view.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => pick({ exercise_id: b.dataset.pick })));
+  document.getElementById("fresh").addEventListener("click", () => pick({ new_material: true }));
+}
+
+// --- starting a session: a short proposal and a duration choice ----------------------------
+
+function proposalText(p, minutes) {
+  if (!p.ready && !p.repairs) {
+    return `${p.new_material ? "Nothing is due. New material is available." : "Nothing is due and there is no new material."}${p.upcoming.length ? ` The next check is offered from ${fmtTime(p.upcoming[0])}.` : ""}`;
+  }
+  const head = minutes ? `${minutes} minutes.` : "No time limit.";
+  const first = p.first ? ` Start with ${p.first.overdue ? "an overdue check" : "a due check"}: ${p.first.action}.` : " Nothing due fits this time.";
+  const others = p.fits > 1 ? ` ${p.fits - 1} other check${p.fits > 2 ? "s" : ""} may fit.` : "";
+  const repairs = p.repairs ? ` ${p.repairs} repair${p.repairs > 1 ? "s" : ""} waiting.` : "";
+  const fresh = p.new_material ? " New material remains available; it adds future checks." : "";
+  return `${head}${first}${others}${repairs}${fresh}`;
+}
+
+async function startPage(ids) {
+  const curricula = ids.split(",");
+  const saved = store.get("muninn.minutes");
+  let minutes = Number.isInteger(saved) ? saved : 10;
+  view.innerHTML = `<p><a href="#/">← Library</a></p><h1>Start a session</h1>
+    <label for="minutes">How long do you have?</label>
+    <select id="minutes">${DURATIONS.map(([m, label]) => `<option value="${m}" ${m === minutes ? "selected" : ""}>${label}</option>`).join("")}</select>
+    <div class="card" id="proposal">…</div>
+    <div class="row"><button type="button" id="go">Start</button></div>`;
+  timer.set("progress_inspection", { context: [] });
+  const show = async () => {
+    const budget = minutes ? `&budget=${minutes * 60}` : "";
+    const p = await api(`/proposal?curricula=${encodeURIComponent(ids)}${budget}`);
+    document.getElementById("proposal").innerHTML = `<p>${esc(proposalText(p, minutes))}</p>
+      ${p.blocked.length ? `<p class="small muted">${p.blocked.length} check${p.blocked.length > 1 ? "s" : ""} cannot be offered yet; the session will say why.</p>` : ""}`;
+  };
+  document.getElementById("minutes").addEventListener("change", (e) => {
+    minutes = Number(e.target.value);
+    store.set("muninn.minutes", minutes);
+    show();
+  });
+  document.getElementById("go").addEventListener("click", async () => {
+    const { session } = await api("/sessions", { curricula, budget_seconds: minutes ? minutes * 60 : null });
+    location.hash = `#/s/${session.id}`;
+  });
+  await show();
 }
 
 async function studyPage(session, studyId) {
@@ -701,7 +849,7 @@ async function studyPage(session, studyId) {
       <div class="small muted">Approach: ${esc(s.approach)}</div></div>
     <div class="row"><button type="button" id="done">I've worked through this</button>
       <button type="button" class="secondary" id="stop">Stop for now</button></div>`;
-  timer.set("study", { session: session.ref, enrollment: session.enrollments[0], context: [s.ref] });
+  timer.set("study", { session: session.ref, enrollment: oneEnrollment(session), context: [s.ref] });
   document.getElementById("done").addEventListener("click", async () => {
     await api(`/studies/${studyId}/complete`, { base: s.ref.revision, client_at: new Date().toISOString() });
     route();
@@ -713,7 +861,7 @@ async function practicePage(sessionId) {
   const p = await api(`/sessions/${sessionId}`);
   if (!p.attempt) return go(`#/s/${sessionId}/next`);
   const a = p.attempt;
-  const ctx = { session: p.session.ref, enrollment: p.session.enrollments[0], context: [a.ref] };
+  const ctx = { session: p.session.ref, enrollment: oneEnrollment(p.session), context: [a.ref] };
   if (a.status === "submitted") return waitForFeedback(sessionId, a, ctx);
   const backupKey = `muninn.draft.${a.ref.id}`;
   const backup = store.get(backupKey);
@@ -722,6 +870,7 @@ async function practicePage(sessionId) {
   view.innerHTML = `
     <p class="small muted">${esc(PURPOSE[a.purpose] || PURPOSE.initial)}</p>
     ${a.counts_as_practice ? '<p class="small">Earlier history changed after this was offered: your draft is kept, and this answer now counts as practice, not as a scheduled check.</p>' : ""}
+    ${a.purpose === "initial" && a.roles.some((r) => r.role === "extra") ? `<p class="small">Extra practice for: ${esc(a.roles.filter((r) => r.role === "extra").map((r) => r.action).join("; "))}. Its scheduled check stays as it is.</p>` : ""}
     <h1>${esc(a.prompt)}</h1>
     <label for="answer">Your answer</label>
     <textarea id="answer" class="answer">${esc(restored ? backup : a.response)}</textarea>
@@ -730,7 +879,8 @@ async function practicePage(sessionId) {
       ? `<div class="card small"><strong>Hint ${i + 1}:</strong> ${esc(h.text)}</div>`
       : `<button type="button" class="secondary" data-hint="${esc(h.id)}">Show hint ${i + 1}</button> `).join("")}</div>
     <div class="row"><button type="button" id="submit">Submit answer</button>
-      <button type="button" class="secondary" id="stop">Stop for now</button></div>`;
+      <button type="button" class="secondary" id="stop">Stop for now</button>
+      ${a.purpose === "initial" ? `<a href="#/s/${esc(sessionId)}/choose">Practise something else</a>` : ""}</div>`;
   timer.set(a.purpose === "clarification" ? "diagnosis" : "answer", ctx);
   const box = document.getElementById("answer");
   const status = document.getElementById("draft-status");
@@ -820,7 +970,8 @@ function highlight(text, quotes) {
 
 async function feedbackPage(attemptId) {
   const f = await api(`/attempts/${attemptId}`);
-  await api(`/attempts/${attemptId}/feedback-viewed`, {});
+  const { exposure } = await api(`/attempts/${attemptId}/feedback-viewed`, {});
+  views.track(exposure.id);
   const quotes = f.criteria.flatMap((c) => c.quotes);
   const misread = f.criteria.some((c) => c.misread);
   const note = concernNote(f.concern);
@@ -834,6 +985,9 @@ async function feedbackPage(attemptId) {
       <details><summary class="small">The earlier judgment (kept)</summary>${f.earlier_judgments.map(judgmentCard).join("<hr>")}</details></div>` : ""}
     ${reviewLink(f.review) ? `<div class="card">${reviewLink(f.review)}</div>` : ""}
     ${note ? `<div class="card"><strong>What happens next.</strong> ${esc(note)}</div>` : ""}
+    ${f.ratings.map((r, i) => `<div class="card" id="rating-${i}"><strong>How well did you remember: ${esc(r.action)}?</strong>
+      <div class="row">${r.choices.map((c) => `<button type="button" class="${r.choice === c ? "" : "secondary"}" data-rate="${i}" data-choice="${c}">${esc(CHOICE[c])}</button>`).join("")}</div>
+      <p class="small muted" id="rated-${i}">${r.choices.length === 1 ? "The answer had a mistake, so this review counts as forgotten. " : "Rate your own recall, not the grade. "}${r.choice ? `Rated: ${esc(CHOICE[r.choice])}.` : "This review is saved only when you choose."}</p></div>`).join("")}
     <h2>Each part of the answer</h2>
     ${f.criteria.map((c) => `<div class="card">
         ${tag(c.outcome, OUTCOME[c.outcome])}${c.misread ? tag("unresolved", "probably a misread") : ""}${c.help === "shown" ? tag("helped", "hint used") : c.help === "unconfirmed" ? tag("unresolved", "hint sent, display not confirmed") : ""} ${esc(c.requirement)}
@@ -849,8 +1003,23 @@ async function feedbackPage(attemptId) {
       <button type="button" class="secondary" id="finish">Finish session</button>
       ${f.disputable ? `<a href="#/d/${esc(attemptId)}">This judgment is wrong</a>` : ""}</div>`;
   const session = await api(`/sessions/${f.session.id}`);
-  timer.set("feedback", { session: f.session, enrollment: session.session.enrollments[0], context: [f.attempt.ref] });
-  document.getElementById("next").addEventListener("click", () => { location.hash = `#/s/${f.session.id}/next`; });
+  timer.set("feedback", { session: f.session, enrollment: oneEnrollment(session.session), context: [f.attempt.ref] });
+  const unrated = new Set(f.ratings.map((r, i) => (r.choice ? null : i)).filter((i) => i !== null));
+  const next = document.getElementById("next");
+  const gate = () => {
+    next.disabled = unrated.size > 0;
+    next.title = unrated.size ? "Rate your recall first (or finish; you can rate it later)" : "";
+  };
+  gate();
+  view.querySelectorAll("[data-rate]").forEach((b) => b.addEventListener("click", async () => {
+    const r = f.ratings[Number(b.dataset.rate)];
+    await api(`/attempts/${attemptId}/rate`, { target: r.target, choice: b.dataset.choice });
+    document.querySelectorAll(`[data-rate="${b.dataset.rate}"]`).forEach((x) => { x.className = x === b ? "" : "secondary"; });
+    document.getElementById(`rated-${b.dataset.rate}`).textContent = `Rated: ${CHOICE[b.dataset.choice]}. The next review is set from this rating.`;
+    unrated.delete(Number(b.dataset.rate));
+    gate();
+  }));
+  next.addEventListener("click", () => { location.hash = `#/s/${f.session.id}/next`; });
   document.getElementById("finish").addEventListener("click", () => finish(session.session));
 }
 
@@ -861,6 +1030,78 @@ async function finish(session) {
   timer.close();
   await timer.flush();
   location.hash = `#/s/${session.ref.id}/summary`;
+}
+
+// --- later checks: every check kept, and whether you are caught up -------------------------
+
+const CHECK_STATUS = { consumed: "met on time", replaced: "replaced after teaching", invalidated: "no longer applies" };
+
+function caughtUpText(c) {
+  if (c.state === "caught_up") {
+    return `Caught up on later checks as of ${fmtTime(c.as_of)}${c.scope === "active" ? " (started goals only; some selected goals are not started, paused or on hold)" : ""}.`;
+  }
+  return `${WAITING[c.state] || "Not caught up yet"}.`;
+}
+
+async function checksPage(id) {
+  const v = await api(`/curricula/${id}/checks`);
+  const k = v.counts;
+  view.innerHTML = `<p><a href="#/c/${esc(id)}">← Outline</a></p><h1>Later checks: ${esc(v.curriculum.title)}</h1>
+    <div class="card"><strong>${esc(caughtUpText(v.caught_up))}</strong>
+      ${v.caught_up.pending.length ? `<ul class="small">${v.caught_up.pending.map((p) => `<li>${esc(p.action)}: ${esc(p.reason)}</li>`).join("")}</ul>` : ""}
+      <p class="small muted">A statement about now: later checks keep coming, and earlier unmet checks stay in the history.</p></div>
+    <p class="small">${k.met_on_time} met on time${k.reviewed_as_forgotten ? ` · ${k.reviewed_as_forgotten} reviewed as forgotten` : ""} · ${k.replaced_after_teaching} replaced after teaching · ${k.overdue} due now · ${k.upcoming} upcoming
+      · answers: ${k.with_errors} with a mistake, ${k.answered_with_help} with help, ${k.unresolved_answers} unsettled, ${k.too_soon} too soon after seeing the answer</p>
+    ${v.targets.map((t) => `<div class="card"><strong>${esc(t.action)}</strong> <span class="small muted">${t.type === "recall" ? "recall reviews (FSRS)" : t.type ? "capability checks (24 h, then 7 days)" : "not started"}</span>
+      ${t.checks.length ? `<ul class="small">${t.checks.map((c) => `<li>Due ${esc(fmtTime(c.due_at))} — ${c.status === "open"
+        ? (c.due_at && c.due_at <= v.caught_up.as_of ? "due now" : "upcoming") + (c.next_offer ? (c.next_offer.at ? `, offered from ${esc(fmtTime(c.next_offer.at))}` : ", waiting for an open view to be closed") : "")
+        : c.status === "consumed" && t.type === "recall" ? "reviewed" : esc(CHECK_STATUS[c.status])}
+        ${c.answers.map((a) => `<div class="muted">${esc(fmtTime(a.at))}: ${a.role === "owner" ? "the check" : "extra practice"}, ${a.label ? esc(LABEL[a.label]) : "not graded yet"}${a.effect ? ` (${esc(a.effect)})` : ""}</div>`).join("")}</li>`).join("")}</ul>`
+        : '<p class="small muted">No later check yet.</p>'}</div>`).join("")}`;
+  timer.set("progress_inspection", { context: [v.curriculum.ref] });
+}
+
+// --- following the same goals over time (routine-tracking-1) -------------------------------
+
+async function trackPage(id) {
+  const p = await api(`/curricula/${id}/tracking`);
+  const running = p.plans.find((x) => x.lifecycle === "active");
+  if (running) return go(`#/tr/${running.id}`);
+  view.innerHTML = `<p><a href="#/c/${esc(id)}">← Outline</a></p><h1>Follow the same goals over time</h1>
+    <p>This records a fixed comparison using your normal reviews: three one-week windows from now. It adds no extra questions and changes no due dates. Some windows may have no check.</p>
+    ${p.population.length ? `<div class="card"><strong>Tracked (${p.population.length})</strong><ul class="small">${p.population.map((m) => `<li>${esc(m.action)} — baseline: ${m.baseline.state === "selected" ? "your last answer so far" : m.baseline.state === "missing" ? "none yet" : "two answers at the same moment"}${m.hold ? ` · on hold: ${esc(m.hold)}` : ""}${m.authoring_unavailable ? " · no exercise yet" : ""}</li>`).join("")}</ul></div>` : '<p class="error-text">Nothing is started yet. Start practice first; tracking follows practised goals.</p>'}
+    ${p.outside.length ? `<p class="small muted">Not tracked: ${p.outside.map((o) => `${esc(o.action)} (${esc(o.reason)})`).join("; ")}</p>` : ""}
+    <p class="small">Windows: ${p.windows.map((w) => `${esc(fmtTime(w.start))} – ${esc(fmtTime(w.end))}`).join("; ")}</p>
+    ${p.population.length ? '<div class="row"><button type="button" id="start">Start tracking</button></div>' : ""}
+    ${p.plans.length ? `<h2>Earlier plans</h2><ul>${p.plans.map((x) => `<li><a href="#/tr/${esc(x.id)}">${esc(fmtTime(x.frozen_at))}</a> (${esc(x.lifecycle)})</li>`).join("")}</ul>` : ""}`;
+  timer.set("progress_inspection", { context: [] });
+  document.getElementById("start")?.addEventListener("click", async () => {
+    const { cohort } = await api(`/curricula/${id}/tracking`, {});
+    location.hash = `#/tr/${cohort.id}`;
+  });
+}
+
+const fraction = ([n, d]) => (d ? `${n} of ${d}` : "not available yet");
+
+async function reportPage(id) {
+  const r = await api(`/tracking/${id}`);
+  view.innerHTML = `<p><a href="#/c/${esc(r.curriculum.id)}">← Outline</a></p><h1>Following the same goals</h1>
+    <p class="small muted">Started ${esc(fmtTime(r.frozen_at))} · ${r.lifecycle === "stopped" ? `<strong>stopped</strong> ${esc(fmtTime(r.stopped_at))}` : r.lifecycle}
+      · ${r.population.length} goals, fixed when tracking began. Intervening practice is allowed, so this is not retention without rehearsal.</p>
+    ${r.windows.map((w) => `<div class="card"><strong>Window ${w.index + 1}</strong> <span class="small muted">${esc(fmtTime(w.start))} – ${esc(fmtTime(w.end))}${w.mature ? "" : " · still open"}</span>
+      <ul class="small">${w.endpoints.map((e) => `<li>${esc(r.actions[e.target.id])}: ${esc(BUCKET[e.claims.performance.bucket])}${e.raw !== "N" ? ` (raw: ${esc(RAW[e.raw])})` : ""}
+        ${e.reason ? `<span class="muted">— ${esc(e.reason)}</span>` : ""}${w.mature && ["QS", "QE", "QX"].includes(e.claims.performance.bucket) ? `<span class="muted"> · as a later check: ${esc(BUCKET[e.claims.later_check.bucket])}</span>` : ""}
+        ${e.claims.performance.reasons.filter((x) => x.result !== "eligible").map((x) => `<span class="muted"> · ${esc(x.code.replace("_", " "))}: ${esc(x.result)}</span>`).join("")}</li>`).join("")}</ul>
+      ${w.mature ? `<p class="small">Correct among graded answers: ${fraction(w.counts.formulas.raw_correct)} · planned checks that established the result: ${fraction(w.counts.formulas.qualified_coverage)} · answered: ${fraction(w.counts.formulas.checked)}</p>` : ""}</div>`).join("")}
+    <p class="small">Time on this curriculum since tracking began: ${esc(fmtMs(r.cost.period.total_ms))}${r.cost.uncertain_spans ? ` (plus ${esc(fmtMs(r.cost.uncertain_known_ms))} that may belong to it)` : ""} · before tracking: ${esc(fmtMs(r.cost.before_tracking.total_ms))}</p>
+    ${r.added.length ? `<p class="small muted">Added since tracking began (not in this comparison): ${r.added.map((a) => esc(a.action)).join("; ")}</p>` : ""}
+    ${r.lifecycle === "active" ? '<div class="row"><button type="button" class="secondary" id="stop">Stop tracking</button></div>' : ""}`;
+  timer.set("progress_inspection", { context: [] });
+  document.getElementById("stop")?.addEventListener("click", async () => {
+    if (!confirm("Stop tracking? Checks already assigned keep their results; later windows will show as missing.")) return;
+    await api(`/tracking/${id}/stop`, { base: r.ref.revision, reason: "stopped by the learner" });
+    route();
+  });
 }
 
 // --- summary ----------------------------------------------------------------------------
@@ -882,6 +1123,9 @@ async function summaryPage(sessionId) {
       <p class="small muted">Clarifying requests used this session: ${s.clarifications} of at most ${s.clarification_limit}.</p>
       <ul class="plain">${s.concerns.map((c) => `<li class="card">${esc(concernNote(c))}</li>`).join("")}</ul>` : ""}
     <p>Next check: ${esc(fmtTime(s.next_check))}</p>
+    ${s.unmet.length ? `<h2>Still waiting</h2><p class="small muted">Nothing here was marked done or failed; each keeps its original waiting time.</p>
+      <ul class="plain">${s.unmet.map((u) => `<li class="card small">${esc(u.action)}<div class="muted">${esc(capital(u.reason))}${u.waiting_since ? ` · waiting since ${esc(fmtTime(u.waiting_since))}` : ""}</div></li>`).join("")}</ul>` : ""}
+    ${s.session.budget_seconds ? `<p class="small muted">Chosen time: ${esc(fmtMs(s.session.budget_seconds * 1000))}.</p>` : ""}
     <h2>Time</h2>
     <dl class="time">
       <dt>Learning work</dt><dd>${esc(fmtMs(groups.learning ?? null))}</dd>
@@ -900,7 +1144,7 @@ async function summaryPage(sessionId) {
         <div class="row"><button type="submit">Save</button><span class="status" id="ratings-status"></span></div>
       </form></details>
     <p><a href="#/">Back to your library</a></p>`;
-  timer.set("progress_inspection", { session: s.session.ref, enrollment: s.session.enrollments[0] });
+  timer.set("progress_inspection", { session: s.session.ref, enrollment: oneEnrollment(s.session) });
   document.getElementById("ratings").addEventListener("submit", async (event) => {
     event.preventDefault();
     await api(`/sessions/${sessionId}/feedback`, {

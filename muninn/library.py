@@ -211,6 +211,8 @@ class Tx:
         self.written: list[JSON] = []
         self.sequences: list[int] = []
         row = conn.execute("SELECT COALESCE(MAX(sequence), 0) FROM records").fetchone()
+        self.watermark: int = row[0]
+        """The last committed sequence before this transaction (its source prefix)."""
         self._next_sequence: int = row[0] + 1
 
     def put(

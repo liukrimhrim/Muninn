@@ -8,13 +8,23 @@ count once, pauses overlapping work are disputed, and unknown time stays unknown
 
 from __future__ import annotations
 
+from datetime import timedelta
 from itertools import pairwise
 from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from muninn import content, practice
-from muninn.library import JSON, Conflict, Record, parse_utc, utc, validate_payloads
+from muninn import content, evidence, practice
+from muninn.library import (
+    JSON,
+    Conflict,
+    Record,
+    exact_key,
+    new_id,
+    parse_utc,
+    utc,
+    validate_payloads,
+)
 
 if TYPE_CHECKING:
     from muninn.library import Tx
@@ -112,10 +122,80 @@ class SessionFeedbackP(_Strict):
     note: str | None
 
 
+class WindowP(_Strict):
+    """One observation window, half-open [start, end)."""
+
+    index: int
+    start: str
+    end: str
+
+
+class BaselineP(_Strict):
+    """The frozen baseline answer of one goal."""
+
+    state: Literal["selected", "missing", "order_uncertain"]
+    attempts: list[Ref]
+    assessment: Ref | None
+
+
+class MemberP(_Strict):
+    """One frozen goal of the tracked population."""
+
+    target: Ref
+    hold: str | None
+    families: list[str]
+    authoring_unavailable: bool
+    baseline: BaselineP
+    anchor: Ref | None
+    anchor_reason: str | None
+
+
+class OutsideP(_Strict):
+    """A selected goal outside the frozen comparison, and why."""
+
+    target: Ref
+    reason: str
+
+
+class EndpointP(_Strict):
+    """One planned check of one goal in one window; assigned before its answer exists."""
+
+    id: str
+    target: Ref
+    window: int
+    assigned_attempt: Ref | None
+    assignment_offer: Ref | None
+    assignment_rule: str
+
+
+class CohortP(_Strict):
+    """A frozen comparison of the same goals over three windows (``routine-tracking-1``)."""
+
+    curriculum: Ref
+    enrollment: Ref
+    plan_rule: content.AlgorithmP
+    creation_source: dict[str, int]
+    frozen_at: str
+    windows: list[WindowP]
+    population: list[MemberP]
+    outside: list[OutsideP]
+    claim_definitions: list[content.AlgorithmP]
+    effort_membership: content.AlgorithmP
+    effort_scope: list[Ref]
+    investment_window: list[str]
+    endpoints: list[EndpointP]
+    lifecycle: Literal["active", "stopped", "completed"]
+    stopped_at: str | None
+    stop_reason: str | None
+    predecessor: Ref | None
+    baseline_rule: str
+
+
 PAYLOADS: dict[str, type[BaseModel]] = {
     "timing_run": TimingRunP,
     "activity_span": SpanP,
     "session_feedback": SessionFeedbackP,
+    "measurement_cohort": CohortP,
 }
 
 
@@ -369,6 +449,12 @@ def elapsed_ms(started_at: str, ended_at: str) -> int:
     return int((parse_utc(ended_at) - parse_utc(started_at)).total_seconds() * 1000)
 
 
+def session_elapsed_ms(tx: Tx, session_id: str) -> int:
+    """Return a session's elapsed time so far, breaks included (its budget summary)."""
+    session = practice.session_view(tx, session_id)
+    return elapsed_ms(session["started_at"], session["ended_at"] or tx.now)
+
+
 def spans_for(tx: Tx, *, session_ids: set[str], context_ids: set[str]) -> list[JSON]:
     """Return spans recorded in the given sessions or naming any given context."""
     return [
@@ -381,20 +467,536 @@ def spans_for(tx: Tx, *, session_ids: set[str], context_ids: set[str]) -> list[J
 
 
 def curriculum_effort(tx: Tx, *, enrollment_id: str | None, preparation_ids: set[str]) -> JSON:
-    """Account a curriculum's effort: its sessions plus the preparation that produced it.
+    """Account a curriculum's effort: its enrollment's work plus the preparation behind it.
 
-    Membership: spans in any session of the enrollment, spans naming the enrollment,
-    and spans whose context names one of the curriculum's preparation records.
+    Membership follows ``cost-membership-1``: explicit enrollment attribution, else the
+    session's single enrollment, plus spans whose context names a preparation record.
+    Time in a session over several curricula without attribution is reported as
+    uncertain membership, never split or guessed.
     """
-    sessions = {
-        s["ref"]["id"]
-        for s in practice.sessions(tx)
-        if enrollment_id and s["enrollments"][0]["id"] == enrollment_id
-    }
-    context: set[str] = preparation_ids | ({enrollment_id} if enrollment_id else set[str]())
-    return ledger(spans_for(tx, session_ids=sessions, context_ids=context))
+    roots = {enrollment_id} if enrollment_id else set[str]()
+    known, maybe = _scoped(tx, roots)
+    prepared = [
+        s
+        for s in all_spans(tx)
+        if s not in known and any(c["id"] in preparation_ids for c in s["context"])
+    ]
+    known += prepared
+    uncertain = sum(s["duration_ms"] or 0 for s in maybe if s not in prepared)
+    return {**ledger(known), "uncertain_membership_ms": uncertain}
 
 
 def all_spans(tx: Tx) -> list[JSON]:
     """Return every span's current revision."""
     return [r.payload for r in tx.current("activity_span", by=OWNER)]
+
+
+def clipped(spans: list[JSON], start: str, upper: str) -> list[JSON]:
+    """Clip reliably placed spans to ``[start, upper)`` (``cost-cutoff-1``).
+
+    A crossing span keeps only its part inside; a span outside, or one that cannot be
+    placed, contributes nothing to the clipped union (unplaced time stays separate).
+    """
+    kept: list[JSON] = []
+    for s in spans:
+        if s["placement"] != "anchored" or s["started_at"] is None or s["ended_at"] is None:
+            continue
+        lo, hi = max(s["started_at"], start), min(s["ended_at"], upper)
+        if lo < hi:
+            ms = int((parse_utc(hi) - parse_utc(lo)).total_seconds() * 1000)
+            kept.append({**s, "started_at": lo, "ended_at": hi, "duration_ms": ms})
+    return kept
+
+
+# --- routine tracking: claim-outcomes-1 (tracking-contract.md section 4) -----------------
+
+REASON_ORDER = [
+    "contract",
+    "occurrence_window",
+    "aid_availability",
+    "minimum_delay",
+    "relevant_exposure",
+    "mode",
+    "coverage",
+    "baseline",
+    "later_session",
+]
+"""Tracking section 4's fixed reason order (the later-session condition added last)."""
+
+
+def partition(raw: str, reasons: list[JSON]) -> tuple[str, str]:
+    """Place one endpoint in exactly one bucket for one claim; return (bucket, eligibility).
+
+    Precedence: not matured, missing, unusable, helped, then a usable S/E whose claim
+    conditions are not all eligible, then qualified success or error.
+    """
+    results = {r["result"] for r in reasons}
+    eligibility = (
+        "ineligible"
+        if "ineligible" in results
+        else "uncertain"
+        if "uncertain" in results
+        else "eligible"
+    )
+    fixed = {"N": "QN", "M": "QM", "U": "QU", "H": "QH"}
+    if raw in fixed:
+        return fixed[raw], eligibility
+    if eligibility != "eligible":
+        return "QX", eligibility
+    return ("QS" if raw == "S" else "QE"), eligibility
+
+
+def endpoint_counts(endpoints: list[JSON]) -> JSON:
+    """Count raw outcomes and one claim's buckets, with the tracking formulas as fractions.
+
+    Not-matured endpoints stay outside the matured denominator P. Each fraction is
+    [numerator, denominator]; a zero denominator means unavailable, never zero percent.
+    """
+    raw = dict.fromkeys(["S", "E", "H", "U", "M", "N"], 0)
+    claim = dict.fromkeys(["QS", "QE", "QH", "QU", "QM", "QX", "QN"], 0)
+    split = {"ineligible": 0, "uncertain": 0}
+    for e in endpoints:
+        raw[e["raw"]] += 1
+        claim[e["bucket"]] += 1
+        if e["bucket"] == "QX":
+            split[e.get("eligibility", "uncertain")] += 1
+    p = len(endpoints) - raw["N"]
+    clean = p > 0 and claim["QH"] == claim["QU"] == claim["QX"] == 0
+    return {
+        "raw": raw,
+        "claim": claim,
+        "qx": split,
+        "matured": p,
+        "missing_only_range": [[claim["QS"], p], [claim["QS"] + claim["QM"], p]] if clean else None,
+        "formulas": {
+            "raw_correct": [raw["S"], raw["S"] + raw["E"]],
+            "graded": [raw["S"] + raw["E"] + raw["H"], p - raw["M"]],
+            "qualified_coverage": [claim["QS"], p],
+            "qualified_correct": [claim["QS"], claim["QS"] + claim["QE"]],
+            "checked": [p - raw["M"], p],
+        },
+    }
+
+
+# --- routine tracking: freeze, assign, report (tracking-contract.md sections 2-5) ---------
+
+WINDOWS = 3
+WINDOW = timedelta(days=7)
+TRACKING_RULE: JSON = {
+    "name": "routine-tracking",
+    "version": 1,
+    "parameters": {"windows": WINDOWS, "window_days": 7},
+}
+COST_MEMBERSHIP: JSON = {"name": "cost-membership", "version": 1, "parameters": {"scope": "roots"}}
+CLAIMS = [evidence.QUALIFICATION, evidence.LATER_CHECK_CLAIM]
+BASELINE_RULE = "the last submitted answer for each exact goal before tracking began"
+ASSIGNMENT_RULE = "the first ordinary owned check offered for the goal in this window"
+NO_OFFER = "no ordinary check was offered in this window"
+STOPPED = "tracking was stopped"
+UNANSWERED = "the assigned check was not answered"
+
+
+def _member(tx: Tx, target: JSON, frozen_at: str, usable: list[JSON]) -> MemberP:
+    """Freeze one goal's baseline, anchor and allowed exercise families."""
+    answers = [
+        e
+        for e in evidence.chronology(tx, target)
+        if e["kind"] == "answer" and (e["at"] or "") < frozen_at
+    ]
+    tied = [a for a in answers if answers and a["at"] == answers[-1]["at"]]
+    state: Literal["selected", "missing", "order_uncertain"] = (
+        "missing" if not answers else "order_uncertain" if len(tied) > 1 else "selected"
+    )
+    chosen = tied if state == "order_uncertain" else answers[-1:]
+    last = chosen[-1] if chosen else None
+    gap = evidence.delay(tx, target, before=frozen_at)
+    families = sorted(
+        {
+            e["family_id"]
+            for e in usable
+            if any(exact_key(t) == exact_key(target) for t in e["targets"])
+        }
+    )
+    hold = content.target_hold(tx, target)
+    return MemberP(
+        target=Ref(**target),
+        hold=hold.reason if hold else None,
+        families=families,
+        authoring_unavailable=not families,
+        baseline=BaselineP(
+            state=state,
+            attempts=[Ref(**a["attempt"]) for a in chosen],
+            assessment=Ref(**last["assessment"]) if last and last["assessment"] else None,
+        ),
+        anchor=Ref(**gap.basis[0]) if gap.known and gap.basis else None,
+        anchor_reason=None
+        if gap.known and gap.basis
+        else ("an earlier view may still be open" if not gap.known else "nothing earlier recorded"),
+    )
+
+
+def tracking_preview(tx: Tx, *, curriculum: JSON, enrollment: JSON) -> JSON:
+    """Preview a plan: who would be tracked, their baselines and the three windows.
+
+    Disposable: nothing is saved.
+    """
+    frozen_at = tx.now
+    usable = content.exercises_for(tx, enrollment["goal_order"])
+    population: list[MemberP] = []
+    outside: list[OutsideP] = []
+    for entry in enrollment["practice"]:
+        if entry["state"] == "active" and enrollment["status"] == "active":
+            population.append(_member(tx, entry["target"], frozen_at, usable))
+        else:
+            why = "not started yet" if entry["state"] == "unstarted" else f"{entry['state']}"
+            outside.append(OutsideP(target=Ref(**entry["target"]), reason=why))
+    start = parse_utc(frozen_at)
+    windows = [
+        WindowP(index=n, start=utc(start + n * WINDOW), end=utc(start + (n + 1) * WINDOW))
+        for n in range(WINDOWS)
+    ]
+    return {
+        "curriculum": curriculum,
+        "enrollment": enrollment["ref"],
+        "frozen_at": frozen_at,
+        "population": [m.model_dump() for m in population],
+        "outside": [o.model_dump() for o in outside],
+        "windows": [w.model_dump() for w in windows],
+        "scheduled": [
+            {"target": m.target.model_dump(), "due_at": s["due_at"]}
+            for m in population
+            if (s := practice.schedule_view(tx, m.target.model_dump())) and s["due_at"]
+        ],
+    }
+
+
+def start_tracking(tx: Tx, *, curriculum: JSON, enrollment: JSON) -> JSON:
+    """Freeze a tracking plan in one command, before any endpoint is assigned."""
+    for r in tx.current("measurement_cohort", by=OWNER):
+        if (
+            r.payload["enrollment"]["id"] == enrollment["ref"]["id"]
+            and r.payload["lifecycle"] == "active"
+        ):
+            msg = "tracking is already running for this curriculum; stop it to start a new plan"
+            raise ValueError(msg)
+    preview = tracking_preview(tx, curriculum=curriculum, enrollment=enrollment)
+    if not preview["population"]:
+        msg = "nothing is admitted yet: start practice first, then track it"
+        raise ValueError(msg)
+    windows = [WindowP.model_validate(w) for w in preview["windows"]]
+    population = [MemberP.model_validate(m) for m in preview["population"]]
+    cohort = CohortP(
+        curriculum=Ref(**curriculum),
+        enrollment=Ref(**enrollment["ref"]),
+        plan_rule=content.AlgorithmP(**TRACKING_RULE),
+        creation_source={"through_sequence": tx.watermark},
+        frozen_at=preview["frozen_at"],
+        windows=windows,
+        population=population,
+        outside=[OutsideP.model_validate(o) for o in preview["outside"]],
+        claim_definitions=[content.AlgorithmP(**c) for c in CLAIMS],
+        effort_membership=content.AlgorithmP(**COST_MEMBERSHIP),
+        effort_scope=[Ref(**enrollment["ref"])],
+        investment_window=[windows[0].start, windows[-1].end],
+        endpoints=[
+            EndpointP(
+                id=new_id(),
+                target=m.target,
+                window=w.index,
+                assigned_attempt=None,
+                assignment_offer=None,
+                assignment_rule=ASSIGNMENT_RULE,
+            )
+            for w in windows
+            for m in population
+        ],
+        lifecycle="active",
+        stopped_at=None,
+        stop_reason=None,
+        predecessor=None,
+        baseline_rule=BASELINE_RULE,
+    )
+    return tx.put("measurement_cohort", cohort.model_dump(), by=OWNER)
+
+
+def stop_tracking(tx: Tx, *, cohort_id: str, base: int, reason: str) -> JSON:
+    """Stop assigning checks; frozen endpoints stay and later ones become missing."""
+    record = tx.require("measurement_cohort", cohort_id, by=OWNER)
+    cohort = CohortP.model_validate(record.payload)
+    if cohort.lifecycle != "active":
+        msg = "this tracking plan is not running"
+        raise ValueError(msg)
+    stopped = cohort.model_copy(
+        update={"lifecycle": "stopped", "stopped_at": tx.now, "stop_reason": reason}
+    )
+    return tx.put("measurement_cohort", stopped.model_dump(), by=OWNER, id=cohort_id, base=base)
+
+
+def assign_endpoints(tx: Tx, *, offer: JSON, exercise: JSON) -> None:
+    """Assign still-open endpoints to an ordinary owned check as it is offered.
+
+    Only an owned slot of a tracked goal, inside a running plan's current window and
+    from an allowed exercise family, is assigned; never after its answer exists.
+    """
+    owned = {exact_key(s["target"]) for s in offer["slots"] if s["role"] == "owner"}
+    for record in tx.current("measurement_cohort", by=OWNER):
+        cohort = CohortP.model_validate(record.payload)
+        if cohort.lifecycle != "active":
+            continue
+        window = next((w for w in cohort.windows if w.start <= tx.now < w.end), None)
+        families = {exact_key(m.target.model_dump()): set(m.families) for m in cohort.population}
+        changed = False
+        endpoints: list[EndpointP] = []
+        for e in cohort.endpoints:
+            key = exact_key(e.target.model_dump())
+            if (
+                window is not None
+                and e.window == window.index
+                and e.assigned_attempt is None
+                and key in owned
+                and exercise["family_id"] in families.get(key, set())
+            ):
+                endpoints.append(
+                    e.model_copy(
+                        update={
+                            "assigned_attempt": Ref(**offer["attempt"]),
+                            "assignment_offer": Ref(**offer["ref"]),
+                        }
+                    )
+                )
+                changed = True
+            else:
+                endpoints.append(e)
+        if changed:
+            revised = cohort.model_copy(update={"endpoints": endpoints})
+            tx.put(
+                "measurement_cohort",
+                revised.model_dump(),
+                by=OWNER,
+                id=record.id,
+                base=record.revision,
+            )
+
+
+def cohorts(tx: Tx, enrollment_id: str) -> list[JSON]:
+    """Return every tracking plan of an enrollment, oldest first."""
+    return [
+        r.view
+        for r in tx.current("measurement_cohort", by=OWNER)
+        if r.payload["enrollment"]["id"] == enrollment_id
+    ]
+
+
+RAW_OF: dict[str, str] = {"independent": "S", "error": "E"}
+CLAIM_ROLES = {
+    "independent-demonstration": "performance",
+    "delayed-independent-check": "later_check",
+}
+"""The tracking contract's two claims by role: recorded performance, and a later check."""
+
+
+def _answer_raw(tx: Tx, attempt_id: str, target: JSON) -> tuple[str, str | None]:
+    """Map Evidence's judgment of one answer onto the raw axis S/E/H/U.
+
+    Help shown makes it H; a hint never confirmed keeps the raw judgment (its claim
+    eligibility is uncertain instead); missing or unjudgeable evidence is U.
+    """
+    found = evidence.answer_evidence(tx, attempt_id, target)
+    if found is None:
+        return "U", "not graded yet"
+    if found["judged"] not in RAW_OF and found["judged"] != "helped":
+        return "U", "; ".join(found["reasons"])
+    if found["help"] == "shown":
+        return "H", "answered with help"
+    return RAW_OF[found["judged"]], None
+
+
+def _raw(tx: Tx, cohort: CohortP, endpoint: EndpointP, window: WindowP) -> tuple[str, str | None]:
+    """Return an endpoint's raw outcome S/E/H/U/M/N and why, at the current time."""
+    if tx.now < window.end:
+        return "N", "this window has not closed yet"
+    if endpoint.assigned_attempt is None:
+        stopped = cohort.stopped_at is not None and cohort.stopped_at < window.end
+        return "M", STOPPED if stopped else NO_OFFER
+    attempt = evidence.attempt_view(tx, attempt_id=endpoint.assigned_attempt.id)
+    if attempt["status"] != "submitted":
+        return "M", UNANSWERED
+    return _answer_raw(tx, attempt["ref"]["id"], endpoint.target.model_dump())
+
+
+def _baseline_raw(tx: Tx, member: MemberP) -> str:
+    """Return the frozen baseline's raw outcome under today's effective judgment."""
+    if member.baseline.state != "selected":
+        return "M"
+    return _answer_raw(tx, member.baseline.attempts[0].id, member.target.model_dump())[0]
+
+
+def _claims(tx: Tx, cohort: CohortP, endpoint: EndpointP, window: WindowP, raw: str) -> JSON:
+    """Partition one endpoint under each frozen claim, every reason kept in fixed order."""
+    attempt = (
+        evidence.attempt_view(tx, attempt_id=endpoint.assigned_attempt.id)
+        if endpoint.assigned_attempt
+        else None
+    )
+    member = next(m for m in cohort.population if m.target == endpoint.target)
+    found: JSON = {}
+    for claim in cohort.claim_definitions:
+        reasons = (
+            evidence.claim_reasons(
+                tx,
+                claim.model_dump(),
+                target=endpoint.target.model_dump(),
+                attempt=attempt,
+                window=(window.start, window.end),
+                anchor=member.anchor.model_dump() if member.anchor else None,
+            )
+            if attempt and attempt["status"] == "submitted"
+            else []
+        )
+        reasons.sort(key=lambda r: REASON_ORDER.index(r["code"]))
+        bucket, eligibility = partition(raw, reasons)
+        found[CLAIM_ROLES[claim.name]] = {
+            "claim": claim.model_dump(),
+            "bucket": bucket,
+            "eligibility": eligibility,
+            "reasons": reasons,
+            "baseline_qualification": "not_required",
+        }
+    return found
+
+
+def _pair(baseline: str, bucket: str) -> str:
+    """Name the same-target change from baseline to a qualified endpoint, or why not."""
+    if bucket == "QN":
+        return "not_matured"
+    if baseline in ("S", "E") and bucket in ("QS", "QE"):
+        return f"{baseline}->{bucket[1]}"
+    return "incomparable"
+
+
+def tracking_report(tx: Tx, cohort_id: str) -> JSON:
+    """Report a plan live at the current time: raw outcomes and each claim's partition.
+
+    Windows mature at their end; the cost follows the frozen enrollment identity over
+    the investment window, capped at the current time (``cost-cutoff-1``).
+    """
+    record = tx.require("measurement_cohort", cohort_id, by=OWNER)
+    cohort = CohortP.model_validate(record.payload)
+    baselines = {exact_key(m.target.model_dump()): _baseline_raw(tx, m) for m in cohort.population}
+    windows: list[JSON] = []
+    for w in cohort.windows:
+        rows: list[JSON] = []
+        for e in (e for e in cohort.endpoints if e.window == w.index):
+            raw, why = _raw(tx, cohort, e, w)
+            claims = _claims(tx, cohort, e, w, raw)
+            baseline = baselines[exact_key(e.target.model_dump())]
+            rows.append(
+                {
+                    **e.model_dump(),
+                    "raw": raw,
+                    "reason": why,
+                    "claims": claims,
+                    "baseline_raw": baseline,
+                    "comparison": _pair(baseline, claims["performance"]["bucket"]),
+                }
+            )
+        windows.append(
+            {
+                **w.model_dump(),
+                "mature": tx.now >= w.end,
+                "endpoints": rows,
+                "counts": endpoint_counts(
+                    [{"raw": r["raw"], **r["claims"]["performance"]} for r in rows]
+                ),
+                "later_counts": endpoint_counts(
+                    [{"raw": r["raw"], **r["claims"]["later_check"]} for r in rows]
+                ),
+                "changes": {
+                    pair: sum(1 for r in rows if r["comparison"] == pair)
+                    for pair in ("E->S", "S->S", "S->E", "E->E", "incomparable", "not_matured")
+                },
+            }
+        )
+    return {
+        "ref": record.ref,
+        **cohort.model_dump(),
+        "windows": windows,
+        "cost": _cohort_cost(tx, cohort),
+    }
+
+
+def _scoped(tx: Tx, roots: set[str]) -> tuple[list[JSON], list[JSON]]:
+    """Split every span into in-scope and uncertain-membership spans for enrollment roots."""
+    sessions = {s["ref"]["id"]: s for s in practice.sessions(tx)}
+    known: list[JSON] = []
+    uncertain: list[JSON] = []
+    for s in all_spans(tx):
+        state = _membership(s, roots, sessions)
+        if state == "in_scope":
+            known.append(s)
+        elif state == "uncertain":
+            uncertain.append(s)
+    return known, uncertain
+
+
+def _cohort_cost(tx: Tx, cohort: CohortP) -> JSON:
+    """Cost of the frozen enrollment identity in the investment window, capped at now.
+
+    Unplaced known durations and uncertain membership stay beside it, never added.
+    """
+    known, uncertain = _scoped(tx, {r.id for r in cohort.effort_scope})
+    start, end = cohort.investment_window
+    upper = min(end, tx.now)
+    maybe = clipped(uncertain, start, upper)
+    return {
+        "membership_rule": cohort.effort_membership.model_dump(),
+        "roots": [r.model_dump() for r in cohort.effort_scope],
+        "window": [start, upper],
+        "period": ledger(clipped(known, start, upper)),
+        "before_tracking": ledger(clipped(known, "0000-01-01T00:00:00.000Z", start)),
+        "unplaced_known_ms": sum(
+            s["duration_ms"] or 0 for s in known if s["placement"] != "anchored"
+        ),
+        "uncertain_spans": len(maybe),
+        "uncertain_known_ms": sum(s["duration_ms"] for s in maybe),
+    }
+
+
+def _membership(span: JSON, roots: set[str], sessions: dict[str, JSON]) -> str:
+    """Resolve one span's scope under ``cost-membership-1`` (enrollment roots)."""
+    named: set[str] = {span["enrollment"]["id"]} if span["enrollment"] else set()
+    named |= {str(c["id"]) for c in span["context"] if c["kind"] == "enrollment"}
+    if named:
+        return "in_scope" if named & roots else "out_of_scope"
+    session = sessions.get(span["session"]["id"]) if span["session"] else None
+    if session is None:
+        return "out_of_scope"
+    enrolled = {e["id"] for e in session["enrollments"]}
+    if enrolled & roots:
+        return "in_scope" if len(enrolled) == 1 else "uncertain"
+    return "out_of_scope"
+
+
+def later_check_counts(checks: list[JSON], now: str) -> JSON:
+    """Count later checks by how they stand; delayed successes only from real checks.
+
+    Missed (overdue), helped and unresolved checks stay visible beside the met ones.
+    """
+    answers = [a for c in checks for a in c["answers"] if a["role"] == "owner"]
+    closing = [a for a in answers if a["effect"] in ("met", "reviewed")]
+    return {
+        "met_on_time": sum(1 for a in closing if a["label"] != "error"),
+        "reviewed_as_forgotten": sum(1 for a in closing if a["label"] == "error"),
+        "replaced_after_teaching": sum(1 for c in checks if c["status"] == "replaced"),
+        "no_longer_applies": sum(1 for c in checks if c["status"] == "invalidated"),
+        "overdue": sum(
+            1 for c in checks if c["status"] == "open" and c["due_at"] and c["due_at"] <= now
+        ),
+        "upcoming": sum(
+            1 for c in checks if c["status"] == "open" and c["due_at"] and c["due_at"] > now
+        ),
+        "answered_with_help": sum(1 for a in answers if a["label"] == "helped"),
+        "unresolved_answers": sum(1 for a in answers if a["label"] == "unresolved"),
+        "with_errors": sum(1 for a in answers if a["label"] == "error"),
+        "too_soon": sum(1 for a in answers if a["effect"] == "too soon"),
+    }

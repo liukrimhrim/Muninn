@@ -19,6 +19,7 @@ from tests.drafts import (
     teaching,
     variant,
     vocab_outline,
+    with_modes,
 )
 from tests.test_workflows import answer, curriculum_id, drafted, targets
 
@@ -119,7 +120,7 @@ def test_a_reviewed_exercise_is_rebound_to_the_edited_goal_and_old_answers_stay_
     delivered = app.next_exercise(rid(), session_id=session["id"])
     assert delivered["kind"] == "exercise"
     assert app.read(practice.schedule_view, new_t2)["need"] == "initial"
-    assert app.read(practice.schedule_view, t1)["need"] == "independent_check"
+    assert app.read(practice.schedule_view, t1)["need"] == "held"  # its recall rating waits
 
 
 def add(app, title, text):
@@ -294,8 +295,12 @@ def test_a_conflicting_claim_is_kept_separate_and_held(make_app):
 
 
 def two_exercises():
-    """Return the outline plus a second exercise checking only the fact (t1)."""
-    drafted_outline = outline()
+    """Return the outline plus a second exercise checking only the fact (t1).
+
+    Both goals follow the capability intervals here (the fact as a written statement), so
+    these cases test capability replay; recall items follow FSRS (``test_later_checks``).
+    """
+    drafted_outline = with_modes(outline(), "explain", "explain")
     drafted_outline["exercises"].append(
         {
             "prompt": "What must hold before you binary-search an array?",
@@ -317,8 +322,19 @@ def two_exercises():
 FACT_WRONG = assessment({"c1": "error"}, {"c1": ["It can be in any order."]})
 
 
-def submit(app, session):
-    delivered = app.next_exercise(rid(), session_id=session["id"])["attempt"]
+def fact_exercise(app):
+    """Return the id of the fact-only exercise (a learner's own choice of what to practise)."""
+    return app.read(
+        lambda tx: next(
+            r.id
+            for r in tx.current("exercise", by="content")
+            if r.payload["prompt"].startswith("What must hold")
+        )
+    )
+
+
+def submit(app, session, **choice):
+    delivered = app.next_exercise(rid(), session_id=session["id"], **choice)["attempt"]
     exercise = app.read(lambda tx: evidence.attempt_view(tx, delivered))["exercise"]
     prompt = app.read(lambda tx: tx.at(exercise, by="content").payload["prompt"])
     text = ANSWER if prompt.startswith("What must be true") else "It can be in any order."
@@ -334,7 +350,7 @@ def test_results_graded_out_of_order_apply_in_the_order_the_answers_happened(mak
     session = app.start_session(rid(), curriculum_id=curriculum_id(op))["session"]
     first = submit(app, session)  # 10:00: the larger task (graded last)
     clock.advance(minutes=5)
-    second = submit(app, session)  # 10:05: the fact alone, wrong (graded first)
+    second = submit(app, session, exercise_id=fact_exercise(app))  # 10:05: the fact, wrong
     app.run_operation(second["operation"]["id"])
     app.run_operation(first["operation"]["id"])
 
@@ -446,7 +462,7 @@ def test_a_success_corrected_to_an_error_reopens_the_first_check_and_asks_for_re
     assert [h["obligation"]["status"] for h in history if h["obligation"]["id"] == later["id"]][
         -1
     ] == "invalidated"
-    assert app.read(practice.schedule_view, t1)["need"] == "independent_check"  # unaffected
+    assert app.read(practice.schedule_view, t1)["need"] == "held"  # unaffected: its rating waits
     (concern,) = app.read(practice.open_concerns)
     assert (concern["kind"], concern["route"]) == ("error", "repair")
 
@@ -489,7 +505,9 @@ FACT_WRONG_ON_THE_LARGER_TASK = judged({"c1": "error", "c2": "demonstrated", "c3
 
 def submit_fact(app, session):
     """Answer the fact-only exercise correctly (the second exercise of ``two_exercises``)."""
-    delivered = app.next_exercise(rid(), session_id=session["id"])["attempt"]
+    delivered = app.next_exercise(rid(), session_id=session["id"], exercise_id=fact_exercise(app))[
+        "attempt"
+    ]
     return app.submit_answer(
         rid(),
         attempt_id=delivered["id"],
@@ -586,7 +604,9 @@ def test_a_draft_on_a_corrected_away_opportunity_counts_only_as_practice(make_ap
     app = make_app(two_exercises(), judged(ALL_SHOWN), FACT_WRONG_ON_THE_LARGER_TASK, FACT_RIGHT)
     _op, session, attempt, t1, _t2 = answered(app)
     clock.advance(hours=25)
-    draft = app.next_exercise(rid(), session_id=session["id"])["attempt"]  # reserved, owned
+    draft = app.next_exercise(rid(), session_id=session["id"], exercise_id=fact_exercise(app))[
+        "attempt"
+    ]  # reserved, owned
 
     app.accept_correction(
         rid(), operation_id=reviewed(app, attempt, "I made a mistake")["ref"]["id"]

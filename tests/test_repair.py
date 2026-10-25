@@ -120,7 +120,7 @@ def test_competing_causes_get_one_question_and_its_answer_chooses_the_help(
     (concern,) = concerns(app)
     assert (concern["route"], concern["focus"]) == ("repair", supported)
     assert [h["key"] for h in concern["hypotheses"]] == ["h1", "h2"]
-    assert need(app, t1) == "independent_check"
+    assert need(app, t1) == "held"  # the recall fact waits for its rating
     assert need(app, t2) == "repair"  # from the original supported error
     step = app.next_exercise(rid(), session_id=session["id"])
     assert step["kind"] == "preparing"  # teaching is authored next, not more questions
@@ -251,13 +251,24 @@ VERIFIED = judged(ALL_SHOWN)
 STILL_WRONG = judged(CONNECTION_ERROR)
 
 
-def step(app, session):
+def step(app, session, **choice):
     """Take the next step, running any authoring it had to start."""
-    taken = app.next_exercise(rid(), session_id=session["id"])
+    taken = app.next_exercise(rid(), session_id=session["id"], **choice)
     if taken["kind"] == "preparing":
         app.run_operation(taken["operation"]["id"])
         taken = app.next_exercise(rid(), session_id=session["id"])
     return taken
+
+
+def other_exercise(app, op, prompt):
+    """Return the id of the practice exercise with this prompt (for a learner's own choice)."""
+    return app.read(
+        lambda tx: next(
+            r.id
+            for r in tx.current("exercise", by="content")
+            if r.payload["prompt"] == prompt and r.payload["use"] == "practice"
+        )
+    )
 
 
 def study_and_check(app, session, *, hint=False, text=ANSWER):
@@ -493,8 +504,8 @@ def test_a_stopped_concern_does_not_restart_repair_when_the_part_comes_up_again(
     study_and_check(app, session)
     (concern,) = concerns(app)
     app.pause_concern(rid(), concern_id=concern["ref"]["id"], base=concern["ref"]["revision"])
-    later = step(app, session)
-    assert later["kind"] == "exercise"  # the other practice exercise
+    later = step(app, session, exercise_id=other_exercise(app, op, "Why only about log2(n)?"))
+    assert later["kind"] == "exercise"  # the learner chooses the other practice exercise
     sent = app.submit_answer(
         rid(),
         attempt_id=later["attempt"]["id"],
@@ -520,7 +531,9 @@ def test_a_reused_concern_takes_in_new_errors_from_the_same_answer(make_app):
     app.run_operation(submitted["operation"]["id"])
     (concern,) = concerns(app)
     app.pause_concern(rid(), concern_id=concern["ref"]["id"], base=concern["ref"]["revision"])
-    again = step(app, session)
+    again = step(
+        app, session, exercise_id=other_exercise(app, op, "Again: sorted, and why log2(n)?")
+    )
     assert again["kind"] == "exercise"
     sent = app.submit_answer(
         rid(),

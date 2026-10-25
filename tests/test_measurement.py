@@ -1,4 +1,4 @@
-from muninn.measurement import ledger
+from muninn.measurement import clipped, endpoint_counts, ledger, partition
 
 MIN = 60_000
 T0 = "2026-10-24T10:00:00.000Z"
@@ -89,3 +89,74 @@ def test_stale_unplaced_and_unknown_time_stay_out_of_the_total():
 
 def test_no_spans_means_unknown_not_zero():
     assert ledger([])["total_ms"] is None
+
+
+# --- routine tracking: one qualified partition per claim (tracking-contract.md) ---------
+
+
+def test_each_endpoint_lands_in_exactly_one_bucket_by_precedence():
+    ok = [{"code": "minimum_delay", "result": "eligible"}]
+    early = [{"code": "minimum_delay", "result": "ineligible"}]
+    unsure = [{"code": "relevant_exposure", "result": "uncertain"}]
+    assert partition("N", ok) == ("QN", "eligible")
+    assert partition("M", early) == ("QM", "ineligible")
+    assert partition("U", ok) == ("QU", "eligible")
+    assert partition("H", early) == ("QH", "ineligible")  # help wins; both reasons stay
+    assert partition("S", early) == ("QX", "ineligible")
+    assert partition("E", unsure) == ("QX", "uncertain")
+    assert partition("S", ok) == ("QS", "eligible")
+    assert partition("E", ok) == ("QE", "eligible")
+
+
+def test_the_worked_example_keeps_raw_and_qualified_counts_apart():
+    # tracking §5: eight matured endpoints, raw 5S 2E 1M, one S known too early
+    early = [{"code": "minimum_delay", "result": "ineligible"}]
+    ok = [{"code": "minimum_delay", "result": "eligible"}]
+    rows = [("S", ok)] * 4 + [("S", early)] + [("E", ok)] * 2 + [("M", ok)] + [("N", ok)]
+    counts = endpoint_counts(
+        [
+            dict(zip(("bucket", "eligibility"), partition(raw, r), strict=True), raw=raw)
+            for raw, r in rows
+        ]
+    )
+    assert counts["raw"] == {"S": 5, "E": 2, "H": 0, "U": 0, "M": 1, "N": 1}
+    assert counts["claim"] == {"QS": 4, "QE": 2, "QH": 0, "QU": 0, "QM": 1, "QX": 1, "QN": 1}
+    assert counts["matured"] == 8
+    assert counts["qx"] == {"ineligible": 1, "uncertain": 0}
+    assert counts["missing_only_range"] is None  # withheld: QX is not zero
+    assert counts["formulas"] == {
+        "raw_correct": [5, 7],
+        "graded": [7, 7],
+        "qualified_coverage": [4, 8],
+        "qualified_correct": [4, 6],
+        "checked": [7, 8],
+    }
+
+
+def at_day(day, hour, minute=0):
+    return f"2026-10-{day:02d}T{hour:02d}:{minute:02d}:00.000Z"
+
+
+def test_cost_is_clipped_to_its_evaluation_interval_never_rounded_to_whole_spans():
+    # data-contract I08/I09: 20 m on Oct 5, 30 m on Oct 15, and 11:58-12:03 on Oct 8
+    spans = [
+        span("answer", 0, 20, started_at=at_day(5, 10), ended_at=at_day(5, 10, 20)),
+        span("answer", 0, 30, started_at=at_day(15, 10), ended_at=at_day(15, 10, 30)),
+        span("study", 0, 5, started_at=at_day(8, 11, 58), ended_at=at_day(8, 12, 3)),
+    ]
+    start, upper = at_day(1, 0), at_day(8, 12)
+    assert ledger(clipped(spans, start, upper))["total_ms"] == 22 * MIN
+    assert ledger(clipped(spans, start, at_day(22, 0)))["total_ms"] == 55 * MIN
+    assert ledger(clipped(spans, at_day(8, 12), at_day(8, 12)))["total_ms"] is None  # empty
+
+
+def test_a_missing_only_range_needs_every_other_endpoint_qualified():
+    ok = [{"code": "minimum_delay", "result": "eligible"}]
+    rows = [("S", ok)] * 3 + [("E", ok), ("M", ok)]
+    counts = endpoint_counts(
+        [
+            dict(zip(("bucket", "eligibility"), partition(raw, r), strict=True), raw=raw)
+            for raw, r in rows
+        ]
+    )
+    assert counts["missing_only_range"] == [[3, 5], [4, 5]]

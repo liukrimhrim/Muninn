@@ -415,3 +415,81 @@ def notes_outline(
         "omitted": [],
         "doubts": [],
     }
+
+
+EXPLANATION = "Each comparison throws away half, so it takes about log2(n) steps."
+EXPLANATION_QUOTES = {"c1": ["throws away half"], "c2": ["about log2(n) steps"]}
+
+
+def explanation_outline() -> dict[str, Any]:
+    """Return an outline with one connected-explanation goal and its own exercise."""
+    drafted = outline()
+    drafted["targets"] = [drafted["targets"][1]]
+    drafted["sections"] = [{"title": "Binary search", "target_keys": ["t2"]}]
+    drafted["exercises"] = [
+        {
+            "prompt": "Why does binary search on a sorted array need only about log2(n) "
+            "comparisons?",
+            "criteria": [
+                {
+                    "key": "c1",
+                    "requirement": "Explains that each comparison discards half of the "
+                    "remaining range",
+                    "covers": [{"target_key": "t2", "requirement_keys": ["r1"]}],
+                },
+                {
+                    "key": "c2",
+                    "requirement": "Connects repeated halving to about log2(n) comparisons",
+                    "covers": [{"target_key": "t2", "requirement_keys": ["r2"]}],
+                },
+            ],
+            "reference_response": "Each comparison rules out half of what remains, and n can "
+            "be halved only about log2(n) times.",
+            "hints": [
+                {"text": "Think about what one comparison rules out.", "criterion_keys": ["c1"]}
+            ],
+            "expected_seconds": {"setup": 10, "answer": 60, "feedback": 20},
+        }
+    ]
+    return drafted
+
+
+def explained(outcomes: dict[str, str]) -> dict[str, Any]:
+    """Return an assessment of ``EXPLANATION`` for criteria c1, c2."""
+    shown = {
+        k: EXPLANATION_QUOTES[k] for k, v in outcomes.items() if v in ("demonstrated", "error")
+    }
+    return assessment(outcomes, shown)
+
+
+def with_modes(drafted: dict[str, Any], *modes: str) -> dict[str, Any]:
+    """Return the drafted outline with its targets' modes replaced, in order."""
+    for target, mode in zip(drafted["targets"], modes, strict=True):
+        target["mode"] = mode
+    return drafted
+
+
+def fresh_explanation() -> dict[str, Any]:
+    """Return a fresh variant of ``explanation_outline``'s exercise (its target keyed T1)."""
+    return {
+        "prompt": "A sorted list has 128 names. Why do about 7 comparisons find any name?",
+        "criteria": [
+            {
+                "key": "c1",
+                "requirement": "Each comparison discards half of what remains",
+                "covers": [{"target_key": "T1", "requirement_keys": ["r1"]}],
+            },
+            {
+                "key": "c2",
+                "requirement": "128 halves to 1 in 7 steps",
+                "covers": [{"target_key": "T1", "requirement_keys": ["r2"]}],
+            },
+        ],
+        "reference_response": "Each comparison halves the rest; 128 halves to 1 in 7 steps.",
+        "hints": [],
+        "expected_seconds": {"setup": 10, "answer": 60, "feedback": 20},
+        "variation_kind": "new_instance",
+        "changed": ["list size 128", "names"],
+        "held_fixed": ["halving-to-exponent connection"],
+        "old_answer_insufficient": "The earlier answer named no count for 128.",
+    }

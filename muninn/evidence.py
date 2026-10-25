@@ -8,15 +8,24 @@ verbatim quotes; "not shown" and "cannot judge" never become failures.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
 from muninn import content
-from muninn.library import JSON, ModelRequest, Record, exact_key, validate_payloads
+from muninn.library import (
+    JSON,
+    ModelRequest,
+    Record,
+    exact_key,
+    parse_utc,
+    utc,
+    validate_payloads,
+)
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping
+    from collections.abc import Callable, Collection, Mapping
 
     from muninn.library import Tx
 
@@ -176,11 +185,61 @@ class ExposureP(_Strict):
     session: content.RefP | None
     attempt: content.RefP | None
     targets: list[content.RefP]
-    kind: Literal["answer_presented", "review_content_presented", "outside_report"]
+    kind: Literal[
+        "answer_presented", "review_content_presented", "material_presented", "outside_report"
+    ]
     timing: TimingP
     basis: Literal["app_presentation", "self_report"]
     details: dict[str, Any]
     availability: Literal["ended", "ongoing", "unknown"]
+    ended_by: str | None = None
+    end_basis: Literal["app_closure", "learner_report"] | None = None
+    end_evidence: list[content.RefP] = []
+
+
+class ConditionCheckpointP(_Strict):
+    """A prospective boundary: what is known now about earlier, uncertain occurrences.
+
+    It never supplies their missing historical times (lifecycle section 5).
+    """
+
+    targets: list[content.RefP]
+    prior_occurrences: list[content.RefP]
+    established_at: str
+    purpose: Literal["exposure_ended", "prior_occurrences_ended", "both"]
+    basis: Literal["app_observation", "learner_confirmation", "mixed"]
+    statement: str
+    limitations: list[str]
+
+
+Choice = Literal["forgot", "difficult", "remembered", "easy"]
+RATING_LABELS: JSON = {
+    "name": "recall-rating-labels",
+    "version": 1,
+    "parameters": {
+        "forgot": "again",
+        "difficult": "hard",
+        "remembered": "good",
+        "easy": "easy",
+    },
+}
+
+
+class ReviewP(_Strict):
+    """The learner's own rating of how well they recalled one target in one answer."""
+
+    attempt: content.RefP
+    target: content.RefP
+    offer: content.RefP
+    assessment: content.RefP
+    choice: Choice
+    rating: Literal["again", "hard", "good", "easy"]
+    mapping: content.AlgorithmP
+    occurred_at: str
+    rated_at: str
+    time_evidence: list[TimeEvidenceP]
+    supersedes: content.RefP | None
+    revision_reason: str | None
 
 
 PAYLOADS: dict[str, type[BaseModel]] = {
@@ -189,6 +248,8 @@ PAYLOADS: dict[str, type[BaseModel]] = {
     "assessment": AssessmentP,
     "projection": ProjectionP,
     "exposure": ExposureP,
+    "review": ReviewP,
+    "condition_checkpoint": ConditionCheckpointP,
 }
 
 
@@ -705,11 +766,13 @@ def acknowledge_hint(
 
 
 def submit(tx: Tx, *, attempt_id: str, base: int, response: str, raw_client_at: str | None) -> JSON:
-    """Freeze the answer and its help at submission."""
+    """Freeze the answer and its help at submission; hints shown in the draft close with it."""
     attempt = _draft(tx, attempt_id)
     if not response.strip():
         msg = "an empty answer cannot be submitted"
         raise ValueError(msg)
+    for view in open_views(tx, attempt_id=attempt_id):
+        close_exposure(tx, exposure_id=view["ref"]["id"])
     submitted = attempt.model_copy(
         update={
             "response": response,
@@ -1134,9 +1197,294 @@ def record_feedback_view(tx: Tx, *, attempt_id: str) -> JSON:
         timing=TimingP(precision="exact", earliest_at=tx.now, latest_at=tx.now),
         basis="app_presentation",
         details={"presented": "assessment feedback and reference response"},
-        availability="unknown",
+        availability="ongoing",
     )
     return tx.put("exposure", exposure.model_dump(), by=OWNER)
+
+
+def record_material_view(tx: Tx, *, targets: list[JSON], what: str) -> JSON:
+    """Record that answer-bearing material (claims or source text) was opened for goals."""
+    if not targets:
+        msg = "a material view names the goals it reveals"
+        raise ValueError(msg)
+    exposure = ExposureP(
+        session=None,
+        attempt=None,
+        targets=[content.RefP(**t) for t in targets],
+        kind="material_presented",
+        timing=TimingP(precision="exact", earliest_at=tx.now, latest_at=tx.now),
+        basis="app_presentation",
+        details={"presented": what},
+        availability="ongoing",
+    )
+    return tx.put("exposure", exposure.model_dump(), by=OWNER)
+
+
+def close_exposure(tx: Tx, *, exposure_id: str, at: str | None = None) -> JSON | None:
+    """Record that a presentation is no longer available (closed by the app, at ``at``).
+
+    Closing an already ended presentation writes nothing; the opening time is unchanged.
+    Returns the closed revision, or None when nothing changed.
+    """
+    record = tx.require("exposure", exposure_id, by=OWNER)
+    exposure = ExposureP.model_validate(record.payload)
+    if exposure.availability == "ended":
+        return None
+    ended = exposure.model_copy(
+        update={"availability": "ended", "ended_by": at or tx.now, "end_basis": "app_closure"}
+    )
+    return tx.put("exposure", ended.model_dump(), by=OWNER, id=exposure_id, base=record.revision)
+
+
+def confirm_closed(tx: Tx, *, targets: list[JSON]) -> JSON | None:
+    """Record the learner's confirmation that earlier answer-bearing views are closed now.
+
+    Returns the checkpoint, or None when nothing about these goals was open. The open
+    views keep their unknown closing times; only future checks may count from here.
+    """
+    prior = [r for t in targets for r in delay(tx, t).open]
+    if not prior:
+        return None
+    checkpoint = ConditionCheckpointP(
+        targets=[content.RefP(**t) for t in targets],
+        prior_occurrences=[
+            content.RefP(**r) for r in {(r["id"], r["revision"]): r for r in prior}.values()
+        ],
+        established_at=tx.now,
+        purpose="exposure_ended",
+        basis="learner_confirmation",
+        statement="The learner confirmed that the earlier views of these answers are closed.",
+        limitations=[
+            "when those views were closed is still unknown",
+            "the app cannot know about study outside it",
+        ],
+    )
+    return tx.put("condition_checkpoint", checkpoint.model_dump(), by=OWNER)
+
+
+def exposure_view(tx: Tx, exact: JSON) -> JSON:
+    """Return an exact exposure revision."""
+    return tx.at(exact, by=OWNER).view
+
+
+def open_views(
+    tx: Tx, *, session_id: str | None = None, attempt_id: str | None = None
+) -> list[JSON]:
+    """Return presentations still open in a session or during an answer."""
+
+    def bound(ref_: JSON | None, wanted: str | None) -> bool:
+        return wanted is None or (ref_ is not None and ref_["id"] == wanted)
+
+    return [
+        r.view
+        for r in tx.current("exposure", by=OWNER)
+        if r.payload["availability"] != "ended"
+        and bound(r.payload["session"], session_id)
+        and bound(r.payload["attempt"], attempt_id)
+    ]
+
+
+def record_review(  # noqa: PLR0913 - one keyword per bound fact
+    tx: Tx, *, attempt: JSON, target: JSON, offer: JSON, assessment: JSON, choice: str
+) -> JSON:
+    """Save the learner's recall rating of an answer (a new revision re-rates it).
+
+    Practice validates the owned-review binding first. The retrieval happened at the
+    answer's submission; the rating's own time is kept separately.
+    """
+    view = attempt_view(tx, attempt)
+    if view["submitted_at"] is None:
+        msg = "only a submitted answer can be rated"
+        raise ValueError(msg)
+    mapping = RATING_LABELS["parameters"]
+    if choice not in mapping:
+        msg = f"unknown rating {choice!r}"
+        raise ValueError(msg)
+    existing = _review_record(tx, attempt["id"], target)
+    payload = ReviewP(
+        attempt=content.RefP(**attempt),
+        target=content.RefP(**target),
+        offer=content.RefP(**offer),
+        assessment=content.RefP(**assessment),
+        choice=choice,  # type: ignore[arg-type]
+        rating=mapping[choice],
+        mapping=content.AlgorithmP(**RATING_LABELS),
+        occurred_at=view["submitted_at"],
+        rated_at=tx.now,
+        time_evidence=[_exact(tx.now, "rated_at", None, "store time when the rating arrived")],
+        supersedes=content.RefP(**existing.ref) if existing else None,
+        revision_reason="changed by the learner" if existing else None,
+    )
+    if existing is None:
+        return tx.put("review", payload.model_dump(), by=OWNER)
+    if existing.payload["choice"] == choice:
+        return existing.ref
+    return tx.put("review", payload.model_dump(), by=OWNER, id=existing.id, base=existing.revision)
+
+
+def _review_record(tx: Tx, attempt_id: str, target: JSON) -> Record | None:
+    return next(
+        (
+            r
+            for r in tx.current("review", by=OWNER)
+            if r.payload["attempt"]["id"] == attempt_id
+            and exact_key(r.payload["target"]) == exact_key(target)
+        ),
+        None,
+    )
+
+
+def answer_label(tx: Tx, attempt_id: str, target: JSON) -> str | None:
+    """Return what one assessed answer shows about one exact target (None: not assessed)."""
+    found = answer_evidence(tx, attempt_id, target)
+    return found["label"] if found else None
+
+
+def answer_evidence(tx: Tx, attempt_id: str, target: JSON) -> JSON | None:
+    """Return one assessed answer's qualified label for one exact target, with its help.
+
+    ``judged`` is the label the judgment itself supports when a hint whose display was
+    never confirmed is set aside; ``help`` says whether help was shown on this target's
+    criteria, may have been seen ("unconfirmed"), or neither (None).
+    """
+    observed = [
+        {k: v for k, v in o.items() if k not in ("assessment", "attempt")}
+        for o in _projection_observations(tx, target)
+        if o["attempt"]["id"] == attempt_id
+    ]
+    if not observed:
+        return None
+    requirements = [r["id"] for r in content.definition(tx, target)["evidence_requirements"]]
+    q = qualify(requirements, observed)
+    unconfirmed = any(o["assisted"] is None for o in observed)
+    settled = [{**o, "assisted": bool(o["assisted"])} for o in observed]
+    return {
+        "label": q.label,
+        "reasons": q.reasons,
+        "judged": qualify(requirements, settled).label if unconfirmed else q.label,
+        "help": "shown"
+        if any(o["assisted"] is True for o in observed)
+        else "unconfirmed"
+        if unconfirmed
+        else None,
+    }
+
+
+LATER_CHECK_CLAIM: JSON = {
+    "name": "delayed-independent-check",
+    "version": 1,
+    "parameters": {"minimum_delay_hours": 24, "later_session": True},
+}
+"""The tracking later-check claim: the delayed check, in a later session than its anchor.
+
+The same rule as ``DELAYED_CHECK`` with one more parameter, so a distinct identity.
+"""
+
+
+def claim_reasons(  # noqa: PLR0913 - the claim and the facts it is evaluated on
+    tx: Tx,
+    claim: JSON,
+    *,
+    target: JSON,
+    attempt: JSON,
+    window: tuple[str, str],
+    anchor: JSON | None,
+) -> list[JSON]:
+    """Evaluate a named claim's conditions for one submitted answer.
+
+    Every claim checks the exact contract, the occurrence window and aid availability
+    during the answer; the later-check claim adds the minimum delay after its frozen
+    anchor, the delay after any later relevant exposure, and a later session than the
+    anchor. Unknown claims are refused rather than evaluated by a newer rule.
+    """
+    if claim not in (QUALIFICATION, LATER_CHECK_CLAIM):
+        msg = f"unknown claim {claim['name']} v{claim['version']}"
+        raise ValueError(msg)
+    at = attempt["submitted_at"]
+    start, end = window
+    exercise = content.definition(tx, attempt["exercise"])
+    reasons = [
+        _reason("contract", "eligible" if _covers(exercise, target) else "ineligible", []),
+        _reason("occurrence_window", "eligible" if at and start <= at < end else "ineligible", []),
+        _aid_availability(tx, target, attempt),
+    ]
+    if claim == LATER_CHECK_CLAIM:
+        anchored = _ended(tx, anchor) if anchor else None
+        since = Delay(since=anchored, open=[], basis=[anchor] if anchor else [])
+        reasons.append(
+            _reason(
+                "minimum_delay",
+                since.state(at) if anchored else "uncertain",
+                [anchor] if anchor else [],
+            )
+        )
+        gap = delay(tx, target, before=at, exclude=attempt["ref"]["id"])
+        reasons.append(_reason("relevant_exposure", gap.state(at), gap.basis or gap.open))
+        anchor_session = _session_of(tx, anchor) if anchor else None
+        later = (
+            "uncertain"
+            if anchor is None
+            else ("eligible" if anchor_session != attempt["session"]["id"] else "ineligible")
+        )
+        reasons.append(_reason("later_session", later, [anchor] if anchor else []))
+    return reasons
+
+
+def _aid_availability(tx: Tx, target: JSON, attempt: JSON) -> JSON:
+    """Judge whether answer-bearing aids were available while the answer was written.
+
+    A hint sent but never confirmed, or a relevant view still open, leaves it
+    uncertain; a relevant view known to stay open into the answer makes it ineligible.
+    The answer's own hints are help, judged on the raw axis instead.
+    """
+    found = answer_evidence(tx, attempt["ref"]["id"], target)
+    unsure = [attempt["ref"]] if found and found["help"] == "unconfirmed" else []
+    known: list[JSON] = []
+    for r in tx.current("exposure", by=OWNER):
+        p = r.payload
+        bound: JSON | None = p["attempt"]
+        if bound is not None and bound["id"] == attempt["ref"]["id"]:
+            continue
+        if exact_key(target) not in {exact_key(t) for t in p["targets"]}:
+            continue
+        if not attempt["submitted_at"] or p["timing"]["earliest_at"] >= attempt["submitted_at"]:
+            continue
+        ended = p["ended_by"] if p["availability"] == "ended" else None
+        if ended is None:
+            unsure.append(r.ref)
+        elif ended > attempt["started_at"]:
+            known.append(r.ref)
+    result = "ineligible" if known else "uncertain" if unsure else "eligible"
+    return _reason("aid_availability", result, known or unsure)
+
+
+def _ended(tx: Tx, exact: JSON) -> str | None:
+    """Return when an anchoring occurrence ended (None when that is unknown)."""
+    payload = tx.at(exact, by=OWNER).payload
+    return {
+        "attempt": payload.get("submitted_at"),
+        "study": payload.get("completed_at"),
+        "exposure": payload.get("ended_by"),
+        "condition_checkpoint": payload.get("established_at"),
+    }.get(exact["kind"])
+
+
+def _reason(code: str, result: str, basis: list[JSON]) -> JSON:
+    return {"code": code, "result": result, "basis": basis}
+
+
+def _session_of(tx: Tx, exact: JSON) -> str | None:
+    """Return the session an anchoring occurrence happened in, if it records one."""
+    if exact["kind"] not in ("attempt", "study", "exposure"):
+        return None
+    session = tx.at(exact, by=OWNER).payload.get("session")
+    return session["id"] if session else None
+
+
+def review_for(tx: Tx, attempt_id: str, target: JSON) -> JSON | None:
+    """Return the current rating of one target in one answer, if the learner gave one."""
+    record = _review_record(tx, attempt_id, target)
+    return record.view if record else None
 
 
 # --- read views ------------------------------------------------------------------
@@ -1203,6 +1551,122 @@ def target_evidence(tx: Tx, target: JSON, *, attempt_ids: set[str] | None = None
     if q.label in ("independent", "helped") and len({o["attempt"]["id"] for o in current}) > 1:
         q = Qualified("unresolved", ["shown in parts across answers; one whole check is still due"])
     return {"label": q.label, "reasons": q.reasons, "observations": current}
+
+
+# --- the delayed-check claim (everyday-learning-design.md "Exposure, no-help answers") ----
+
+DELAYED_CHECK: JSON = {
+    "name": "delayed-independent-check",
+    "version": 1,
+    "parameters": {"minimum_delay_hours": 24},
+}
+DELAY = timedelta(hours=DELAYED_CHECK["parameters"]["minimum_delay_hours"])
+
+
+@dataclass(frozen=True)
+class Delay:
+    """How long ago one exact target's latest relevant occurrence ended.
+
+    ``since`` is the latest known end (None: nothing relevant recorded); ``open`` lists
+    occurrences whose end is unknown, which certify no delay at all.
+    """
+
+    since: str | None
+    open: list[JSON]
+    basis: list[JSON]
+
+    @property
+    def known(self) -> bool:
+        """Tell whether every relevant occurrence has a known end."""
+        return not self.open
+
+    @property
+    def eligible_at(self) -> str | None:
+        """Return when a delayed check may start (None: no wait, or unknown; see ``known``)."""
+        return utc(parse_utc(self.since) + DELAY) if self.since and self.known else None
+
+    def state(self, at: str | None) -> Literal["eligible", "ineligible", "uncertain"]:
+        """Judge an answer at ``at`` under ``DELAYED_CHECK``."""
+        if at is None or not self.known:
+            return "uncertain"
+        return "ineligible" if self.eligible_at and at < self.eligible_at else "eligible"
+
+
+type Occurrence = tuple[str, JSON]
+"""(time, exact ref) of something relevant to a delayed check."""
+
+
+def delay(tx: Tx, target: JSON, *, before: str | None = None, exclude: str | None = None) -> Delay:
+    """Find the latest relevant occurrence for one exact target before ``before``.
+
+    Relevant: earlier answers covering the target (their retrieval ends at submission),
+    teaching about it (ends at completion; a started one is still open) and exposures
+    naming it (end when closed). The checked answer ``exclude`` is not its own exposure.
+    A learner-confirmed condition checkpoint ends earlier open occurrences at its time.
+    """
+    # ponytail: scans every attempt, study and exposure per call; index by target if slow.
+
+    def prior(at: str | None) -> bool:
+        return at is not None and (before is None or at < before)
+
+    ends = [
+        (r.payload["submitted_at"], r.ref)
+        for r in tx.current("attempt", by=OWNER)
+        if r.id != exclude
+        and prior(r.payload["submitted_at"])
+        and _covers(content.definition(tx, r.payload["exercise"]), target)
+    ]
+    studied, open_studies = _studies_about(tx, target, prior)
+    shown, views_open = _exposures_about(tx, target, prior)
+    ends += studied + shown
+    opened = open_studies + views_open
+    for r in tx.current("condition_checkpoint", by=OWNER):
+        at = r.payload["established_at"]
+        named = exact_key(target) in {exact_key(t) for t in r.payload["targets"]}
+        if named and prior(at) and any(o[0] < at for o in opened):
+            opened = [o for o in opened if o[0] >= at]
+            ends.append((at, r.ref))
+    latest = max(ends, key=lambda e: e[0], default=None)
+    return Delay(
+        since=latest[0] if latest else None,
+        open=[o[1] for o in opened],
+        basis=[latest[1]] if latest else [],
+    )
+
+
+def _studies_about(
+    tx: Tx, target: JSON, prior: Callable[[str | None], bool]
+) -> tuple[list[Occurrence], list[Occurrence]]:
+    """Return completed teaching about a target (ended) and started teaching (still open)."""
+    ended: list[Occurrence] = []
+    opened: list[Occurrence] = []
+    for r in tx.current("study", by=OWNER):
+        if exact_key(target) not in {exact_key(s["target"]) for s in r.payload["scope"]}:
+            continue
+        if r.payload["status"] == "completed" and prior(r.payload["completed_at"]):
+            ended.append((r.payload["completed_at"], r.ref))
+        elif r.payload["status"] == "started" and prior(r.payload["started_at"]):
+            opened.append((r.payload["started_at"], r.ref))
+    return ended, opened
+
+
+def _exposures_about(
+    tx: Tx, target: JSON, prior: Callable[[str | None], bool]
+) -> tuple[list[Occurrence], list[Occurrence]]:
+    """Return closed presentations naming a target (by their end) and open ones."""
+    ended: list[Occurrence] = []
+    opened: list[Occurrence] = []
+    for r in tx.current("exposure", by=OWNER):
+        started = r.payload["timing"]["earliest_at"]
+        if exact_key(target) not in {exact_key(t) for t in r.payload["targets"]}:
+            continue
+        if not prior(started):
+            continue
+        if r.payload["availability"] == "ended" and r.payload.get("ended_by"):
+            ended.append((r.payload["ended_by"], r.ref))
+        else:
+            opened.append((started, r.ref))
+    return ended, opened
 
 
 def supported_error(o: JSON) -> bool:

@@ -968,27 +968,71 @@ class App:
 
     # --- practice ------------------------------------------------------------------
 
-    def start_session(self, request_id: str, *, curriculum_id: str) -> JSON:
-        """Open a session in a curriculum's enrollment."""
+    def start_session(
+        self,
+        request_id: str,
+        *,
+        curriculum_id: str | None = None,
+        curriculum_ids: list[str] | None = None,
+        budget_seconds: int | None = None,
+    ) -> JSON:
+        """Open a session over one or more curricula, in that order, with an optional budget."""
+        chosen = curriculum_ids or ([curriculum_id] if curriculum_id else [])
 
         def fn(tx: Tx) -> JSON:
-            enrollment = practice.enrollment_for(tx, curriculum_id)
-            if enrollment is None:
-                msg = "this curriculum has no enrollment yet"
-                raise LookupError(msg)
-            return {"session": practice.start_session(tx, enrollment_id=enrollment["ref"]["id"])}
+            enrollments: list[str] = []
+            for cid in chosen:
+                enrollment = practice.enrollment_for(tx, cid)
+                if enrollment is None:
+                    msg = "this curriculum has no enrollment yet"
+                    raise LookupError(msg)
+                enrollments.append(enrollment["ref"]["id"])
+            session = practice.start_session(
+                tx, enrollment_ids=enrollments, budget_seconds=budget_seconds
+            )
+            return {"session": session}
 
-        return self.store.run(request_id, "start_session", {"curriculum": curriculum_id}, fn).result
+        inputs = {"curricula": chosen, "budget": budget_seconds}
+        return self.store.run(request_id, "start_session", inputs, fn).result
 
-    def next_exercise(self, request_id: str, *, session_id: str) -> JSON:
+    def change_budget(
+        self, request_id: str, *, session_id: str, base: int, budget_seconds: int | None
+    ) -> JSON:
+        """Change how long this session may run; the time already spent stays as it was."""
+        return self.store.run(
+            request_id,
+            "change_budget",
+            {"session": session_id, "base": base, "budget": budget_seconds},
+            lambda tx: {
+                "session": practice.change_budget(
+                    tx, session_id=session_id, base=base, budget_seconds=budget_seconds
+                )
+            },
+        ).result
+
+    def next_exercise(
+        self,
+        request_id: str,
+        *,
+        session_id: str,
+        exercise_id: str | None = None,
+        new_material: bool = False,
+    ) -> JSON:
         """Take the session's next step: resume, ask, teach, verify, or a new exercise.
 
         Teaching and fresh variants are authored before delivery: when none is ready,
         this saves a pending authoring operation (``operation``) for ``run_operation``.
+        ``exercise_id`` or ``new_material`` is the learner's own choice (an override).
         """
 
         def fn(tx: Tx) -> JSON:
-            step = practice.next_step(tx, session_id)
+            step = practice.next_step(
+                tx,
+                session_id,
+                elapsed_ms=measurement.session_elapsed_ms(tx, session_id),
+                exercise_id=exercise_id,
+                new_material=new_material,
+            )
             nothing: JSON = {"attempt": None, "offer": None, "resumed": False}
             kind = step["kind"]
             if kind == "resume":
@@ -1000,8 +1044,12 @@ class App:
                     "offer": step["offer"]["ref"],
                     "resumed": True,
                 }
-            if kind in ("none", "stopped", "pending", "study"):
-                return {**nothing, **step}
+            if kind in ("none", "stopped", "pending", "study", "budget_spent", "nothing_fits"):
+                left = [
+                    {**x, "action": content.definition(tx, x["target"])["action"]}
+                    for x in step.get("left", [])
+                ]
+                return {**nothing, **step, "left": left}
             if kind in ("teach", "verify"):
                 serve = self._teach if kind == "teach" else self._verify
                 return {
@@ -1014,10 +1062,21 @@ class App:
             if kind == "ask":
                 return {**nothing, **_ask(tx, session, exercise, step["concern"])}
             attempt = evidence.start_attempt(tx, session=session["ref"], exercise=exercise["ref"])
-            offer = practice.deliver(tx, session_id=session_id, exercise=exercise, attempt=attempt)
+            offer = practice.deliver(
+                tx,
+                session_id=session_id,
+                exercise=exercise,
+                attempt=attempt,
+                reason=step["reason"],
+                selection=step["selection"],
+            )
+            delivered = practice.offer_for(tx, attempt["id"])
+            assert delivered is not None  # noqa: S101 - just reserved
+            measurement.assign_endpoints(tx, offer=delivered, exercise=exercise)
             return {**nothing, "kind": "exercise", "attempt": attempt, "offer": offer}
 
-        return self.store.run(request_id, "next_exercise", {"session": session_id}, fn).result
+        inputs = {"session": session_id, "exercise": exercise_id, "new": new_material}
+        return self.store.run(request_id, "next_exercise", inputs, fn).result
 
     def _teach(self, tx: Tx, session_id: str, concern: JSON) -> JSON:
         """Deliver accepted teaching for this concern revision, or author it first."""
@@ -1199,26 +1258,95 @@ class App:
         return self.store.run(request_id, "submit_answer", inputs, fn).result
 
     def view_feedback(self, request_id: str, *, attempt_id: str) -> JSON:
-        """Record that the learner was shown feedback and the reference answer."""
-        return self.store.run(
-            request_id,
-            "view_feedback",
-            {"attempt": attempt_id},
-            lambda tx: {"exposure": evidence.record_feedback_view(tx, attempt_id=attempt_id)},
-        ).result
+        """Record that the learner was shown feedback and the reference answer.
+
+        Seeing the answer defers the next offer of a later check for its goals.
+        """
+
+        def fn(tx: Tx) -> JSON:
+            exposure = evidence.record_feedback_view(tx, attempt_id=attempt_id)
+            _exposed(tx, exposure)
+            return {"exposure": exposure}
+
+        return self.store.run(request_id, "view_feedback", {"attempt": attempt_id}, fn).result
+
+    def read_material(self, request_id: str, *, targets: list[JSON], what: str) -> JSON:
+        """Record that answer-bearing material (claims or source text) was opened."""
+
+        def fn(tx: Tx) -> JSON:
+            exposure = evidence.record_material_view(tx, targets=targets, what=what)
+            _exposed(tx, exposure)
+            return {"exposure": exposure}
+
+        inputs = {"targets": targets, "what": what}
+        return self.store.run(request_id, "read_material", inputs, fn).result
+
+    def rate_recall(self, request_id: str, *, attempt_id: str, target: JSON, choice: str) -> JSON:
+        """Save the learner's recall rating of an owned answer; FSRS dates the next review."""
+
+        def fn(tx: Tx) -> JSON:
+            assessment = evidence.assessment_for(tx, attempt_id)
+            if assessment is None:
+                msg = "this answer cannot be rated: it is not graded yet"
+                raise ValueError(msg)
+            offer = practice.review_binding(
+                tx,
+                attempt_id=attempt_id,
+                target=target,
+                choice=choice,
+                under_review=_under_review(tx, assessment),
+            )
+            attempt = evidence.attempt_view(tx, attempt_id=attempt_id)["ref"]
+            saved = evidence.record_review(
+                tx,
+                attempt=attempt,
+                target=target,
+                offer=offer["ref"],
+                assessment=assessment["ref"],
+                choice=choice,
+            )
+            practice.recompute_schedule(tx, target, basis=[saved])
+            return {"review": saved}
+
+        inputs = {"attempt": attempt_id, "target": target, "choice": choice}
+        return self.store.run(request_id, "rate_recall", inputs, fn).result
+
+    def confirm_closed(self, request_id: str, *, targets: list[JSON]) -> JSON:
+        """Start later checks of these goals from now: earlier views are confirmed closed."""
+
+        def fn(tx: Tx) -> JSON:
+            checkpoint = evidence.confirm_closed(tx, targets=targets)
+            if checkpoint is not None:
+                for target in targets:
+                    practice.recompute_schedule(tx, target, basis=[checkpoint])
+            return {"checkpoint": checkpoint}
+
+        return self.store.run(request_id, "confirm_closed", {"targets": targets}, fn).result
+
+    def close_view(self, request_id: str, *, exposure_id: str) -> JSON:
+        """Record that an answer-bearing view was closed; its wait starts from now."""
+
+        def fn(tx: Tx) -> JSON:
+            closed = evidence.close_exposure(tx, exposure_id=exposure_id)
+            if closed is not None:
+                _exposed(tx, closed)
+            return {"exposure": closed}
+
+        return self.store.run(request_id, "close_view", {"exposure": exposure_id}, fn).result
 
     def end_session(self, request_id: str, *, session_id: str, base: int, reason: str) -> JSON:
-        """End a session; an unfinished draft stays resumable."""
-        return self.store.run(
-            request_id,
-            "end_session",
-            {"session": session_id, "base": base, "reason": reason},
-            lambda tx: {
+        """End a session, saving what it left unserved; an unfinished draft stays resumable."""
+
+        def fn(tx: Tx) -> JSON:
+            elapsed = measurement.session_elapsed_ms(tx, session_id)
+            return {
                 "session": practice.end_session(
-                    tx, session_id=session_id, base=base, stop_reason=reason
+                    tx, session_id=session_id, base=base, stop_reason=reason, elapsed_ms=elapsed
                 )
-            },
-        ).result
+            }
+
+        inputs = {"session": session_id, "base": base, "reason": reason}
+        return self.store.run(request_id, "end_session", inputs, fn).result
 
     # --- measurement -----------------------------------------------------------------
 
@@ -1259,6 +1387,34 @@ class App:
 
         return self.store.run(request_id, "record_spans", {"spans": spans}, fn).result
 
+    def start_tracking(self, request_id: str, *, curriculum_id: str) -> JSON:
+        """Freeze a tracking plan over this curriculum's admitted goals (one command)."""
+
+        def fn(tx: Tx) -> JSON:
+            curriculum, enrollment = _tracked(tx, curriculum_id)
+            return {
+                "cohort": measurement.start_tracking(
+                    tx, curriculum=curriculum["ref"], enrollment=enrollment
+                )
+            }
+
+        return self.store.run(
+            request_id, "start_tracking", {"curriculum": curriculum_id}, fn
+        ).result
+
+    def stop_tracking(self, request_id: str, *, cohort_id: str, base: int, reason: str) -> JSON:
+        """Stop a tracking plan; its frozen endpoints stay, later ones become missing."""
+        return self.store.run(
+            request_id,
+            "stop_tracking",
+            {"cohort": cohort_id, "base": base, "reason": reason},
+            lambda tx: {
+                "cohort": measurement.stop_tracking(
+                    tx, cohort_id=cohort_id, base=base, reason=reason
+                )
+            },
+        ).result
+
     def session_feedback(
         self,
         request_id: str,
@@ -1291,6 +1447,15 @@ class App:
     def restore(path: Path, text: str, *, clock: Clock) -> Store:
         """Restore an archive into a new store file, validating every record first."""
         return restore_library(path, text, clock=clock, validate=validate_library)
+
+
+# --- practice: parts of the commands above -----------------------------------------------
+
+
+def _exposed(tx: Tx, exposure: JSON) -> None:
+    """Let Practice re-derive the next offer of every goal an exposure revision names."""
+    for target in evidence.exposure_view(tx, exposure)["targets"]:
+        practice.recompute_schedule(tx, target, basis=[exposure])
 
 
 # --- corrections: parts of the commands above -------------------------------------------
@@ -1668,7 +1833,7 @@ def proposals_view(tx: Tx, operation_id: str) -> JSON:
 
 
 def home_view(tx: Tx) -> JSON:
-    """List curricula with their state, and material still being drafted."""
+    """List curricula with their state and due work, and material still being drafted."""
     accepted_groups = {o["request_group"] for o in _operations(tx) if o["acceptance"] == "accepted"}
     latest_by_group: dict[str, JSON] = {}
     for o in _operations(tx):
@@ -1682,6 +1847,7 @@ def home_view(tx: Tx) -> JSON:
     for c in content.curricula(tx):
         enrollment = practice.enrollment_for(tx, c["ref"]["id"])
         goals: list[JSON] = enrollment["goal_order"] if enrollment else []
+        due = _due_work(tx, enrollment)
         items.append(
             {
                 "id": c["ref"]["id"],
@@ -1692,12 +1858,34 @@ def home_view(tx: Tx) -> JSON:
                     1 for e in (enrollment or {}).get("practice", []) if e["state"] != "unstarted"
                 ),
                 "next_check": _due(tx, goals),
+                **due,
             }
         )
     return {
         "curricula": items,
         "drafting": drafting,
+        "due": {
+            "checks": sum(i["due_now"] for i in items),
+            "repairs": sum(i["repairs"] for i in items),
+            "blocked": sum(i["blocked"] for i in items),
+            "curricula": [i["id"] for i in items if i["due_now"] or i["repairs"] or i["blocked"]],
+            "oldest": min((i["oldest"] for i in items if i["oldest"]), default=None),
+        },
+        "now": tx.now,
         "effort": measurement.ledger(measurement.all_spans(tx)),
+    }
+
+
+def _due_work(tx: Tx, enrollment: JSON | None) -> JSON:
+    """Count what is ready in one enrollment now (shown when the app opens)."""
+    if enrollment is None:
+        return {"due_now": 0, "repairs": 0, "blocked": 0, "oldest": None}
+    preview = practice.proposal(tx, [enrollment["ref"]], None)
+    return {
+        "due_now": preview["ready"],
+        "repairs": preview["repairs"],
+        "blocked": len(preview["blocked"]),
+        "oldest": preview["oldest"],
     }
 
 
@@ -1741,7 +1929,17 @@ def _target_view(tx: Tx, target: JSON, enrollment: JSON | None) -> JSON:
         "hold": _reason(content.target_hold(tx, target)),
         "state": entry["state"] if entry else "not selected",
         "evidence": {"label": result["label"], "reasons": result["reasons"]},
-        "schedule": {"need": schedule["need"], "due_at": schedule["due_at"]} if schedule else None,
+        "schedule": {
+            "type": schedule["type"],
+            "need": schedule["need"],
+            "hold_reason": schedule["hold_reason"],
+            "due_at": schedule["due_at"],
+            "next_offer": {k: schedule["next_offer"][k] for k in ("at", "reason")}
+            if schedule.get("next_offer")
+            else None,
+        }
+        if schedule
+        else None,
     }
 
 
@@ -1757,6 +1955,124 @@ def _curriculum_effort(tx: Tx, curriculum: JSON, enrollment: JSON | None) -> JSO
         enrollment_id=enrollment["ref"]["id"] if enrollment else None,
         preparation_ids={curriculum["ref"]["id"], curriculum["source"]["id"], *authoring},
     )
+
+
+def _tracked(tx: Tx, curriculum_id: str) -> tuple[JSON, JSON]:
+    curriculum = content.current_definition(tx, "curriculum", curriculum_id)
+    enrollment = practice.enrollment_for(tx, curriculum_id)
+    if curriculum is None or enrollment is None:
+        msg = f"no curriculum {curriculum_id}"
+        raise LookupError(msg)
+    return curriculum, enrollment
+
+
+def tracking_preview_view(tx: Tx, curriculum_id: str) -> JSON:
+    """Preview a tracking plan: its goals, baselines, windows and known checks."""
+    curriculum, enrollment = _tracked(tx, curriculum_id)
+    preview = measurement.tracking_preview(tx, curriculum=curriculum["ref"], enrollment=enrollment)
+    for group in ("population", "outside"):
+        for row in preview[group]:
+            row["action"] = content.definition(tx, row["target"])["action"]
+    plans = measurement.cohorts(tx, enrollment["ref"]["id"])
+    return {
+        **preview,
+        "title": curriculum["title"],
+        "plans": [
+            {"id": p["ref"]["id"], "lifecycle": p["lifecycle"], "frozen_at": p["frozen_at"]}
+            for p in plans
+        ],
+    }
+
+
+def tracking_view(tx: Tx, cohort_id: str) -> JSON:
+    """Report a tracking plan as of now, with each goal's action."""
+    report = measurement.tracking_report(tx, cohort_id)
+    actions = {
+        m["target"]["id"]: content.definition(tx, m["target"])["action"]
+        for m in report["population"]
+    }
+    enrollment = practice.enrollment_for(tx, report["curriculum"]["id"])
+    tracked = {m["target"]["id"] for m in report["population"]} | {
+        o["target"]["id"] for o in report["outside"]
+    }
+    return {
+        **report,
+        "actions": actions,
+        "added": [
+            {"target": t, "action": content.definition(tx, t)["action"]}
+            for t in (enrollment or {}).get("goal_order", [])
+            if t["id"] not in tracked
+        ],
+    }
+
+
+def later_checks_view(tx: Tx, curriculum_id: str) -> JSON:
+    """Show every later check of a curriculum's goals, the counts, and whether it is caught up."""
+    curriculum, enrollment = _tracked(tx, curriculum_id)
+    rows: list[JSON] = [
+        {
+            "ref": t,
+            "action": content.definition(tx, t)["action"],
+            "type": s["type"] if (s := practice.schedule_view(tx, t)) else None,
+            "checks": practice.later_checks(tx, t),
+        }
+        for t in enrollment["goal_order"]
+    ]
+    return {
+        "curriculum": {"ref": curriculum["ref"], "title": curriculum["title"]},
+        "targets": rows,
+        "counts": measurement.later_check_counts([c for r in rows for c in r["checks"]], tx.now),
+        "caught_up": {
+            **(caught := practice.caught_up(tx, enrollment)),
+            "pending": [
+                {**p, "action": content.definition(tx, p["target"])["action"]}
+                for p in caught["pending"]
+            ],
+        },
+    }
+
+
+def choices_view(tx: Tx, session_id: str) -> JSON:
+    """List what the learner may choose to practise instead (a recorded override)."""
+    session = practice.session_view(tx, session_id)
+    checks, _upcoming = practice.pending(tx, session["enrollments"], tx.now)
+    needs = {(p.target["id"], p.target["revision"]): p for p in checks}
+    goals = [
+        e["target"]
+        for ref_ in session["enrollments"]
+        for e in practice.enrollment_view(tx, ref_["id"])["practice"]
+    ]
+    rows = [
+        {
+            "exercise": e["ref"],
+            "prompt": e["prompt"],
+            "seconds": practice.full_cost(e),
+            "targets": [_choice_target(tx, t, needs) for t in e["targets"]],
+        }
+        for e in content.exercises_for(tx, goals)
+    ]
+    return {"session": session, "exercises": rows}
+
+
+def _choice_target(tx: Tx, target: JSON, needs: dict[tuple[str, int], Any]) -> JSON:
+    p = needs.get((target["id"], target["revision"]))
+    return {
+        "action": content.definition(tx, target)["action"],
+        "need": p.need if p else None,
+        "blocked": p.blocked if p else None,
+        "role": practice.role_now(tx, target),
+    }
+
+
+def session_proposal_view(tx: Tx, curriculum_ids: list[str], budget_seconds: int | None) -> JSON:
+    """Preview a session over these curricula and budget before starting it."""
+    enrollments = [
+        e["ref"] for cid in curriculum_ids if (e := practice.enrollment_for(tx, cid)) is not None
+    ]
+    if not enrollments:
+        msg = "none of these curricula has an enrollment yet"
+        raise LookupError(msg)
+    return practice.proposal(tx, enrollments, budget_seconds)
 
 
 def outline_view(tx: Tx, curriculum_id: str) -> JSON:
@@ -1844,6 +2160,7 @@ def practice_view(tx: Tx, session_id: str) -> JSON:
             for e in evidence.exposures_for(tx, current["ref"]["id"])
             if e["details"].get("hint_id") == h["id"]
         }
+        offer = practice.offer_for(tx, current["ref"]["id"])
         view["attempt"] = {
             "ref": current["ref"],
             "purpose": current["purpose"],
@@ -1857,8 +2174,16 @@ def practice_view(tx: Tx, session_id: str) -> JSON:
             "assessment": _assessing(tx, current["ref"]["id"]),
             "feedback_ready": evidence.assessment_for(tx, current["ref"]["id"]) is not None,
             "counts_as_practice": bool(shown and practice.revoked(tx, shown["ref"]["id"])),
+            "roles": [
+                {"action": content.definition(tx, slot["target"])["action"], "role": slot["role"]}
+                for slot in _offer_slots(offer)
+            ],
         }
     return view
+
+
+def _offer_slots(offer: JSON | None) -> list[JSON]:
+    return list(offer["slots"]) if offer else []
 
 
 def feedback_view(tx: Tx, attempt_id: str) -> JSON:
@@ -1910,7 +2235,31 @@ def feedback_view(tx: Tx, attempt_id: str) -> JSON:
             _judgment(j, exercise) for j in evidence.assessment_history(tx, attempt_id)[:-1]
         ],
         "review": _review(tx, assessment),
+        "ratings": _ratings(tx, attempt, exercise),
     }
+
+
+def _ratings(tx: Tx, attempt: JSON, exercise: JSON) -> list[JSON]:
+    """Return the recall ratings this answer can take, per goal (none for extra practice)."""
+    found: list[JSON] = []
+    for target in exercise["targets"]:
+        choices, _why = practice.rating_choices(
+            tx,
+            attempt["ref"]["id"],
+            target,
+            under_review=_under_review(tx, evidence.assessment_for(tx, attempt["ref"]["id"])),
+        )
+        if choices:
+            review = evidence.review_for(tx, attempt["ref"]["id"], target)
+            found.append(
+                {
+                    "target": target,
+                    "action": content.definition(tx, target)["action"],
+                    "choices": choices,
+                    "choice": review["choice"] if review else None,
+                }
+            )
+    return found
 
 
 def _judgment(judgment: JSON, exercise: JSON) -> JSON:
@@ -1932,6 +2281,12 @@ def _judgment(judgment: JSON, exercise: JSON) -> JSON:
         "explanation": judgment["explanation"],
         "revision_reason": judgment["revision_reason"],
     }
+
+
+def _under_review(tx: Tx, assessment: JSON | None) -> bool:
+    """Tell whether a review of this judgment is running or waiting for a decision."""
+    review = _review(tx, assessment)
+    return review is not None and review["acceptance"] == "pending"
 
 
 def _review(tx: Tx, assessment: JSON | None) -> JSON | None:
@@ -2078,8 +2433,14 @@ def summary_view(tx: Tx, session_id: str) -> JSON:
         for s in evidence.studies(tx)
         if s["session"]["id"] == session_id
     ]
+    unmet = (
+        session["unmet"]
+        if session["status"] == "ended"
+        else practice.unserved_view(tx, session_id, measurement.session_elapsed_ms(tx, session_id))
+    )
     return {
         "session": session,
+        "unmet": [{**u, "action": content.definition(tx, u["target"])["action"]} for u in unmet],
         "headline": "Practiced today; later recall not checked yet.",
         "targets": list(targets.values()),
         "help": help_given,
