@@ -2,7 +2,7 @@
 
 A local web app for memorization-oriented learning: paste material, get a source-linked outline and exercises, answer in your own words, and get criterion-by-criterion feedback that separates independent, helped and unsettled evidence. When an answer shows a gap, the app asks a question only if its answer changes the help, teaches the supported gap, and checks it with a fresh version of the task. Built from the design in this repository; start with [START-HERE.md](START-HERE.md).
 
-**Status:** build slice 4 of 5 ([one saved learning encounter](.scratch/first-build/issues/01-one-saved-learning-encounter.md), [diagnose and repair](.scratch/first-build/issues/02-diagnose-and-repair.md), [corrections](.scratch/first-build/issues/03-correct-knowledge-and-judgments.md), [later checks and time budgets](.scratch/first-build/issues/04-return-later-and-fit-practice-into-time.md)). Later checks follow real due dates: recall items are scheduled by FSRS (py-fsrs 6.3.2) from your own ratings, other goals by a simple 24-hour-then-7-day policy; sessions fit due work into the time you choose. Qualification on fresh material comes in slice 5.
+**Status:** all five build slices are in ([one saved learning encounter](.scratch/first-build/issues/01-one-saved-learning-encounter.md), [diagnose and repair](.scratch/first-build/issues/02-diagnose-and-repair.md), [corrections](.scratch/first-build/issues/03-correct-knowledge-and-judgments.md), [later checks and time budgets](.scratch/first-build/issues/04-return-later-and-fit-practice-into-time.md), [qualification](.scratch/first-build/issues/05-qualify-the-pilot-on-fresh-material.md)). Later checks follow real due dates: recall items are scheduled by FSRS (py-fsrs 6.3.2) from your own ratings, other goals by a simple 24-hour-then-7-day policy; sessions fit due work into the time you choose. Its deterministic qualification uses a scripted model, which is no substitute for the live run: running the [acceptance pack](qualification/pack-v1.json) against the real model and a genuinely elapsed later session are still to be done, and nothing here is a validated learning improvement (see the [pilot limits](.scratch/first-build/issues/05-qualify-the-pilot-on-fresh-material.md#pilot-limits) and the [coverage ledger](qualification/ledger.md)).
 
 ## Run it
 
@@ -18,9 +18,13 @@ bin/lint                           # ruff (all rules), format, mypy --strict, py
 uv run pytest                      # real SQLite store, scripted model
 uv run python -m tests.dev_server  # UI check with a scripted model, no key needed (port 8766)
 curl -X POST 'http://127.0.0.1:8766/dev/clock?hours=25'  # move the UI check's clock past a due time
+uv run python -m tests.qualify             # live run of the acceptance pack (needs ANTHROPIC_API_KEY)
+uv run python -m tests.qualify --scripted  # the same harness with a scripted stand-in
 ```
 
-Export and restore live on the home page. A restore always goes into a new store file; the previous one stays in `data/`.
+The qualification report (in `qualification/reports/`) lists every substantive error, disagreement with the pack's reference judgments, abstention and prompt version, and never a quality percentage.
+
+Export and restore live on the home page. A restore always goes into a new store file; the previous one stays in `data/`. An older export of the same library is refused when the current library holds learning the export lacks, so a restore never hides later work.
 
 ---
 

@@ -78,12 +78,16 @@ function concernNote(c) {
   }[c.route] || "";
 }
 
+const KEEPALIVE_LIMIT = 60000;  // bytes; browsers refuse keepalive requests above 64 KiB
+
 async function api(path, body, requestId) {
-  const options = body === undefined ? {} : {
+  const payload = body === undefined ? null : JSON.stringify({ request_id: requestId ?? uuid(), ...body });
+  const options = payload === null ? {} : {
     method: "POST",
-    keepalive: true,
+    // keepalive lets page-close writes finish; a restored library is far larger than that
+    keepalive: new TextEncoder().encode(payload).length < KEEPALIVE_LIMIT,
     headers: { "content-type": "application/json", "x-muninn-protocol": PROTOCOL },
-    body: JSON.stringify({ request_id: requestId ?? uuid(), ...body }),
+    body: payload,
   };
   const response = await fetch(`/api${path}`, options);
   const data = await response.json().catch(() => ({}));
@@ -118,9 +122,11 @@ const views = {
   },
   track(id) { this.open.add(id); },
   close(id) {
-    if (this.open.delete(id)) api(`/exposures/${id}/close`, {}).catch(() => {});
+    if (!this.open.delete(id)) return Promise.resolve();
+    return api(`/exposures/${id}/close`, {}).catch(() => {});
   },
-  closeAll() { for (const id of [...this.open]) this.close(id); },
+  // awaited on navigation: a view still open when the next task starts counts as help on it
+  closeAll() { return Promise.all([...this.open].map((id) => this.close(id))); },
 };
 window.addEventListener("pagehide", () => views.closeAll());
 
@@ -204,7 +210,7 @@ let leave = () => {};
 async function route() {
   leave();
   leave = () => {};
-  views.closeAll();
+  await views.closeAll();
   const [, page, id, sub] = location.hash.split("/");
   try {
     if (page === "start") await startPage(id);
@@ -552,7 +558,7 @@ async function disputePage(attemptId) {
       <p class="small muted">The assessor checks the same answer again against the same rubric. Your reason is a claim to check, not a pass. Nothing changes until you accept the result.</p>
       <div class="row"><button type="submit">Ask for a review</button><span class="status" id="dispute-status"></span></div>
     </form>`;
-  timer.set("progress_inspection", { session: f.session, context: [f.attempt.ref] });
+  timer.set("assessment_correction", { session: f.session, context: [f.attempt.ref] });
   document.getElementById("dispute").addEventListener("submit", async (event) => {
     event.preventDefault();
     const picked = view.querySelector("input[name=why]:checked").value;
@@ -599,7 +605,7 @@ async function reviewPage(opId) {
     return;
   }
   const p = await api(`/operations/${opId}/correction`);
-  timer.set("progress_inspection", { context: [op.ref] });
+  timer.set("assessment_correction", { context: [op.ref] });
   const decide = async (action) => {
     try {
       await api(`/operations/${opId}/correction/${action}`, action === "accept" ? { preview: p.digest } : {});
@@ -1024,6 +1030,7 @@ async function feedbackPage(attemptId) {
 }
 
 async function finish(session) {
+  await views.closeAll();  // leaving this page: its views are closed before the unmet needs are saved
   if (session.status !== "ended") {
     await api(`/sessions/${session.ref.id}/end`, { base: session.ref.revision, reason: "learner finished" }).catch(() => {});
   }

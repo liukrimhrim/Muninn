@@ -26,7 +26,9 @@ from muninn.library import (
     active_store,
     digest,
     export_library,
+    lineage_conflict,
     new_id,
+    parse_archive,
     restore_library,
 )
 from muninn.library import Conflict as Conflict  # noqa: PLC0414 - re-exported for Web Interaction
@@ -1306,6 +1308,7 @@ class App:
                 choice=choice,
             )
             practice.recompute_schedule(tx, target, basis=[saved])
+            practice.after_review(tx, attempt_id=attempt_id, assessment=assessment["ref"])
             return {"review": saved}
 
         inputs = {"attempt": attempt_id, "target": target, "choice": choice}
@@ -1754,7 +1757,13 @@ def open_app(data_dir: Path, provider: Provider, *, clock: Clock) -> App:
 
 
 def restore_into(app: App, data_dir: Path, text: str, *, clock: Clock) -> None:
-    """Restore an archive into a new store, make it active and switch the app to it."""
+    """Restore an archive into a new store, make it active and switch the app to it.
+
+    ``Conflict`` when the active library has learning the archive does not contain.
+    """
+    hidden = lineage_conflict(app.store, parse_archive(text))
+    if hidden is not None:
+        raise Conflict(hidden)
     path = data_dir / f"library-{new_id()}.sqlite"
     restored = App.restore(path, text, clock=clock)
     activate(data_dir, path)
@@ -2438,10 +2447,18 @@ def summary_view(tx: Tx, session_id: str) -> JSON:
         if session["status"] == "ended"
         else practice.unserved_view(tx, session_id, measurement.session_elapsed_ms(tx, session_id))
     )
+    checks = [c for t in targets.values() for c in practice.later_checks(tx, t["ref"])]
+    checked = measurement.later_check_counts(checks, tx.now, session_attempts)
+    headline = (
+        f"Later checks in this session: {checked['answered']} answered, "
+        f"{checked['met_on_time']} met on time."
+        if checked["answered"]
+        else "Practiced today; later recall not checked yet."
+    )
     return {
         "session": session,
         "unmet": [{**u, "action": content.definition(tx, u["target"])["action"]} for u in unmet],
-        "headline": "Practiced today; later recall not checked yet.",
+        "headline": headline,
         "targets": list(targets.values()),
         "help": help_given,
         "clarifications": sum(

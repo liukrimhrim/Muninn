@@ -133,28 +133,39 @@ def test_seeing_the_answer_defers_the_next_offer_but_never_moves_the_due_time(ma
     assert schedule(app, goal)["due_at"] == "2026-11-01T10:05:00.000Z"
 
 
-def test_an_answer_too_soon_after_seeing_the_answer_cannot_advance_the_check(make_app, clock):
-    app = make_app(explanation_outline(), SHOWN, SHOWN)
-    curriculum, goal = begin(app)
-    practise(app, curriculum)
+def test_an_answer_too_soon_after_another_answer_cannot_advance_the_check(make_app, clock):
+    # A view of the answer opened while the check's draft is open is help on that answer
+    # (W04, tests/test_qualification.py). "Too soon" is an earlier relevant occurrence
+    # that ended before the answer: here another tab recalled the fact a minute earlier.
+    app = make_app(two_exercises(), judged(ALL_SHOWN), FACT_SHOWN, judged(ALL_SHOWN))
+    curriculum, fact = begin(app)
+    _fact, connection = goals_of(app, curriculum)
+    practise(app, curriculum, text=ANSWER)  # both goals demonstrated at 10:00
     clock.advance(hours=25)
     session = app.start_session(rid(), curriculum_id=curriculum)["session"]
-    check = app.next_exercise(rid(), session_id=session["id"])["attempt"]  # owned, due
-    material = app.read_material(rid(), targets=[goal], what="claims")["exposure"]
-    clock.advance(minutes=1)
-    app.close_view(rid(), exposure_id=material["id"])  # the claims were opened, then closed
-    sent = app.submit_answer(
-        rid(), attempt_id=check["id"], base=check["revision"], response=EXPLANATION, client_at=None
-    )
-    app.run_operation(sent["operation"]["id"])
+    check = app.next_exercise(rid(), session_id=session["id"])  # owns both due checks
+    chosen = exercise_ids(app)["What must hol"]
+    other = app.next_exercise(rid(), session_id=session["id"], exercise_id=chosen)
+    assert roles(app, other) == ["extra"]
+    for step, text in ((other, "It must be sorted."), (check, ANSWER)):
+        sent = app.submit_answer(
+            rid(),
+            attempt_id=step["attempt"]["id"],
+            base=step["attempt"]["revision"],
+            response=text,
+            client_at=None,
+        )
+        app.run_operation(sent["operation"]["id"])
+        clock.advance(minutes=1)
 
-    now = schedule(app, goal)
+    now = schedule(app, fact)
     assert (now["due_at"], now["obligation"]["kind"], now["reason"]) == (
         "2026-10-25T10:00:00.000Z",  # still due: no seven-day advance from an exposed answer
         "later",
         "answered too soon after seeing the answer; this check stays due",
     )
     assert now["next_offer"]["at"] == "2026-10-26T11:01:00.000Z"  # 24 h after this answer
+    assert schedule(app, connection)["due_at"] == "2026-11-01T11:01:00.000Z"  # on time, met
 
 
 def test_a_view_never_closed_certifies_no_delay_until_the_learner_confirms_it(make_app, clock):

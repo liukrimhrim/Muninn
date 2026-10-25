@@ -714,6 +714,28 @@ def _check_receipts(receipts: list[JSON], records: list[JSON]) -> list[str]:
     return errors
 
 
+def lineage_conflict(store: Store, envelope: JSON) -> str | None:
+    """Tell why an archive of this same library may not replace it (compatibility sections 4-5).
+
+    The active store must be an exact prefix of the archive: a local record or receipt the
+    archive lacks or holds differently (later learning, or a copy edited separately) would
+    be hidden by the switch. Another library's archive is not compared.
+    """
+    if envelope.get("library_id") != store.library_id:
+        return None
+    records, receipts = store.snapshot()
+    archived = {canonical(r) for r in envelope.get("receipts", [])}
+    if records != envelope.get("records", [])[: len(records)] or any(
+        canonical(r) not in archived for r in receipts
+    ):
+        return (
+            "this library has learning the archive does not contain (work saved after the "
+            "export, or a copy changed separately); restoring it would hide that work. "
+            "Export the current library first, or restore the archive into another folder."
+        )
+    return None
+
+
 def restore_library(
     path: Path,
     text: str,

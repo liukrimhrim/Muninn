@@ -1495,6 +1495,10 @@ def _update_concerns(  # noqa: PLR0913 - the accepted assessment and its context
         concern = concern.model_copy(update={"basis": [*concern.basis, Ref(**assessment)]})
         tx.put("concern", concern.model_dump(), by=OWNER, id=record.id, base=record.revision)
         question = None
+    if not bound:
+        _settle_later_checks(
+            tx, attempt_id=view["ref"]["id"], assessment=assessment, observations=observations
+        )
     errors = _scope(observations, {"error"}, exclude=handled)
     if errors:
         _open_concern(
@@ -1517,6 +1521,66 @@ def _update_concerns(  # noqa: PLR0913 - the accepted assessment and its context
             out=out,
             question=question,
         )
+
+
+LATER_SUCCESS = "an independent later check showed it"
+
+
+def _settle_later_checks(
+    tx: Tx, *, attempt_id: str, assessment: JSON, observations: list[JSON]
+) -> None:
+    """Settle concerns waiting for a later check against this answer (P06).
+
+    An open one closes, with no extra check, when the answer meets its later checks; one
+    this answer closed (its latest basis) reopens when, after a correction or a new
+    rating, the answer no longer does. A concern stays on the ``later_check`` route.
+    """
+    for record in tx.current("concern", by=OWNER):
+        concern = ConcernP.model_validate(record.payload)
+        closed_here = concern.status == "resolved" and concern.basis[-1].id == assessment["id"]
+        if concern.route != "later_check" or not (concern.status == "open" or closed_here):
+            continue
+        met = _met_later(tx, concern, attempt_id, observations)
+        if met == closed_here:
+            continue  # still open and unmet, or still met
+        update = (
+            WAITING_LATER
+            if closed_here
+            else {"status": "resolved", "resolution_reason": LATER_SUCCESS}
+        )
+        settled = concern.model_copy(
+            update={**update, "basis": [*concern.basis, Ref(**assessment)]}
+        )
+        tx.put("concern", settled.model_dump(), by=OWNER, id=record.id, base=record.revision)
+
+
+def _met_later(tx: Tx, concern: ConcernP, attempt_id: str, observations: list[JSON]) -> bool:
+    """Tell whether this answer shows the whole scope unaided and meets each due later check.
+
+    Meeting a check takes an owned, on-time, delay-eligible answer (the replayed schedule);
+    for a recall goal, the learner's review of it, unless rated "forgot".
+    """
+    scope = [s.model_dump() for s in concern.scope]
+    if evidence.scope_outcome(observations, scope) != "demonstrated":
+        return False
+    return all(
+        any(
+            a["attempt"]["id"] == attempt_id
+            and (
+                a["effect"] == "met"
+                or (a["effect"] == "reviewed" and _succeeded(tx, a, s["target"]))
+            )
+            for check in later_checks(tx, s["target"])
+            for a in check["answers"]
+        )
+        for s in scope
+    )
+
+
+def after_review(tx: Tx, *, attempt_id: str, assessment: JSON) -> None:
+    """Settle the concerns a recall rating meets (or, when re-rated, no longer meets)."""
+    observed = evidence.observations_for(tx, {assessment["id"]})
+    _settle_later_checks(tx, attempt_id=attempt_id, assessment=assessment, observations=observed)
 
 
 def _hypotheses(out: evidence.AssessmentOutput | None, criteria: set[str]) -> list[HypothesisP]:
@@ -1657,11 +1721,7 @@ def _after_verification(concern: ConcernP, observations: list[JSON], view: JSON)
             "status": "resolved",
             "resolution_reason": "recovered on a fresh check; the later check is still due",
         },
-        "assisted": {
-            "route": "later_check",
-            "resolution_reason": "shown with help on the fresh check; an independent later "
-            "check is due",
-        },
+        "assisted": WAITING_LATER,
         "incomplete": {
             "route": "assessment_review",
             "resolution_reason": "the fresh check did not show the repaired part",
@@ -1673,6 +1733,11 @@ def _after_verification(concern: ConcernP, observations: list[JSON], view: JSON)
     return concern.model_copy(update={"cycles": cycles, **update})
 
 
+WAITING_LATER: JSON = {
+    "status": "open",
+    "route": "later_check",
+    "resolution_reason": "shown with help on the fresh check; an independent later check is due",
+}
 STOPPED_REPAIR: JSON = {
     "route": "content_review",
     "resolution_reason": "these two approaches have not resolved this yet",
@@ -1745,10 +1810,18 @@ def reconcile_correction(
         if revised != concern:  # an unchanged concern gets no new revision
             revised = revised.model_copy(update={"basis": [*concern.basis, Ref(**assessment)]})
             tx.put("concern", revised.model_dump(), by=OWNER, id=record.id, base=record.revision)
-    covered = {
+    if bound is None:
+        _settle_later_checks(
+            tx,
+            attempt_id=view["ref"]["id"],
+            assessment=assessment,
+            observations=_observations(results),
+        )
+    covered = {  # an error inside a concern waiting for a later check repairs that concern
         pair
         for record in tx.current("concern", by=OWNER)
         if record.payload["status"] in ("open", "paused")
+        and record.payload["route"] != "later_check"
         for pair in _pairs(ConcernP.model_validate(record.payload).scope)
     }
     errors = _scope(_observations(results), {"error"}, exclude=covered)
@@ -2371,8 +2444,9 @@ def later_checks(tx: Tx, target: JSON) -> list[JSON]:
     for oid in dict.fromkeys(h["obligation"]["id"] for h in history):
         revisions = [h for h in history if h["obligation"]["id"] == oid]
         first, last = revisions[0], revisions[-1]
-        if first["obligation"]["kind"] != "later":
-            continue
+        dated = [h["due_at"] for h in revisions if h["due_at"]]
+        if first["obligation"]["kind"] != "later" and not dated:
+            continue  # a first check that never got a due time (a helped first answer gives one)
         status = last["obligation"]["status"]
         too_soon = {b["id"] for h in revisions if h["reason"] == TOO_SOON for b in h["basis"]}
         answers: list[JSON] = []
@@ -2382,6 +2456,11 @@ def later_checks(tx: Tx, target: JSON) -> list[JSON]:
             attempt = evidence.attempt_view(tx, attempt_id=offer["attempt"]["id"])
             if attempt["status"] != "submitted":
                 continue
+            if (
+                first["obligation"]["kind"] != "later"
+                and (attempt["submitted_at"] or "") < dated[0]
+            ):
+                continue  # the first answer, which set this due time, is not an answer to it
             graded = evidence.assessment_for(tx, attempt["ref"]["id"])
             consumed_by: JSON | None = last["consumed_by"]
             met = consumed_by is not None and consumed_by["id"] == attempt["ref"]["id"]
@@ -2401,7 +2480,7 @@ def later_checks(tx: Tx, target: JSON) -> list[JSON]:
         checks.append(
             {
                 "obligation": oid,
-                "due_at": first["due_at"],
+                "due_at": dated[0] if dated else first["due_at"],
                 "status": status,
                 "ended": last["reason"] if status != "open" else None,
                 "next_offer": last.get("next_offer") if status == "open" else None,

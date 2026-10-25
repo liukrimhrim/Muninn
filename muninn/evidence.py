@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from muninn import content
 from muninn.library import (
@@ -53,6 +53,23 @@ class TimeEvidenceP(_Strict):
     raw_client_at: str | None
     explanation: str
 
+    @model_validator(mode="after")
+    def _bounds_match_precision(self) -> TimeEvidenceP:
+        """Refuse invented times: bounds must match the precision and have a basis."""
+        bounds = (self.earliest_at, self.latest_at)
+        if self.precision == "exact":
+            ok = None not in bounds and self.earliest_at == self.latest_at
+        elif self.precision == "bounded":
+            ok = bounds != (None, None)
+        else:
+            ok = bounds == (None, None)
+        if self.basis in ("unavailable", "legacy_unknown") and self.precision != "unknown":
+            ok = False
+        if not ok:
+            msg = f"{self.precision} time with basis {self.basis} cannot have bounds {bounds}"
+            raise ValueError(msg)
+        return self
+
 
 class AssistanceP(_Strict):
     """Help whose display was acknowledged during this answer."""
@@ -62,6 +79,19 @@ class AssistanceP(_Strict):
     text: str
     criterion_ids: list[str]
     study: content.RefP | None
+
+    @model_validator(mode="after")
+    def _shown_at_only_when_exact(self) -> AssistanceP:
+        """Refuse a display instant the clock does not know (``assistance-evidence-1``)."""
+        exact = [
+            t.earliest_at
+            for t in self.time_evidence
+            if t.field == "shown_at" and t.precision == "exact"
+        ]
+        if (self.shown_at is not None or exact) and exact != [self.shown_at]:
+            msg = "a hint's shown_at must be null unless its exact time evidence states it"
+            raise ValueError(msg)
+        return self
 
 
 class VerificationP(_Strict):
@@ -316,7 +346,7 @@ class AssessmentOutput(_Strict):
     explanation: str
 
 
-ASSESS_PROTOCOL: JSON = {"name": "assess-answer", "version": 2, "parameters": {}}
+ASSESS_PROTOCOL: JSON = {"name": "assess-answer", "version": 3, "parameters": {}}
 BRANCH_NEXT = {
     "demonstrated": {"resolve", "teach"},
     "error": {"teach"},
@@ -370,25 +400,34 @@ though later recall is untested.
 """
 
 
+type Timing = Literal["first", "immediate", "later"]
+"""When an answer came: the first for its goals, after practice this session, or later."""
+_TIMING: dict[Timing, str] = {
+    "first": "This is the first recorded answer for these goals.",
+    "immediate": "Earlier practice of these goals happened in this same session (an immediate "
+    "answer).",
+    "later": "This answer was given in a later session than any earlier practice of these goals.",
+}
+
+
 def assessment_request(
-    *, exercise: JSON, response: str, assistance: list[JSON], immediate: bool
+    *,
+    exercise: JSON,
+    response: str,
+    assistance: list[JSON],
+    timing: Timing,
 ) -> ModelRequest:
     """Prepare the assess-answer request for one submitted response."""
     criteria = "\n".join(f"{c['id']}: {c['requirement']}" for c in exercise["criteria"])
     help_lines = "\n".join(
         f"- shown for {', '.join(a['criterion_ids'])}: {a['text']}" for a in assistance
     )
-    timing = (
-        "This answer was given in the same session as any earlier study (an immediate answer)."
-        if immediate
-        else "This answer was given in a later session."
-    )
     user = (
         f"<prompt>\n{exercise['prompt']}\n</prompt>\n"
         f"<criteria>\n{criteria}\n</criteria>\n"
         f"<help_shown_during_this_answer>\n{help_lines or 'none'}\n"
         "</help_shown_during_this_answer>\n"
-        f"<attempt>\nA recorded answer. {timing}\n</attempt>\n"
+        f"<attempt>\nA recorded answer. {_TIMING[timing]}\n</attempt>\n"
         f"<answer>\n{response}\n</answer>"
     )
     return ModelRequest(
@@ -396,7 +435,7 @@ def assessment_request(
     )
 
 
-REASSESS_PROTOCOL: JSON = {"name": "reassess-answer", "version": 1, "parameters": {}}
+REASSESS_PROTOCOL: JSON = {"name": "reassess-answer", "version": 2, "parameters": {}}
 
 REASSESS_SYSTEM = (
     ASSESS_SYSTEM
@@ -443,7 +482,7 @@ def reassessment_request(tx: Tx, assessment: JSON, reason: str) -> ModelRequest:
         exercise=exercise,
         response=attempt["response"],
         assistance=attempt["assistance"],
-        immediate=True,
+        timing=_answer_timing(tx, attempt),
     )
     judged = "\n".join(
         f"{r['criterion_id']}: {r['outcome']} — {r['reason']}" for r in earlier["results"]
@@ -801,8 +840,39 @@ def assessment_request_for(tx: Tx, attempt: JSON) -> ModelRequest:
     view = attempt_view(tx, attempt)
     exercise = content.definition(tx, view["exercise"])
     return assessment_request(
-        exercise=exercise, response=view["response"], assistance=view["assistance"], immediate=True
+        exercise=exercise,
+        response=view["response"],
+        assistance=view["assistance"],
+        timing=_answer_timing(tx, view),
     )
+
+
+def _answer_timing(tx: Tx, attempt: JSON) -> Timing:
+    """Say when a submitted answer came relative to earlier practice of the same goals.
+
+    Earlier practice is an earlier submitted answer or a completed study touching any of
+    its goals (by goal id, so an edited goal keeps its history).
+    """
+    # ponytail: scans every attempt and study, like ``chronology``; index by goal if needed.
+    goals = {t["id"] for t in content.definition(tx, attempt["exercise"])["targets"]}
+    at = attempt["submitted_at"]
+    sessions = [
+        a["session"]["id"]
+        for a in attempts(tx)
+        if a["ref"]["id"] != attempt["ref"]["id"]
+        and a["submitted_at"] is not None
+        and a["submitted_at"] <= at
+        and goals & {t["id"] for t in content.definition(tx, a["exercise"])["targets"]}
+    ] + [
+        s["session"]["id"]
+        for s in studies(tx)
+        if s["completed_at"] is not None
+        and s["completed_at"] <= at
+        and goals & {t["id"] for t in s["targets"]}
+    ]
+    if not sessions:
+        return "first"
+    return "immediate" if attempt["session"]["id"] in sessions else "later"
 
 
 def criterion_help(tx: Tx, attempt: JSON) -> dict[str, str]:
@@ -911,7 +981,7 @@ def observations_for(tx: Tx, assessment_ids: set[str]) -> list[JSON]:
     return [
         {**o, "target_id": r.payload["target"]["id"], "target": r.payload["target"]}
         for r in tx.current("projection", by=OWNER)
-        for o in r.payload["observations"]
+        for o in _with_outside_help(tx, r.payload["target"], r.payload["observations"])
         if o["assessment"]["id"] in assessment_ids
     ]
 
@@ -975,8 +1045,10 @@ def _reproject(tx: Tx, exercise: JSON, assessment: JSON) -> dict[str, JSON]:
 
 
 def _projection_observations(tx: Tx, target: JSON) -> list[JSON]:
+    """Return a target's effective observations, help from outside views included (W04)."""
     projection = _projection(tx, target)
-    return list(projection.payload["observations"]) if projection else []
+    observed: list[JSON] = projection.payload["observations"] if projection else []
+    return _with_outside_help(tx, target, observed)
 
 
 def _covers(exercise: JSON, target: JSON) -> bool:
@@ -1438,8 +1510,22 @@ def _aid_availability(tx: Tx, target: JSON, attempt: JSON) -> JSON:
     The answer's own hints are help, judged on the raw axis instead.
     """
     found = answer_evidence(tx, attempt["ref"]["id"], target)
+    known, open_ = _outside_views(tx, target, attempt)
     unsure = [attempt["ref"]] if found and found["help"] == "unconfirmed" else []
+    unsure += open_
+    result = "ineligible" if known else "uncertain" if unsure else "eligible"
+    return _reason("aid_availability", result, known or unsure)
+
+
+def _outside_views(tx: Tx, target: JSON, attempt: JSON) -> tuple[list[JSON], list[JSON]]:
+    """Return the answer-bearing views of a goal that overlapped writing an answer.
+
+    Views outside the answer itself (another answer's feedback, the claims or source
+    text) that began before it was submitted: ``known`` ended after it was started, so
+    they were available while it was written; ``open`` have no known end.
+    """
     known: list[JSON] = []
+    open_: list[JSON] = []
     for r in tx.current("exposure", by=OWNER):
         p = r.payload
         bound: JSON | None = p["attempt"]
@@ -1451,11 +1537,30 @@ def _aid_availability(tx: Tx, target: JSON, attempt: JSON) -> JSON:
             continue
         ended = p["ended_by"] if p["availability"] == "ended" else None
         if ended is None:
-            unsure.append(r.ref)
+            open_.append(r.ref)
         elif ended > attempt["started_at"]:
             known.append(r.ref)
-    result = "ineligible" if known else "uncertain" if unsure else "eligible"
-    return _reason("aid_availability", result, known or unsure)
+    return known, open_
+
+
+def _with_outside_help(tx: Tx, target: JSON, observations: list[JSON]) -> list[JSON]:
+    """Count a view known open while an answer was written as help on that answer.
+
+    ``assistance-evidence-1`` / W04: known available task-specific aid makes a usable
+    judgment helped, whatever screen showed it. A view with no known end leaves the
+    raw judgment as it was (its claims are uncertain instead).
+    """
+    # ponytail: scans every exposure once per answer on each read; index exposures by
+    # target when one library's history outgrows memory.
+    aided: dict[str, bool] = {}
+    marked: list[JSON] = []
+    for o in observations:
+        attempt_id = o["attempt"]["id"]
+        if attempt_id not in aided:
+            attempt = attempt_view(tx, attempt_id=attempt_id)
+            aided[attempt_id] = bool(_outside_views(tx, target, attempt)[0])
+        marked.append({**o, "assisted": True} if aided[attempt_id] else o)
+    return marked
 
 
 def _ended(tx: Tx, exact: JSON) -> str | None:
@@ -1527,8 +1632,7 @@ def target_evidence(tx: Tx, target: JSON, *, attempt_ids: set[str] | None = None
     question cues its answer. With ``attempt_ids`` only those answers count, so an old
     summary keeps its own result.
     """
-    projection = _projection(tx, target)
-    observations: list[JSON] = projection.payload["observations"] if projection else []
+    observations = _projection_observations(tx, target)
     clarification_ids = {
         r.id for r in tx.current("attempt", by=OWNER) if r.payload["purpose"] == "clarification"
     }

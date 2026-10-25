@@ -977,14 +977,21 @@ def _membership(span: JSON, roots: set[str], sessions: dict[str, JSON]) -> str:
     return "out_of_scope"
 
 
-def later_check_counts(checks: list[JSON], now: str) -> JSON:
+def later_check_counts(checks: list[JSON], now: str, attempt_ids: set[str] | None = None) -> JSON:
     """Count later checks by how they stand; delayed successes only from real checks.
 
     Missed (overdue), helped and unresolved checks stay visible beside the met ones.
+    With ``attempt_ids`` only those answers count (one session's summary).
     """
-    answers = [a for c in checks for a in c["answers"] if a["role"] == "owner"]
+    answers = [
+        a
+        for c in checks
+        for a in c["answers"]
+        if a["role"] == "owner" and (attempt_ids is None or a["attempt"]["id"] in attempt_ids)
+    ]
     closing = [a for a in answers if a["effect"] in ("met", "reviewed")]
     return {
+        "answered": len(answers),
         "met_on_time": sum(1 for a in closing if a["label"] != "error"),
         "reviewed_as_forgotten": sum(1 for a in closing if a["label"] == "error"),
         "replaced_after_teaching": sum(1 for c in checks if c["status"] == "replaced"),
