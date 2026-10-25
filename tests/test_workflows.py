@@ -49,7 +49,7 @@ def answer(app, op, text=ANSWER, *, hint=False):
 
 
 def need(app, target):
-    schedule = app.store.read(lambda tx: practice.schedule_view(tx, target["id"]))
+    schedule = app.store.read(lambda tx: practice.schedule_view(tx, target))
     assert schedule is not None
     return schedule["need"]
 
@@ -73,7 +73,7 @@ def test_a_drafted_outline_selects_goals_without_admitting_or_scheduling_them(ma
     t1, _t2 = targets(app, op)
     enrollment = app.store.read(lambda tx: practice.enrollment_for(tx, curriculum_id(op)))
     assert [e["state"] for e in enrollment["practice"]] == ["unstarted", "unstarted"]
-    assert app.store.read(lambda tx: practice.schedule_view(tx, t1["id"])) is None
+    assert app.store.read(lambda tx: practice.schedule_view(tx, t1)) is None
 
 
 def test_a_refused_draft_gets_one_targeted_retry(make_app):
@@ -126,7 +126,7 @@ def test_delivery_admits_only_the_covered_targets_with_open_initial_obligations(
     enrollment = app.store.read(lambda tx: practice.enrollment_for(tx, curriculum_id(op)))
     assert {e["state"] for e in enrollment["practice"]} == {"active"}
     for t in targets(app, op):
-        schedule = app.store.read(lambda tx, t=t: practice.schedule_view(tx, t["id"]))
+        schedule = app.store.read(lambda tx, t=t: practice.schedule_view(tx, t))
         assert (schedule["need"], schedule["due_at"], schedule["obligation"]["status"]) == (
             "initial",
             None,
@@ -179,7 +179,7 @@ def test_first_independent_success_schedules_a_check_a_day_after_the_answer(make
     assessed = app.run_operation(submitted["operation"]["id"])
     assert assessed["acceptance"] == "accepted"
     for t in targets(app, op):
-        history = app.store.read(lambda tx, t=t: practice.schedule_history(tx, t["id"]))
+        history = app.store.read(lambda tx, t=t: practice.schedule_history(tx, t))
         assert history[-2]["obligation"]["status"] == "consumed"
         assert history[-1]["obligation"]["kind"] == "later"
         assert (history[-1]["need"], history[-1]["due_at"]) == (
@@ -200,7 +200,7 @@ def test_mixed_outcomes_resolve_each_target_separately(make_app):
     app.run_operation(submitted["operation"]["id"])
     t1, t2 = targets(app, op)
     assert need(app, t1) == "independent_check"
-    t2_schedule = app.store.read(lambda tx: practice.schedule_view(tx, t2["id"]))
+    t2_schedule = app.store.read(lambda tx: practice.schedule_view(tx, t2))
     assert (t2_schedule["need"], t2_schedule["due_at"]) == ("repair", None)
     concerns = app.store.read(practice.open_concerns)
     assert [
@@ -215,7 +215,7 @@ def test_not_shown_is_never_a_failure(make_app):
     app.run_operation(submitted["operation"]["id"])
     _, t2 = targets(app, op)
     assert app.store.read(lambda tx: evidence.target_evidence(tx, t2)["label"]) == "unresolved"
-    schedule = app.store.read(lambda tx: practice.schedule_view(tx, t2["id"]))
+    schedule = app.store.read(lambda tx: practice.schedule_view(tx, t2))
     assert (schedule["need"], schedule["due_at"]) == ("clarify", None)
     assert app.store.read(practice.open_concerns) == []
 
@@ -235,7 +235,7 @@ def test_an_acknowledged_hint_makes_its_targets_helped_and_bounds_its_time(make_
     assert attempt["assistance"][0]["shown_at"] is None
     assert help_time["precision"] == "bounded"
     # a helped success keeps the initial obligation open and asks for a check tomorrow
-    schedule = app.store.read(lambda tx: practice.schedule_view(tx, t2["id"]))
+    schedule = app.store.read(lambda tx: practice.schedule_view(tx, t2))
     assert (schedule["obligation"]["kind"], schedule["need"]) == ("initial", "independent_check")
 
 
@@ -254,7 +254,7 @@ def test_an_unacknowledged_hint_cannot_certify_independence(make_app):
     assert result["label"] == "unresolved"
     assert "not confirmed" in result["reasons"][0]
     # the demonstration still earns a check tomorrow, but cannot consume the first obligation
-    schedule = app.store.read(lambda tx: practice.schedule_view(tx, t2["id"]))
+    schedule = app.store.read(lambda tx: practice.schedule_view(tx, t2))
     assert (schedule["obligation"]["kind"], schedule["need"]) == ("initial", "independent_check")
     assert schedule["due_at"] is not None
 

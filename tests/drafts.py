@@ -23,6 +23,7 @@ def outline() -> dict[str, Any]:
                 "scope": "Searching arrays",
                 "quotes": ["Binary search finds a target in a sorted array."],
                 "depends_on": [],
+                "existing": [],
             },
             {
                 "key": "k2",
@@ -37,6 +38,7 @@ def outline() -> dict[str, Any]:
                     )
                 ],
                 "depends_on": [{"key": "k1", "role": "holds only when"}],
+                "existing": [],
             },
         ],
         "targets": [
@@ -230,3 +232,186 @@ def judged(outcomes: dict[str, str], **extra: Any) -> dict[str, Any]:
     """Return an assessment of ``ANSWER`` quoting it for every demonstrated or erred part."""
     shown = {k: QUOTES[k] for k, v in outcomes.items() if v in ("demonstrated", "error")}
     return assessment(outcomes, shown, **extra)
+
+
+VOCAB_SOURCE = "In the invented language Tarvi, the word mavo means blue and sel means stone."
+
+
+def vocab_outline() -> dict[str, Any]:
+    """Return a drafted outline for an invented association (a second, unrelated subject)."""
+    return {
+        "title": "Tarvi words",
+        "purpose": "Remember what mavo means",
+        "purpose_was_inferred": False,
+        "knowledge": [
+            {
+                "key": "k1",
+                "form": "fact",
+                "statement": "In Tarvi, mavo means blue.",
+                "scope": "Tarvi vocabulary",
+                "quotes": ["the word mavo means blue"],
+                "depends_on": [],
+                "existing": [],
+            }
+        ],
+        "targets": [
+            {
+                "key": "t1",
+                "knowledge_keys": ["k1"],
+                "action": "Recall what mavo means",
+                "mode": "recall",
+                "conditions": ["from memory"],
+                "requirements": [
+                    {"key": "r1", "statement": "Gives the meaning blue", "knowledge_keys": ["k1"]}
+                ],
+            }
+        ],
+        "sections": [{"title": "Words", "target_keys": ["t1"]}],
+        "exercises": [
+            {
+                "prompt": "In Tarvi, what does mavo mean?",
+                "criteria": [
+                    {
+                        "key": "c1",
+                        "requirement": "Answers blue",
+                        "covers": [{"target_key": "t1", "requirement_keys": ["r1"]}],
+                    }
+                ],
+                "reference_response": "Blue.",
+                "hints": [],
+                "expected_seconds": {"setup": 5, "answer": 10, "feedback": 5},
+            }
+        ],
+        "omitted": [],
+        "doubts": [],
+    }
+
+
+NOTES_SOURCE = (
+    "Notes on searching. Binary search requires a sorted array. Each comparison halves what "
+    "remains, so about log2(n) comparisons suffice. Linear search checks every element in turn."
+)
+
+
+def existing_keys(request: Any) -> dict[str, str]:
+    """Read the existing-claim keys (statement -> key) the drafting packet listed."""
+    listing = request.user.split("<existing_claims>\n", 1)[1].split("\n</existing_claims>", 1)[0]
+    keys: dict[str, str] = {}
+    for line in listing.splitlines():
+        key, _, rest = line.partition(": ")
+        keys[rest.rsplit(" (scope: ", 1)[0]] = key
+    return keys
+
+
+def notes_outline(
+    request: Any, *, sorted_relation: str = "same", halving_relation: str = "same"
+) -> dict[str, Any]:
+    """Draft second material that repeats (or contradicts) the binary-search claims."""
+    keys = existing_keys(request)
+    return {
+        "title": "Searching notes",
+        "purpose": "Compare searching methods",
+        "purpose_was_inferred": True,
+        "knowledge": [
+            {
+                "key": "b1",
+                "form": "fact",
+                "statement": "Binary search requires a sorted array.",
+                "scope": "Searching arrays",
+                "quotes": ["Binary search requires a sorted array."],
+                "depends_on": [],
+                "existing": [
+                    {
+                        "key": keys["Binary search only works on a sorted array."],
+                        "relation": sorted_relation,
+                        "why": "the same requirement",
+                    }
+                ],
+            },
+            {
+                "key": "b2",
+                "form": "relation",
+                "statement": "Halving at each comparison takes about log2(n) comparisons.",
+                "scope": "Sorted arrays of n elements",
+                "quotes": ["Each comparison halves what remains"],
+                "depends_on": [{"key": "b1", "role": "holds only when"}],
+                "existing": [
+                    {
+                        "key": keys[
+                            "Because each comparison discards the half that cannot contain the "
+                            "target, the search needs only about log2(n) comparisons."
+                        ],
+                        "relation": halving_relation,
+                        "why": "the same halving argument",
+                    }
+                ],
+            },
+            {
+                "key": "b3",
+                "form": "fact",
+                "statement": "Linear search checks every element in turn.",
+                "scope": "Searching lists",
+                "quotes": ["Linear search checks every element in turn."],
+                "depends_on": [],
+                "existing": [],
+            },
+        ],
+        "targets": [
+            {
+                "key": "t1",
+                "knowledge_keys": ["b1", "b2"],
+                "action": "Explain when binary search needs about log2(n) comparisons",
+                "mode": "explain",
+                "conditions": ["from memory"],
+                "requirements": [
+                    {"key": "r1", "statement": "Names sorted order", "knowledge_keys": ["b1"]},
+                    {
+                        "key": "r2",
+                        "statement": "Connects halving to log2(n)",
+                        "knowledge_keys": ["b2"],
+                    },
+                ],
+            },
+            {
+                "key": "t2",
+                "knowledge_keys": ["b3"],
+                "action": "State how linear search proceeds",
+                "mode": "recall",
+                "conditions": ["from memory"],
+                "requirements": [
+                    {"key": "r1", "statement": "Every element in turn", "knowledge_keys": ["b3"]}
+                ],
+            },
+        ],
+        "sections": [{"title": "Searching", "target_keys": ["t1", "t2"]}],
+        "exercises": [
+            {
+                "prompt": "When does binary search need only about log2(n) comparisons?",
+                "criteria": [
+                    {
+                        "key": "c1",
+                        "requirement": "Sorted array, halving each time",
+                        "covers": [{"target_key": "t1", "requirement_keys": ["r1", "r2"]}],
+                    }
+                ],
+                "reference_response": "On a sorted array, because each comparison halves the rest.",
+                "hints": [],
+                "expected_seconds": {"setup": 5, "answer": 60, "feedback": 20},
+            },
+            {
+                "prompt": "How does linear search look for an element?",
+                "criteria": [
+                    {
+                        "key": "c1",
+                        "requirement": "Checks every element in turn",
+                        "covers": [{"target_key": "t2", "requirement_keys": ["r1"]}],
+                    }
+                ],
+                "reference_response": "It checks every element in turn.",
+                "hints": [],
+                "expected_seconds": {"setup": 5, "answer": 20, "feedback": 10},
+            },
+        ],
+        "omitted": [],
+        "doubts": [],
+    }

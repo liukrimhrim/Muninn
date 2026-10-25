@@ -7,13 +7,14 @@ check 24 hours after a full demonstration. FSRS recall scheduling arrives later.
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
 from muninn import content, evidence
-from muninn.library import JSON, Record, new_id, parse_utc, utc, validate_payloads
+from muninn.library import JSON, Record, exact_key, new_id, parse_utc, utc, validate_payloads
 
 if TYPE_CHECKING:
     from muninn.library import Tx
@@ -97,6 +98,16 @@ class ObligationP(_Strict):
     successor_id: str | None
 
 
+class CheckEffectP(_Strict):
+    """What a correction decided for one offer's slot of this target (lifecycle section 4)."""
+
+    offer: Ref
+    disposition: Literal["preserved", "reanchored", "no_advance", "pending", "held"]
+    revokes_reservation: bool
+    basis: list[Ref]
+    reason: str
+
+
 class ScheduleP(_Strict):
     """One target's current learning need and due check."""
 
@@ -113,6 +124,8 @@ class ScheduleP(_Strict):
     obligation: ObligationP
     consumed_by: Ref | None
     hold_reason: str | None
+    resolution_rule: content.AlgorithmP | None = None
+    check_effects: list[CheckEffectP] = []
 
 
 class SlotP(_Strict):
@@ -321,8 +334,26 @@ def _enrollment_offer(tx: Tx, session_id: str, state: str) -> JSON | None:
     }
     for r in tx.current("practice_offer", by=OWNER):
         if r.payload["session"]["id"] in sessions and r.payload["state"] == state:
+            if state == "reserved" and _held_draft(tx, r.payload["attempt"]):
+                continue  # the draft is kept; it resumes if its material is settled again
             return r.view
     return None
+
+
+def _held_draft(tx: Tx, attempt: JSON) -> bool:
+    exercise = content.definition(tx, evidence.attempt_view(tx, attempt)["exercise"])
+    return content.exercise_hold(tx, exercise) is not None
+
+
+def revoked(tx: Tx, offer_id: str) -> bool:
+    """Tell whether a correction ended this offer's reservation (its answer is practice)."""
+    offer = tx.require("practice_offer", offer_id, by=OWNER)
+    return any(
+        e["offer"]["id"] == offer_id and e["revokes_reservation"]
+        for slot in offer.payload["slots"]
+        for h in schedule_history(tx, slot["target"])
+        for e in h.get("check_effects", [])
+    )
 
 
 def offer_for(tx: Tx, attempt_id: str) -> JSON | None:
@@ -341,20 +372,23 @@ def choose_exercise(tx: Tx, *, session_id: str) -> JSON | None:
         tx, "curriculum", enrollment.payload["curriculum"]["id"]
     )
     order = [t["id"] for s in curriculum["sections"] for t in s["targets"]] if curriculum else []
-    answered = {a["exercise"]["id"] for a in evidence.attempts(tx) if a["status"] == "submitted"}
+    answered = {
+        exact_key(a["exercise"]) for a in evidence.attempts(tx) if a["status"] == "submitted"
+    }
     candidates = [
         e
         for e in content.exercises_for(tx, enrollment.payload["goal_order"])
-        if e["ref"]["id"] not in answered
+        if exact_key(e["ref"]) not in answered  # a rebound revision checks a new contract
     ]
     position = {target_id: n for n, target_id in enumerate(order)}
     candidates.sort(key=lambda e: min(position.get(t["id"], len(order)) for t in e["targets"]))
     return candidates[0] if candidates else None
 
 
-def _schedule(tx: Tx, target_id: str) -> Record | None:
+def _schedule(tx: Tx, target: JSON) -> Record | None:
+    """Return the schedule of one exact goal revision (each contract has its own)."""
     for r in tx.current("schedule", by=OWNER):
-        if r.payload["target"]["id"] == target_id:
+        if exact_key(r.payload["target"]) == exact_key(target):
             return r
     return None
 
@@ -381,13 +415,13 @@ def deliver(  # noqa: PLR0913 - one keyword per delivery decision
         msg = "the session has no enrollment"
         raise LookupError(msg)
     targets = exercise["targets"]
-    covered = {t["id"] for t in targets}
+    covered = {exact_key(t) for t in targets}
     enrollment = EnrollmentP.model_validate(record.payload)
     entries = [
         e.model_copy(
             update={"state": "active", "admitted_at": tx.now, "basis": [Ref(**exercise["ref"])]}
         )
-        if e.target.id in covered and e.state == "unstarted"
+        if exact_key(e.target.model_dump()) in covered and e.state == "unstarted"
         else e
         for e in enrollment.practice
     ]
@@ -401,7 +435,7 @@ def deliver(  # noqa: PLR0913 - one keyword per delivery decision
         )
     slots: list[SlotP] = []
     for target in targets:
-        existing = _schedule(tx, target["id"])
+        existing = _schedule(tx, target)
         if existing is None:
             schedule = ScheduleP(
                 target=Ref(**target),
@@ -483,6 +517,72 @@ def mark_submitted(tx: Tx, *, attempt_id: str) -> None:
     _set_offer_state(tx, attempt_id, "submitted")
 
 
+# --- content changes (compatibility-design.md section 6) ----------------------------------
+
+GOAL_CHANGED = "the goal changed; the work done on its earlier version is kept"
+
+
+def replace_goals(tx: Tx, *, curricula: list[list[JSON]], replaced: list[list[JSON]]) -> None:
+    """Select replaced goal revisions in each affected enrollment as unstarted goals.
+
+    The old revision keeps its schedule and evidence. Concerns drop a replaced revision
+    from their scope (superseded when nothing is left), and drafts offered for it are
+    released; the drafts themselves stay saved.
+    """
+    swap = {exact_key(old): Ref(**new) for old, new in replaced}
+    moved = {old["id"]: Ref(**new) for old, new in curricula}
+    for record in tx.current("enrollment", by=OWNER):
+        curriculum = moved.get(record.payload["curriculum"]["id"])
+        if curriculum is None:
+            continue
+        enrollment = EnrollmentP.model_validate(record.payload)
+        revised = enrollment.model_copy(
+            update={
+                "curriculum": curriculum,
+                "goal_order": [
+                    swap.get(exact_key(t.model_dump()), t) for t in enrollment.goal_order
+                ],
+                "practice": [
+                    PracticeEntryP(target=new, state="unstarted", admitted_at=None, basis=[])
+                    if (new := swap.get(exact_key(e.target.model_dump())))
+                    else e
+                    for e in enrollment.practice
+                ],
+            }
+        )
+        tx.put("enrollment", revised.model_dump(), by=OWNER, id=record.id, base=record.revision)
+    for record in tx.current("concern", by=OWNER):
+        concern = ConcernP.model_validate(record.payload)
+        kept = [s for s in concern.scope if exact_key(s.target.model_dump()) not in swap]
+        if concern.status in ("open", "paused") and kept != concern.scope:
+            update: JSON = {"scope": kept}
+            if not kept:
+                update |= {"status": "superseded", "resolution_reason": GOAL_CHANGED}
+            revised_concern = concern.model_copy(update=update)
+            tx.put(
+                "concern",
+                revised_concern.model_dump(),
+                by=OWNER,
+                id=record.id,
+                base=record.revision,
+            )
+    for record in tx.current("practice_offer", by=OWNER):
+        offer = OfferP.model_validate(record.payload)
+        if offer.state == "reserved" and any(
+            exact_key(s.target.model_dump()) in swap for s in offer.slots
+        ):
+            released = offer.model_copy(
+                update={"state": "released", "released_at": tx.now, "reason": GOAL_CHANGED}
+            )
+            tx.put(
+                "practice_offer",
+                released.model_dump(),
+                by=OWNER,
+                id=record.id,
+                base=record.revision,
+            )
+
+
 # --- reconciling needs with new evidence --------------------------------------------------
 
 
@@ -495,137 +595,389 @@ def reconcile(  # noqa: PLR0913 - one keyword per accepted input
     out: evidence.AssessmentOutput | None = None,
     question: JSON | None = None,
 ) -> None:
-    """Apply each target's qualified label to its schedule and concerns, then settle.
+    """Recompute each covered target's schedule, update concerns, then settle the offer.
 
     The next check is dated from when the answer happened, never from grading time.
     ``question`` is the saved clarification exercise when ``wants_question`` said yes.
     """
     view = evidence.attempt_view(tx, attempt)
-    answered_at = view["submitted_at"]
-    offer = offer_for(tx, attempt["id"])
-    roles = {s["target"]["id"]: s["role"] for s in offer["slots"]} if offer else {}
-    for target_id, result in results.items():
-        record = _schedule(tx, target_id)
-        if record is None:
-            continue
-        schedule = ScheduleP.model_validate(record.payload)
-        revisions = (
-            _extra_transition(schedule, result, assessment)
-            if roles.get(target_id) == "extra"
-            else _transition(schedule, result, attempt, assessment, answered_at)
-        )
-        last = record.ref
-        for revision in revisions:
-            linked = revision.model_copy(update={"previous": Ref(**last)})
-            last = tx.put(
-                "schedule", linked.model_dump(), by=OWNER, id=record.id, base=last["revision"]
-            )
+    for result in results.values():
+        recompute_schedule(tx, result["target"], basis=[assessment])
     _update_concerns(
         tx, view=view, assessment=assessment, results=results, out=out, question=question
     )
     _set_offer_state(tx, attempt["id"], "settled")
 
 
-def _extra_transition(schedule: ScheduleP, result: JSON, assessment: JSON) -> list[ScheduleP]:
-    """Keep every due date on a focused check; only a supported error changes the need."""
-    if result["label"] != "error":
-        return []
-    return [
-        schedule.model_copy(
+# --- the one resolver (lifecycle section 4: effective event order and recomputation) -------
+
+CORRECTION_RULE: JSON = {
+    "name": "descendant-correction",
+    "version": 1,
+    "parameters": {"capability_policy": POLICY["name"], "first_check_hours": 24},
+}
+REANCHORED = "reanchored from a real later check"
+INVALIDATED = "its generating answer no longer qualifies after a corrected judgment"
+LATER_PENDING = "a later answer is still being assessed"
+
+
+type Successors = dict[tuple[str, str, int], str]
+"""Saved later-obligation identities by their generating occurrence (kind, id, revision)."""
+
+
+@dataclass(frozen=True)
+class _Ended:
+    """Why an obligation ended during a replay."""
+
+    basis: list[Ref]
+    reason: str
+    consumed_by: Ref | None
+
+
+@dataclass
+class _Replay:
+    """The schedule state while replaying one target's effective history."""
+
+    lineage: list[ObligationP]
+    ended: dict[str, _Ended]
+    need: Need
+    due_at: str | None
+    reason: str
+    basis: list[Ref]
+    hold_reason: str | None
+    effects: dict[str, CheckEffectP] = field(default_factory=dict[str, CheckEffectP])
+
+    @property
+    def current(self) -> ObligationP:
+        return self.lineage[-1]
+
+    def set(
+        self, need: Need, reason: str, basis: list[Ref], *, hold_reason: str | None = None
+    ) -> None:
+        """Set the current need; the due time changes only where a rule dates a check."""
+        self.need, self.reason, self.basis, self.hold_reason = need, reason, basis, hold_reason
+
+    def close(
+        self,
+        status: Literal["consumed", "replaced"],
+        successor: ObligationP,
+        *,
+        basis: list[Ref],
+        reason: str,
+        consumed_by: Ref | None = None,
+    ) -> None:
+        """End the current obligation and open its successor."""
+        ended = self.current.model_copy(update={"status": status, "successor_id": successor.id})
+        self.lineage[-1] = ended
+        self.ended[ended.id] = _Ended(basis=basis, reason=reason, consumed_by=consumed_by)
+        self.lineage.append(successor)
+
+
+def _later(origin: Ref, ids: Successors) -> ObligationP:
+    """Return the later obligation an occurrence generates, reusing its saved identity."""
+    key = (origin.kind, origin.id, origin.revision)
+    return ObligationP(
+        id=ids.get(key) or new_id(), kind="later", origin=[origin], status="open", successor_id=None
+    )
+
+
+def _plus_day(at: str) -> str:
+    return utc(parse_utc(at) + FIRST_CHECK)
+
+
+def _fold_owned(state: _Replay, answer: JSON, ids: Successors) -> None:
+    """Apply one owned answer to the current obligation (the capability-interval policy)."""
+    label, at, attempt = answer["label"], answer["at"], Ref(**answer["attempt"])
+    basis = [Ref(**answer["assessment"])]
+    if label in ("independent", "helped") and at is None:
+        state.set(
+            "held",
+            f"{label} demonstration at an unknown time",
+            basis,
+            hold_reason="answer time unknown; a later check needs a known start",
+        )
+        state.due_at = None
+    elif label == "independent" and state.current.kind == "initial":
+        state.close(
+            "consumed",
+            _later(attempt, ids),
+            basis=basis,
+            reason="first independent demonstration",
+            consumed_by=attempt,
+        )
+        state.set("independent_check", "first later check 24 hours after the demonstration", basis)
+        state.due_at = _plus_day(at)
+    elif label in ("independent", "helped"):
+        why = (
+            "independent retrieval 24 hours after helped practice"
+            if label == "helped"
+            else "independent check 24 hours later"
+        )
+        state.set("independent_check", why, basis)
+        state.due_at = _plus_day(at)
+    elif label == "error":
+        state.set("repair", "supported error", basis)
+    else:
+        outcomes = {o["outcome"] for o in answer["observations"]}
+        if outcomes == {"demonstrated"} and at is not None:  # shown; independence unknown
+            state.set(
+                "independent_check",
+                "independent check 24 hours after an answer whose help is unknown",
+                basis,
+            )
+            state.due_at = _plus_day(at)
+            return
+        misread = any(
+            o["outcome"] == "error" and not evidence.supported_error(o)
+            for o in answer["observations"]
+        )
+        state.set(
+            "clarify" if "cannot_judge" in outcomes else state.need,
+            "likely misread; not counted as a mistake" if misread else "evidence incomplete",
+            basis,
+        )
+
+
+def _fold_descendant(
+    state: _Replay,
+    answer: JSON,
+    offer: JSON,
+    offered_due: str | None,
+    ids: Successors,
+) -> None:
+    """Apply an owned answer whose opportunity no longer exists (descendant-correction-1).
+
+    It re-anchors only as an independent demonstration at or after both its offered due
+    time and the corrected due time; otherwise it has no scheduling effect, though a
+    supported error still asks for repair.
+    """
+    at: str | None = answer["at"]
+    basis = [Ref(**answer["assessment"])]
+    eligible = at is not None and all(d is None or at >= d for d in (state.due_at, offered_due))
+    if answer["label"] == "independent" and at is not None and eligible:
+        state.close(
+            "replaced", _later(Ref(**answer["attempt"]), ids), basis=basis, reason=REANCHORED
+        )
+        state.set("independent_check", REANCHORED, basis)
+        state.due_at = _plus_day(at)
+        disposition: Literal["reanchored", "no_advance"] = "reanchored"
+    else:
+        if answer["label"] == "error":
+            state.set("repair", "supported error", basis)
+        disposition = "no_advance"
+    state.effects[offer["ref"]["id"]] = CheckEffectP(
+        offer=Ref(**offer["ref"]),
+        disposition=disposition,
+        revokes_reservation=False,
+        basis=basis,
+        reason=REANCHORED if disposition == "reanchored" else "earlier history changed; no advance",
+    )
+
+
+def _slots(tx: Tx, target: JSON) -> dict[str, tuple[JSON, JSON]]:
+    """Map each attempt to (offer, slot) for this exact target."""
+    found: dict[str, tuple[JSON, JSON]] = {}
+    for r in tx.current("practice_offer", by=OWNER):
+        for slot in r.payload["slots"]:
+            if exact_key(slot["target"]) == exact_key(target):
+                found[r.payload["attempt"]["id"]] = (r.view, slot)
+    return found
+
+
+def _start(history: list[JSON]) -> _Replay:
+    """Return the state at admission: the first revision's open initial obligation."""
+    first = ScheduleP.model_validate({k: v for k, v in history[0].items() if k != "ref"})
+    return _Replay(
+        lineage=[first.obligation.model_copy(update={"status": "open", "successor_id": None})],
+        ended={},
+        need=first.need,
+        due_at=first.due_at,
+        reason=first.reason,
+        basis=first.basis,
+        hold_reason=first.hold_reason,
+    )
+
+
+def _replay(tx: Tx, target: JSON, history: list[JSON]) -> _Replay:
+    """Replay one exact target's effective history from admission, in occurrence order."""
+    state = _start(history)
+    ids: Successors = {
+        (o["kind"], o["id"], o["revision"]): h["obligation"]["id"]
+        for h in history
+        if h["obligation"]["kind"] == "later"
+        for o in h["obligation"]["origin"][:1]
+    }
+    dues = {h["ref"]["revision"]: h["due_at"] for h in history}
+    slots = _slots(tx, target)
+    revocations = {
+        e["offer"]["id"]
+        for h in history
+        for e in h.get("check_effects", [])
+        if e["revokes_reservation"]
+    }
+    later_pending = False
+    assessed: set[str] = set()
+    for event in evidence.chronology(tx, target):
+        if event["kind"] == "study":
+            state.close(
+                "replaced",
+                _later(Ref(**event["study"]), ids),
+                basis=[Ref(**event["study"])],
+                reason="replaced after teaching",
+            )
+            state.set(
+                "independent_check",
+                "independent check 24 hours after completed teaching",
+                [Ref(**event["study"])],
+            )
+            state.due_at = _plus_day(event["at"])
+            continue
+        offer, slot = slots.get(event["attempt"]["id"], (None, None))
+        owned = bool(
+            offer and slot and slot["role"] == "owner" and offer["ref"]["id"] not in revocations
+        )
+        used = {o.id for o in state.lineage[:-1]}
+        if owned and slot and slot["obligation_id"] in used:
+            owned = False  # its check was already met or replaced: another owner's answer is extra
+        if event["label"] is None:  # submitted, not assessed yet
+            later_pending = later_pending or owned
+            continue
+        later_pending = False
+        assessed.add(event["attempt"]["id"])
+        if not owned:
+            if event["label"] == "error":
+                state.set(
+                    "repair", "supported error on a focused check", [Ref(**event["assessment"])]
+                )
+            continue
+        assert offer  # noqa: S101 - owned implies an offer and a slot
+        assert slot  # noqa: S101
+        if slot["obligation_id"] == state.current.id:
+            _fold_owned(state, event, ids)
+        else:
+            offered_due = dues.get(slot["schedule_at_offer"]["revision"])
+            _fold_descendant(state, event, offer, offered_due, ids)
+    if later_pending and state.need != "repair":  # never hide a supported current error
+        state.hold_reason, state.need = LATER_PENDING, "held"
+    _unsettled_owners(state, slots, assessed, revocations)
+    return state
+
+
+def _unsettled_owners(
+    state: _Replay, slots: dict[str, tuple[JSON, JSON]], assessed: set[str], revoked: set[str]
+) -> None:
+    """Decide owned drafts and pending answers whose opportunity no longer exists."""
+    lineage = {o.id for o in state.lineage}
+    for offer, slot in slots.values():
+        decided = offer["attempt"]["id"] in assessed  # the replay already applied its answer
+        practice_now = offer["ref"]["id"] in revoked and offer["state"] != "reserved"
+        if slot["role"] != "owner" or slot["obligation_id"] in lineage or decided or practice_now:
+            continue
+        if offer["state"] == "reserved":
+            effect = CheckEffectP(
+                offer=Ref(**offer["ref"]),
+                disposition="held",
+                revokes_reservation=True,
+                basis=state.basis,
+                reason="earlier history changed; this draft now counts as practice",
+            )
+        elif offer["state"] == "submitted":
+            effect = CheckEffectP(
+                offer=Ref(**offer["ref"]),
+                disposition="pending",
+                revokes_reservation=False,
+                basis=state.basis,
+                reason="earlier history changed; this answer is still being assessed",
+            )
+            if state.need != "repair":
+                state.need, state.hold_reason = "held", effect.reason
+        else:
+            continue
+        state.effects.setdefault(offer["ref"]["id"], effect)
+
+
+def _decision(schedule: ScheduleP) -> JSON:
+    """Return what a revision decides.
+
+    A newer revision of the same basis record, or a correction stamp on an unchanged
+    state, is not a new decision.
+    """
+    decided = schedule.model_dump(exclude={"previous", "basis", "resolution_rule"})
+    return {**decided, "basis": [(b.kind, b.id) for b in schedule.basis]}
+
+
+def recompute_schedule(
+    tx: Tx, target: JSON, *, basis: list[JSON], correction: bool = False
+) -> None:
+    """Replay a target's schedule and append only what changed (one resolver).
+
+    Terminal dispositions come first (predecessors that ended, opportunities whose
+    generating answer no longer qualifies), then the current state. Replaying the same
+    effective history writes nothing, so a repeated correction adds no effect.
+    """
+    record = _schedule(tx, target)
+    if record is None:
+        return
+    history = [r.view for r in tx.history("schedule", record.id, by=OWNER)]
+    state = _replay(tx, target, history)
+    latest = ScheduleP.model_validate({k: v for k, v in history[-1].items() if k != "ref"})
+    effective: dict[str, ObligationP] = {}
+    for h in history:
+        effective[h["obligation"]["id"]] = ObligationP.model_validate(h["obligation"])
+    writes: list[ScheduleP] = []
+    for o in state.lineage[:-1]:
+        if effective.get(o.id) != o:
+            ended = state.ended[o.id]
+            writes.append(
+                latest.model_copy(
+                    update={
+                        "obligation": o,
+                        "consumed_by": ended.consumed_by,
+                        "basis": ended.basis,
+                        "reason": ended.reason,
+                        "hold_reason": None,
+                    }
+                )
+            )
+    alive = {o.id for o in state.lineage}
+    stated = [Ref(**b) for b in basis]
+    writes += [
+        latest.model_copy(
             update={
-                "basis": [Ref(**assessment)],
-                "need": "repair",
-                "reason": "supported error on a focused check",
+                "obligation": o.model_copy(update={"status": "invalidated", "successor_id": None}),
+                "consumed_by": None,
+                "basis": stated,
+                "reason": INVALIDATED,
                 "hold_reason": None,
             }
         )
+        for oid, o in effective.items()
+        if oid not in alive and o.status != "invalidated"
     ]
-
-
-def _transition(
-    schedule: ScheduleP,
-    result: JSON,
-    attempt: JSON,
-    assessment: JSON,
-    answered_at: str | None,
-) -> list[ScheduleP]:
-    label = result["label"]
-    common: dict[str, Any] = {"basis": [Ref(**assessment)], "hold_reason": None}
-    due = utc(parse_utc(answered_at) + FIRST_CHECK) if answered_at else None
-    if label in ("independent", "helped") and due is None:
-        return [
-            schedule.model_copy(
-                update={
-                    **common,
-                    "need": "held",
-                    "due_at": None,
-                    "reason": f"{label} demonstration at an unknown time",
-                    "hold_reason": "answer time unknown; a later check needs a known start",
-                }
-            )
-        ]
-    if label == "independent" and schedule.obligation.kind == "initial":
-        successor = ObligationP(
-            id=new_id(), kind="later", origin=[Ref(**attempt)], status="open", successor_id=None
-        )
-        consumed = schedule.model_copy(
-            update={
-                **common,
-                "reason": "first independent demonstration",
-                "obligation": schedule.obligation.model_copy(
-                    update={"status": "consumed", "successor_id": successor.id}
-                ),
-                "consumed_by": Ref(**attempt),
-            }
-        )
-        return [
-            consumed,
-            consumed.model_copy(
-                update={
-                    "need": "independent_check",
-                    "due_at": due,
-                    "reason": "first later check 24 hours after the demonstration",
-                    "obligation": successor,
-                    "consumed_by": None,
-                }
-            ),
-        ]
-    if label in ("independent", "helped"):
-        return [
-            schedule.model_copy(
-                update={
-                    **common,
-                    "need": "independent_check",
-                    "due_at": due,
-                    "reason": "independent retrieval 24 hours after helped practice"
-                    if label == "helped"
-                    else "independent check 24 hours later",
-                }
-            )
-        ]
-    if label == "error":
-        return [
-            schedule.model_copy(update={**common, "need": "repair", "reason": "supported error"})
-        ]
-    outcomes = {o["outcome"] for o in result.get("observations", [])}
-    if outcomes == {"demonstrated"} and due is not None:  # shown; independence unknown
-        return [
-            schedule.model_copy(
-                update={
-                    **common,
-                    "need": "independent_check",
-                    "due_at": due,
-                    "reason": "independent check 24 hours after an answer whose help is unknown",
-                }
-            )
-        ]
-    need: Need = "clarify" if "cannot_judge" in outcomes else schedule.need
-    misread = any(
-        o["outcome"] == "error" and not evidence.supported_error(o)
-        for o in result.get("observations", [])
+    effects = list(state.effects.values())
+    current = latest.model_copy(
+        update={
+            "obligation": state.current,
+            "consumed_by": None,
+            "need": state.need,
+            "due_at": state.due_at,
+            "reason": state.reason,
+            "basis": state.basis,
+            "hold_reason": state.hold_reason,
+            "resolution_rule": content.AlgorithmP(**CORRECTION_RULE)
+            if correction or effects
+            else None,
+            "check_effects": effects,
+        }
     )
-    reason = "likely misread; not counted as a mistake" if misread else "evidence incomplete"
-    return [schedule.model_copy(update={**common, "need": need, "reason": reason})]
+    if writes or _decision(current) != _decision(latest):
+        writes.append(current)
+    last = record.ref
+    for revision in writes:
+        linked = revision.model_copy(update={"previous": Ref(**last)})
+        last = tx.put(
+            "schedule", linked.model_dump(), by=OWNER, id=record.id, base=last["revision"]
+        )
 
 
 # --- diagnosis and repair (everyday-learning-design.md section 5) ------------------------
@@ -647,10 +999,18 @@ def _concern_id(attempt: JSON) -> str | None:
 
 def _observations(results: dict[str, JSON]) -> list[JSON]:
     return [
-        {**o, "target_id": target_id}
+        {**o, "target_id": target_id, "target": result["target"]}
         for target_id, result in results.items()
         for o in result.get("observations", [])
     ]
+
+
+type Pair = tuple[str, int, str]
+"""One requirement of one exact goal revision: (target id, revision, requirement id)."""
+
+
+def _pairs(scope: list[ConcernScopeP]) -> set[Pair]:
+    return {(s.target.id, s.target.revision, r) for s in scope for r in s.requirement_ids}
 
 
 def _criteria(observations: list[JSON], outcomes: set[str]) -> set[str]:
@@ -706,24 +1066,22 @@ def _branch(concern: ConcernP, observations: list[JSON]) -> BranchP:
 
 
 def _scope(
-    observations: list[JSON],
-    targets: dict[str, JSON],
-    outcomes: set[str],
-    *,
-    exclude: set[tuple[str, str]],
+    observations: list[JSON], outcomes: set[str], *, exclude: set[Pair]
 ) -> list[ConcernScopeP]:
-    wanted: dict[str, set[str]] = {}
+    """Scope the exact goal requirements observed with these outcomes, minus ``exclude``."""
+    wanted: dict[tuple[str, int], tuple[JSON, set[str]]] = {}
     for o in observations:
         if o["outcome"] not in outcomes or (
             o["outcome"] == "error" and not evidence.supported_error(o)
         ):
             continue
-        wanted.setdefault(o["target_id"], set()).update(
-            r for r in o["requirement_ids"] if (o["target_id"], r) not in exclude
+        key = exact_key(o["target"])
+        wanted.setdefault(key, (o["target"], set()))[1].update(
+            r for r in o["requirement_ids"] if (*key, r) not in exclude
         )
     return [
-        ConcernScopeP(target=Ref(**targets[t]), requirement_ids=sorted(reqs))
-        for t, reqs in wanted.items()
+        ConcernScopeP(target=Ref(**target), requirement_ids=sorted(reqs))
+        for target, reqs in wanted.values()
         if reqs
     ]
 
@@ -738,13 +1096,12 @@ def _update_concerns(  # noqa: PLR0913 - the accepted assessment and its context
     question: JSON | None,
 ) -> None:
     observations = _observations(results)
-    targets = {t: r["target"] for t, r in results.items()}
-    handled: set[tuple[str, str]] = set()
+    handled: set[Pair] = set()
     bound = _concern_id(view)
     if bound:
         record = tx.require("concern", bound, by=OWNER)
         concern = ConcernP.model_validate(record.payload)
-        handled = {(s.target.id, r) for s in concern.scope for r in s.requirement_ids}
+        handled = _pairs(concern.scope)
         if view["purpose"] == "clarification":
             concern = _after_clarification(concern, observations, out, question)
         else:
@@ -752,7 +1109,7 @@ def _update_concerns(  # noqa: PLR0913 - the accepted assessment and its context
         concern = concern.model_copy(update={"basis": [*concern.basis, Ref(**assessment)]})
         tx.put("concern", concern.model_dump(), by=OWNER, id=record.id, base=record.revision)
         question = None
-    errors = _scope(observations, targets, {"error"}, exclude=handled)
+    errors = _scope(observations, {"error"}, exclude=handled)
     if errors:
         _open_concern(
             tx,
@@ -764,7 +1121,7 @@ def _update_concerns(  # noqa: PLR0913 - the accepted assessment and its context
             question=question,
         )
     elif question is not None:
-        unsure = _scope(observations, targets, {"not_shown", "cannot_judge"}, exclude=handled)
+        unsure = _scope(observations, {"not_shown", "cannot_judge"}, exclude=handled)
         _open_concern(
             tx,
             kind="uncertainty",
@@ -819,12 +1176,10 @@ def _open_concern(  # noqa: PLR0913 - one concern from one answer
         "question": _question(out, question),
         "resolution_reason": None,
     }
-    wanted = {(s.target.id, r) for s in scope for r in s.requirement_ids}
+    wanted = _pairs(scope)
     for record in tx.current("concern", by=OWNER):
         old = ConcernP.model_validate(record.payload)
-        if old.status in ("open", "paused") and wanted & {
-            (s.target.id, r) for s in old.scope for r in s.requirement_ids
-        }:
+        if old.status in ("open", "paused") and wanted & _pairs(old.scope):
             update |= {
                 "kind": "error" if "error" in (kind, old.kind) else kind,
                 "scope": _merge(old.scope, scope),
@@ -846,9 +1201,10 @@ def _open_concern(  # noqa: PLR0913 - one concern from one answer
 
 
 def _merge(*scopes: list[ConcernScopeP]) -> list[ConcernScopeP]:
-    merged: dict[str, tuple[Ref, set[str]]] = {}
+    merged: dict[tuple[str, int], tuple[Ref, set[str]]] = {}
     for s in (s for scope in scopes for s in scope):
-        merged.setdefault(s.target.id, (s.target, set()))[1].update(s.requirement_ids)
+        key = (s.target.id, s.target.revision)
+        merged.setdefault(key, (s.target, set()))[1].update(s.requirement_ids)
     return [ConcernScopeP(target=t, requirement_ids=sorted(r)) for t, r in merged.values()]
 
 
@@ -961,44 +1317,128 @@ def after_study(tx: Tx, *, study: JSON) -> None:
         )
     revised = concern.model_copy(update={"route": "verification", "cycles": cycles})
     tx.put("concern", revised.model_dump(), by=OWNER, id=record.id, base=record.revision)
-    due = utc(parse_utc(study["completed_at"]) + FIRST_CHECK)
-    for s in concern.scope:
-        existing = _schedule(tx, s.target.id)
-        if existing is None:
+    for s in study["scope"]:
+        recompute_schedule(tx, s["target"], basis=[study["ref"]])
+
+
+# --- corrected judgments (module design: "Accept a corrected assessment") -----------------
+
+CORRECTED_AWAY = "a corrected judgment no longer supports this; the work done on it is kept"
+SUPPORT: dict[str, set[str]] = {"error": {"error"}, "uncertainty": {"not_shown", "cannot_judge"}}
+
+
+def reconcile_correction(
+    tx: Tx,
+    *,
+    attempt: JSON,
+    assessment: JSON,
+    results: dict[str, JSON],
+    out: evidence.AssessmentOutput,
+) -> None:
+    """Recompute schedules, concerns and cycles once from the corrected judgment.
+
+    Schedules replay from admission in occurrence order. A concern citing the corrected
+    judgment keeps only the scope its effective evidence still supports (superseded when
+    none is left); a corrected fresh check re-derives its cycle. A newly supported error
+    outside every unresolved concern opens an ordinary error concern.
+    """
+    view = evidence.attempt_view(tx, attempt)
+    for result in results.values():
+        recompute_schedule(tx, result["target"], basis=[assessment], correction=True)
+    verified: JSON | None = view.get("verification_of")
+    bound = verified["concern"]["id"] if verified else None
+    for record in tx.current("concern", by=OWNER):
+        concern = ConcernP.model_validate(record.payload)
+        if not any(b.id == assessment["id"] for b in concern.basis):
             continue
-        schedule = ScheduleP.model_validate(existing.payload)
-        successor = ObligationP(
-            id=new_id(),
-            kind="later",
-            origin=[Ref(**study["ref"])],
-            status="open",
-            successor_id=None,
+        revised = (
+            _recheck_cycle(concern, _observations(results), view)
+            if record.id == bound
+            else _recheck_support(tx, concern)
         )
-        replaced = schedule.model_copy(
+        if revised != concern:  # an unchanged concern gets no new revision
+            revised = revised.model_copy(update={"basis": [*concern.basis, Ref(**assessment)]})
+            tx.put("concern", revised.model_dump(), by=OWNER, id=record.id, base=record.revision)
+    covered = {
+        pair
+        for record in tx.current("concern", by=OWNER)
+        if record.payload["status"] in ("open", "paused")
+        for pair in _pairs(ConcernP.model_validate(record.payload).scope)
+    }
+    errors = _scope(_observations(results), {"error"}, exclude=covered)
+    if errors:
+        _open_concern(
+            tx, kind="error", scope=errors, view=view, assessment=assessment, out=out, question=None
+        )
+
+
+def _recheck_support(tx: Tx, concern: ConcernP) -> ConcernP:
+    """Keep the scope that the concern's effective evidence still supports."""
+    if concern.status not in ("open", "paused"):
+        return concern
+    observed = evidence.observations_for(tx, {b.id for b in concern.basis})
+    supported = {
+        (*exact_key(o["target"]), r)
+        for o in observed
+        if o["outcome"] in SUPPORT[concern.kind]
+        and (o["outcome"] != "error" or evidence.supported_error(o))
+        for r in o["requirement_ids"]
+    }
+    scope = [
+        s.model_copy(
             update={
-                "basis": [Ref(**study["ref"])],
-                "previous": Ref(**existing.ref),
-                "reason": "replaced after teaching",
-                "obligation": schedule.obligation.model_copy(
-                    update={"status": "replaced", "successor_id": successor.id}
-                ),
-                "consumed_by": None,
-                "hold_reason": None,
+                "requirement_ids": [
+                    r for r in s.requirement_ids if (s.target.id, s.target.revision, r) in supported
+                ]
             }
         )
-        last = tx.put(
-            "schedule", replaced.model_dump(), by=OWNER, id=existing.id, base=existing.revision
+        for s in concern.scope
+    ]
+    scope = [s for s in scope if s.requirement_ids]
+    if not scope:
+        return concern.model_copy(
+            update={"status": "superseded", "resolution_reason": CORRECTED_AWAY}
         )
-        current = replaced.model_copy(
+    return concern.model_copy(update={"scope": scope})
+
+
+def _recheck_cycle(concern: ConcernP, observations: list[JSON], view: JSON) -> ConcernP:
+    """Re-derive the outcome of the repair cycle a corrected fresh check verified.
+
+    The latest cycle of an open or settled concern replays its settlement, which can
+    reopen it; a paused or superseded concern keeps its status (the learner's pause and
+    a changed goal stand), and only a recovery resolves it.
+    """
+    cycle_id = view["verification_of"]["cycle_id"]
+    latest = bool(concern.cycles) and concern.cycles[-1].id == cycle_id
+    if latest and concern.status in ("open", "resolved"):  # replay its settlement
+        reset = concern.model_copy(
             update={
-                "previous": Ref(**last),
-                "need": "independent_check",
-                "due_at": due,
-                "reason": "independent check 24 hours after completed teaching",
-                "obligation": successor,
+                "status": "open",
+                "route": "verification",
+                "resolution_reason": None,
+                "cycles": [
+                    c.model_copy(update={"outcome": "pending"}) if c.id == cycle_id else c
+                    for c in concern.cycles
+                ],
             }
         )
-        tx.put("schedule", current.model_dump(), by=OWNER, id=existing.id, base=last["revision"])
+        return _after_verification(reset, observations, view)
+    outcome = CYCLE_OUTCOME[
+        evidence.scope_outcome(observations, [s.model_dump() for s in concern.scope])
+    ]
+    cycles = [
+        c.model_copy(update={"outcome": outcome}) if c.id == cycle_id else c for c in concern.cycles
+    ]
+    if outcome == "recovered":
+        return concern.model_copy(
+            update={
+                "cycles": cycles,
+                "status": "resolved",
+                "resolution_reason": "recovered on a fresh check (a corrected judgment)",
+            }
+        )
+    return concern.model_copy(update={"cycles": cycles})
 
 
 def diagnostic_allowance(tx: Tx, session_id: str, concern_id: str) -> int:
@@ -1046,19 +1486,26 @@ def next_step(tx: Tx, session_id: str) -> JSON:
         return {"kind": "resume", "offer": reserved}
     session = session_view(tx, session_id)
     enrollment = tx.require("enrollment", session["enrollments"][0]["id"], by=OWNER)
-    goals = {t["id"] for t in enrollment.payload["goal_order"]}
+    goals = {
+        exact_key(t)
+        for t in enrollment.payload["goal_order"]
+        if content.target_hold(tx, t) is None  # a concern on held material waits
+    }
     open_ids = {
         r.id
         for r in tx.current("concern", by=OWNER)
         if r.payload["status"] == "open"
-        and {s["target"]["id"] for s in r.payload["scope"]} <= goals
+        and {exact_key(s["target"]) for s in r.payload["scope"]} <= goals
     }
     for study in evidence.studies(tx):
         if study["status"] == "started" and _concern_id(study) in open_ids:
             return {"kind": "study", "study": study["ref"]}
     for record in tx.current("concern", by=OWNER):
         concern = ConcernP.model_validate(record.payload)
-        if concern.status == "open" and {s.target.id for s in concern.scope} <= goals:
+        if (
+            concern.status == "open"
+            and {exact_key(s.target.model_dump()) for s in concern.scope} <= goals
+        ):
             step = _concern_step(tx, session_id, record)
             if step is not None:
                 return step
@@ -1095,15 +1542,15 @@ def _concern_step(tx: Tx, session_id: str, record: Record) -> JSON | None:
 # --- read views ----------------------------------------------------------------------
 
 
-def schedule_view(tx: Tx, target_id: str) -> JSON | None:
-    """Return a target's current schedule, if it was ever admitted."""
-    record = _schedule(tx, target_id)
+def schedule_view(tx: Tx, target: JSON) -> JSON | None:
+    """Return an exact goal revision's current schedule, if it was ever admitted."""
+    record = _schedule(tx, target)
     return record.view if record else None
 
 
-def schedule_history(tx: Tx, target_id: str) -> list[JSON]:
-    """Return every revision of a target's schedule, oldest first."""
-    record = _schedule(tx, target_id)
+def schedule_history(tx: Tx, target: JSON) -> list[JSON]:
+    """Return every revision of an exact goal revision's schedule, oldest first."""
+    record = _schedule(tx, target)
     if record is None:
         return []
     return [r.view for r in tx.history("schedule", record.id, by=OWNER)]
@@ -1119,6 +1566,19 @@ def pause_concern(tx: Tx, *, concern_id: str, base: int) -> JSON:
     record = tx.require("concern", concern_id, by=OWNER)
     paused = ConcernP.model_validate(record.payload).model_copy(update={"status": "paused"})
     return tx.put("concern", paused.model_dump(), by=OWNER, id=concern_id, base=base)
+
+
+def concern_ids_for(tx: Tx, attempt: JSON) -> list[str]:
+    """Return the concerns an answer's judgments touch, or that cover its targets."""
+    view = evidence.attempt_view(tx, attempt)
+    exercise = content.definition(tx, view["exercise"])
+    targets = {exact_key(t) for t in exercise["targets"]}
+    return [
+        r.id
+        for r in tx.current("concern", by=OWNER)
+        if r.payload["origin"]["id"] == attempt["id"]
+        or any(exact_key(s["target"]) in targets for s in r.payload["scope"])
+    ]
 
 
 def concern_for(tx: Tx, assessment_id: str) -> JSON | None:

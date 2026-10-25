@@ -189,7 +189,7 @@ def study_view(app, study_id):
 
 
 def schedule_history(app, target):
-    return app.store.read(lambda tx: practice.schedule_history(tx, target["id"]))
+    return app.store.read(lambda tx: practice.schedule_history(tx, target))
 
 
 def test_teaching_is_checked_and_saved_before_delivery_and_completion_is_explicit(make_app, clock):
@@ -309,7 +309,7 @@ def test_a_fresh_integrated_check_resolves_the_concern_without_moving_the_later_
     (concern,) = concerns(app)
     assert (concern["status"], concern["cycles"][0]["outcome"]) == ("resolved", "recovered")
     assert label(app, t2)["label"] == "independent"
-    due = app.store.read(lambda tx: practice.schedule_view(tx, t2["id"]))["due_at"]
+    due = app.store.read(lambda tx: practice.schedule_view(tx, t2))["due_at"]
     assert due == "2026-10-25T10:00:00.000Z"  # 24 h after the completed teaching, unchanged
     assert step(app, session)["kind"] == "none"
 

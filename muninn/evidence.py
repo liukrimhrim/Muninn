@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from pydantic import BaseModel, ConfigDict
 
 from muninn import content
-from muninn.library import JSON, ModelRequest, Record, validate_payloads
+from muninn.library import JSON, ModelRequest, Record, exact_key, validate_payloads
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping
@@ -335,6 +335,77 @@ def assessment_request(
     )
 
 
+REASSESS_PROTOCOL: JSON = {"name": "reassess-answer", "version": 1, "parameters": {}}
+
+REASSESS_SYSTEM = (
+    ASSESS_SYSTEM
+    + """
+This is a review of an earlier judgment the learner questioned. Their reason is a claim \
+to check, not evidence: judge the same answer afresh against the same rubric and help, \
+and change a criterion only where the answer itself supports it. Keep a judgment that \
+was right, and say so in the explanation. Do not propose a question (leave it null).
+"""
+)
+NOT_DISPUTABLE = "a clarification answer only chooses help; pause it instead of disputing it"
+
+
+def disputable(attempt: JSON) -> bool:
+    """Tell whether an answer's judgment can be disputed: one whose judgment sets labels.
+
+    A clarification answer never sets a label (it only chose help), so it is not.
+    """
+    return bool(attempt["purpose"] != "clarification")
+
+
+def misread_criteria(assessment: JSON) -> set[str]:
+    """Return the criteria an accepted judgment reads as a supported misread of the task."""
+    if assessment["interpretation"] != "supported_misread":
+        return set()
+    return set(assessment["interpretation_criteria"])
+
+
+def _judged(tx: Tx, assessment: JSON) -> tuple[JSON, JSON, JSON]:
+    """Return an exact judgment with the answer and the exercise revision it judged."""
+    judgment = assessment_view(tx, assessment)
+    attempt = attempt_view(tx, judgment["attempt"])
+    return judgment, attempt, content.definition(tx, attempt["exercise"])
+
+
+def reassessment_request(tx: Tx, assessment: JSON, reason: str) -> ModelRequest:
+    """Prepare the review of an accepted judgment: the original task, help and answer.
+
+    It uses the original prompt, rubric, recorded help and response, the earlier
+    judgment and the learner's reason; nothing about later practice.
+    """
+    earlier, attempt, exercise = _judged(tx, assessment)
+    original = assessment_request(
+        exercise=exercise,
+        response=attempt["response"],
+        assistance=attempt["assistance"],
+        immediate=True,
+    )
+    judged = "\n".join(
+        f"{r['criterion_id']}: {r['outcome']} — {r['reason']}" for r in earlier["results"]
+    )
+    user = (
+        f"{original.user}\n<earlier_judgment>\n{judged}\n"
+        f"Interpretation: {earlier['interpretation']}\n</earlier_judgment>\n"
+        f"<learner_disputes_it>\n{reason}\n</learner_disputes_it>"
+    )
+    return ModelRequest(
+        protocol=REASSESS_PROTOCOL, system=REASSESS_SYSTEM, user=user, output=AssessmentOutput
+    )
+
+
+def check_reassessment(tx: Tx, assessment: JSON, out: AssessmentOutput) -> list[str]:
+    """Return every reason to refuse a reviewed judgment of an accepted assessment."""
+    _earlier, attempt, exercise = _judged(tx, assessment)
+    errors = check_assessment(out, [c["id"] for c in exercise["criteria"]], attempt["response"])
+    if out.question is not None:
+        errors.append("a review of a judgment does not ask a question")
+    return errors
+
+
 def check_assessment(out: AssessmentOutput, criterion_ids: list[str], response: str) -> list[str]:
     """Return every deterministic reason to refuse an assessor's output."""
     errors: list[str] = []
@@ -429,6 +500,17 @@ def project(
     ``misread`` holds errors the assessment supports as a misread of the task.
     """
     outcomes = {o.criterion_key: o.outcome for o in out.observations}
+    return _project(exercise, outcomes, assisted=assisted, unconfirmed=unconfirmed, misread=misread)
+
+
+def _project(
+    exercise: JSON,
+    outcomes: Mapping[str, str],
+    *,
+    assisted: set[str],
+    unconfirmed: set[str],
+    misread: Collection[str],
+) -> dict[str, list[JSON]]:
     by_target: dict[str, list[JSON]] = {}
     for criterion in exercise["criteria"]:
         cid = criterion["id"]
@@ -679,6 +761,98 @@ def _help_status(tx: Tx, attempt: JSON) -> tuple[set[str], set[str]]:
     return assisted, unconfirmed
 
 
+def _results(out: AssessmentOutput, response: str) -> list[CriterionResultP]:
+    response_bytes = response.encode()
+    return [
+        CriterionResultP(
+            criterion_id=o.criterion_key,
+            outcome=o.outcome,
+            response_quotes=[
+                QuoteP(
+                    start_utf8_byte=(start := response_bytes.index(q.encode())),
+                    end_utf8_byte=start + len(q.encode()),
+                    quote=q,
+                )
+                for q in o.quotes
+            ],
+            reason=o.reason,
+        )
+        for o in out.observations
+    ]
+
+
+def _interpretation(out: AssessmentOutput) -> JSON:
+    misread = out.misread_criterion_keys
+    unresolved = [o.criterion_key for o in out.observations if o.outcome == "cannot_judge"]
+    return {
+        "interpretation": "supported_misread"
+        if misread
+        else ("unresolved" if unresolved else "ordinary"),
+        "interpretation_criteria": misread or unresolved,
+    }
+
+
+def revise_assessment(  # noqa: PLR0913 - the reviewed output and its provenance
+    tx: Tx,
+    *,
+    assessment: JSON,
+    out: AssessmentOutput,
+    assessor: JSON,
+    raw_response: str,
+    reason: str,
+) -> JSON:
+    """Append a corrected judgment under the same assessment and the same raw answer.
+
+    ``assessment`` must still be the current revision; the new one supersedes it.
+    Projections of the covered targets are rebuilt from the effective judgments.
+    Returns the new revision and this answer's corrected labels per target.
+    """
+    errors = check_reassessment(tx, assessment, out)
+    if errors:
+        raise ValueError("; ".join(errors))
+    earlier = AssessmentP.model_validate(tx.at(assessment, by=OWNER).payload)
+    attempt = attempt_view(tx, earlier.attempt.model_dump())
+    revised = earlier.model_copy(
+        update={
+            "assessor": AssessorP(**assessor),
+            "results": _results(out, attempt["response"]),
+            **_interpretation(out),
+            "interpretation_basis": [content.RefP(**assessment)],
+            "explanation": out.explanation,
+            "raw_response": raw_response,
+            "supersedes": content.RefP(**assessment),
+            "revision_reason": reason,
+        }
+    )
+    new = tx.put(
+        "assessment",
+        revised.model_dump(),
+        by=OWNER,
+        id=assessment["id"],
+        base=assessment["revision"],
+    )
+    exercise = content.definition(tx, attempt["exercise"])
+    return {"assessment": new, "labels": _reproject(tx, exercise, new)}
+
+
+def assessment_history(tx: Tx, attempt_id: str) -> list[JSON]:
+    """Return every revision of an answer's judgment, oldest first (corrections kept)."""
+    current = assessment_for(tx, attempt_id)
+    if current is None:
+        return []
+    return [r.view for r in tx.history("assessment", current["ref"]["id"], by=OWNER)]
+
+
+def observations_for(tx: Tx, assessment_ids: set[str]) -> list[JSON]:
+    """Return the effective observations of these assessments, with their target ids."""
+    return [
+        {**o, "target_id": r.payload["target"]["id"], "target": r.payload["target"]}
+        for r in tx.current("projection", by=OWNER)
+        for o in r.payload["observations"]
+        if o["assessment"]["id"] in assessment_ids
+    ]
+
+
 def accept_assessment(
     tx: Tx, *, attempt: JSON, out: AssessmentOutput, assessor: JSON, raw_response: str
 ) -> JSON:
@@ -698,35 +872,13 @@ def accept_assessment(
     errors = check_assessment(out, [c["id"] for c in exercise["criteria"]], view["response"])
     if errors:
         raise ValueError("; ".join(errors))
-    response_bytes = view["response"].encode()
-    results = [
-        CriterionResultP(
-            criterion_id=o.criterion_key,
-            outcome=o.outcome,
-            response_quotes=[
-                QuoteP(
-                    start_utf8_byte=(start := response_bytes.index(q.encode())),
-                    end_utf8_byte=start + len(q.encode()),
-                    quote=q,
-                )
-                for q in o.quotes
-            ],
-            reason=o.reason,
-        )
-        for o in out.observations
-    ]
-    unresolved = [o.criterion_key for o in out.observations if o.outcome == "cannot_judge"]
-    misread = out.misread_criterion_keys
     assessment = tx.put(
         "assessment",
         AssessmentP(
             attempt=content.RefP(**attempt),
             assessor=AssessorP(**assessor),
-            results=results,
-            interpretation="supported_misread"
-            if misread
-            else ("unresolved" if unresolved else "ordinary"),
-            interpretation_criteria=misread or unresolved,
+            results=_results(out, view["response"]),
+            **_interpretation(out),
             interpretation_basis=[],
             explanation=out.explanation,
             raw_response=raw_response,
@@ -735,59 +887,150 @@ def accept_assessment(
         ).model_dump(),
         by=OWNER,
     )
-    assisted, unconfirmed = _help_status(tx, view)
+    return {"assessment": assessment, "labels": _reproject(tx, exercise, assessment)}
+
+
+def _reproject(tx: Tx, exercise: JSON, assessment: JSON) -> dict[str, JSON]:
+    """Rebuild each covered target's projection; return this assessment's labels."""
     labels: dict[str, JSON] = {}
-    for target_id, observations in project(
-        exercise, out, assisted=assisted, unconfirmed=unconfirmed, misread=set(misread)
-    ).items():
-        target = next(t for t in exercise["targets"] if t["id"] == target_id)
+    for target in exercise["targets"]:
+        rebuild_projection(tx, target)
+        observations = [
+            {k: v for k, v in o.items() if k not in ("assessment", "attempt")}
+            for o in _projection_observations(tx, target)
+            if o["assessment"] == assessment
+        ]
         definition = content.definition(tx, target)
-        _append_projection(tx, target, assessment, attempt, observations)
         q = qualify([r["id"] for r in definition["evidence_requirements"]], observations)
-        labels[target_id] = {
+        labels[target["id"]] = {
             "target": target,
             "label": q.label,
             "reasons": q.reasons,
             "observations": observations,
         }
-    return {"assessment": assessment, "labels": labels}
+    return labels
 
 
-def _append_projection(
-    tx: Tx, target: JSON, assessment: JSON, attempt: JSON, observations: list[JSON]
-) -> None:
-    existing = next(
+def _projection_observations(tx: Tx, target: JSON) -> list[JSON]:
+    projection = _projection(tx, target)
+    return list(projection.payload["observations"]) if projection else []
+
+
+def _covers(exercise: JSON, target: JSON) -> bool:
+    return any(exact_key(t) == exact_key(target) for t in exercise["targets"])
+
+
+def rebuild_projection(tx: Tx, target: JSON) -> None:
+    """Rebuild one exact target's projection from the effective assessments.
+
+    The one ordering rule (lifecycle section 4): answers in occurrence order, by
+    submission time and then by the commit sequence of the submission, never by when
+    their grades arrived. Each assessment counts in its current revision only, so a
+    corrected judgment replaces the old one instead of adding to it. Writes nothing
+    when the result is unchanged.
+    """
+    # ponytail: scans every assessment per rebuild; index by target when libraries grow.
+    rows: list[tuple[tuple[str, int], JSON, list[ObservationP]]] = []
+    for record in tx.current("assessment", by=OWNER):
+        attempt = tx.at(record.payload["attempt"], by=OWNER)
+        exercise = content.definition(tx, attempt.payload["exercise"])
+        if not _covers(exercise, target):
+            continue
+        results = record.payload["results"]
+        assisted, unconfirmed = _help_status(tx, attempt.view)
+        projected = _project(
+            exercise,
+            {r["criterion_id"]: r["outcome"] for r in results},
+            assisted=assisted,
+            unconfirmed=unconfirmed,
+            misread=misread_criteria(record.payload),
+        )[target["id"]]
+        observed = [
+            ObservationP(
+                assessment=content.RefP(**record.ref), attempt=content.RefP(**attempt.ref), **o
+            )
+            for o in projected
+        ]
+        rows.append(
+            ((attempt.payload["submitted_at"] or "", attempt.sequence), record.ref, observed)
+        )
+    rows.sort(key=lambda row: row[0])
+    basis = [content.RefP(**r[1]) for r in rows]
+    observations = [o for r in rows for o in r[2]]
+    existing = _projection(tx, target)
+    if existing is not None:
+        old = ProjectionP.model_validate(existing.payload)
+        if (old.basis, old.observations) == (basis, observations):
+            return
+        new = old.model_copy(update={"basis": basis, "observations": observations, "as_of": tx.now})
+        tx.put("projection", new.model_dump(), by=OWNER, id=existing.id, base=existing.revision)
+        return
+    payload = ProjectionP(
+        target=content.RefP(**target),
+        rule=content.AlgorithmP(**QUALIFICATION),
+        basis=basis,
+        as_of=tx.now,
+        observations=observations,
+        hypotheses=[],
+    )
+    tx.put("projection", payload.model_dump(), by=OWNER)
+
+
+def chronology(tx: Tx, target: JSON) -> list[JSON]:
+    """Return the answers and completed teaching about one exact target, in occurrence order.
+
+    An assessed answer carries its effective assessment and qualified label; one still
+    waiting for its assessment has ``label: None``. Order is occurrence time, then commit
+    sequence. Practice applies scheduling effects in exactly this order (module design:
+    Evidence owns the order).
+    """
+    # ponytail: scans every attempt and study per target, like ``rebuild_projection``.
+    requirement_ids = [r["id"] for r in content.definition(tx, target)["evidence_requirements"]]
+    grouped: dict[str, JSON] = {}
+    for o in _projection_observations(tx, target):
+        grouped.setdefault(
+            o["attempt"]["id"],
+            {"attempt": o["attempt"], "assessment": o["assessment"], "observations": []},
+        )["observations"].append(o)
+    answers: list[JSON] = []
+    for record in tx.current("attempt", by=OWNER):
+        if record.payload["status"] != "submitted":
+            continue
+        entry: JSON
+        if record.id in grouped:
+            entry = grouped[record.id]
+            entry["label"] = qualify(requirement_ids, entry["observations"]).label
+        elif _covers(content.definition(tx, record.payload["exercise"]), target):
+            entry = {"attempt": record.ref, "assessment": None, "observations": [], "label": None}
+        else:
+            continue
+        answers.append(
+            {
+                **entry,
+                "kind": "answer",
+                "at": record.payload["submitted_at"],
+                "sequence": record.sequence,
+            }
+        )
+    studied = [
+        {"kind": "study", "study": r.ref, "at": r.payload["completed_at"], "sequence": r.sequence}
+        for r in tx.current("study", by=OWNER)
+        if r.payload["status"] == "completed"
+        and any(exact_key(s["target"]) == exact_key(target) for s in r.payload["scope"])
+    ]
+    return sorted([*answers, *studied], key=lambda e: (e["at"] or "", e["sequence"]))
+
+
+def _projection(tx: Tx, target: JSON) -> Record | None:
+    """Return the projection of one exact target revision (each contract has its own)."""
+    return next(
         (
             r
             for r in tx.current("projection", by=OWNER)
-            if r.payload["target"]["id"] == target["id"]
+            if exact_key(r.payload["target"]) == exact_key(target)
         ),
         None,
     )
-    new = [
-        ObservationP(assessment=content.RefP(**assessment), attempt=content.RefP(**attempt), **o)
-        for o in observations
-    ]
-    if existing is None:
-        payload = ProjectionP(
-            target=content.RefP(**target),
-            rule=content.AlgorithmP(**QUALIFICATION),
-            basis=[content.RefP(**assessment)],
-            as_of=tx.now,
-            observations=new,
-            hypotheses=[],
-        )
-        tx.put("projection", payload.model_dump(), by=OWNER)
-        return
-    old = ProjectionP.model_validate(existing.payload)
-    payload = old.model_copy(
-        update={
-            "basis": [*old.basis, content.RefP(**assessment)],
-            "as_of": tx.now,
-            "observations": [*old.observations, *new],
-        }
-    )
-    tx.put("projection", payload.model_dump(), by=OWNER, id=existing.id, base=existing.revision)
 
 
 def start_study(tx: Tx, *, session: JSON, teaching: JSON, concern: JSON | None) -> JSON:
@@ -936,14 +1179,7 @@ def target_evidence(tx: Tx, target: JSON, *, attempt_ids: set[str] | None = None
     question cues its answer. With ``attempt_ids`` only those answers count, so an old
     summary keeps its own result.
     """
-    projection = next(
-        (
-            r
-            for r in tx.current("projection", by=OWNER)
-            if r.payload["target"]["id"] == target["id"]
-        ),
-        None,
-    )
+    projection = _projection(tx, target)
     observations: list[JSON] = projection.payload["observations"] if projection else []
     clarification_ids = {
         r.id for r in tx.current("attempt", by=OWNER) if r.payload["purpose"] == "clarification"
@@ -962,9 +1198,8 @@ def target_evidence(tx: Tx, target: JSON, *, attempt_ids: set[str] | None = None
             if usable(o) or rid not in latest or not usable(latest[rid]):
                 latest[rid] = o
     current = list({id(o): o for o in latest.values()}.values())
-    definition = content.current_definition(tx, "target", target["id"])
-    requirement_ids = [r["id"] for r in definition["evidence_requirements"]] if definition else []
-    q = qualify(requirement_ids, current)
+    definition = content.definition(tx, target)
+    q = qualify([r["id"] for r in definition["evidence_requirements"]], current)
     if q.label in ("independent", "helped") and len({o["attempt"]["id"] for o in current}) > 1:
         q = Qualified("unresolved", ["shown in parts across answers; one whole check is still due"])
     return {"label": q.label, "reasons": q.reasons, "observations": current}

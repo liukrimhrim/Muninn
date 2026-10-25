@@ -35,13 +35,14 @@ const PURPOSE = {
   verification: "A fresh version of the task, to check what you just worked through. Answer in your own words.",
 };
 const capital = (s) => (s ? s[0].toUpperCase() + s.slice(1) : "");
+const sentence = (s) => (/[.!?]$/.test(s) ? s : `${s}.`);
 
 // What a learning concern means for the learner right now (server state, plain words).
 function concernNote(c) {
   if (!c) return "";
   const causes = c.hypotheses.map((h) => h.practice);
   const focus = c.hypotheses.find((h) => h.key === c.focus);
-  if (c.status === "resolved") return `${capital(c.resolution_reason)}.`;
+  if (c.status === "resolved" || c.status === "superseded") return `${capital(c.resolution_reason)}.`;
   if (c.status === "paused") {
     if (c.still_uncertain) {
       return c.kind === "uncertainty"
@@ -173,6 +174,10 @@ async function route() {
   const [, page, id, sub] = location.hash.split("/");
   try {
     if (page === "c") await outlinePage(id);
+    else if (page === "t") await historyPage(id);
+    else if (page === "r") await proposalsPage(id);
+    else if (page === "d") await disputePage(id);
+    else if (page === "rv") await reviewPage(id);
     else if (page === "s" && sub === "summary") await summaryPage(id);
     else if (page === "s" && sub === "next") await nextStep(id);
     else if (page === "s") await practicePage(id);
@@ -193,6 +198,11 @@ function libraryLists(home) {
   const drafting = home.drafting.map((d) => {
     const op = d.operation;
     const live = op.status === "pending" || op.status === "running";
+    if (op.status === "succeeded" && op.acceptance === "pending") {
+      return `<div class="card"><strong>${esc(d.source)}</strong>
+        <div class="status">The outline is ready. Some of its claims match or contradict claims you already have.</div>
+        <a href="#/r/${esc(op.id)}">Review them before accepting the outline</a></div>`;
+    }
     const state = live ? "Drafting your outline…" : op.acceptance === "rejected"
       ? `The draft did not pass its checks: ${op.reason}` : `Drafting stopped: ${op.reason}`;
     return `<div class="card"><strong>${esc(d.source)}</strong><div class="status">${esc(state)}</div>
@@ -293,16 +303,28 @@ async function outlinePage(id) {
   const o = await api(`/curricula/${id}`);
   const c = o.curriculum;
   const byId = Object.fromEntries(o.targets.map((t) => [t.ref.id, t]));
+  const claims = Object.fromEntries(o.targets.flatMap((t) => t.knowledge.map((k) => [k.ref.id, k])));
+  const claimLine = (k) => `<div class="claim">
+      <p><span class="tag">${esc(k.form)}</span>${k.status === "disputed" ? tag("error", "flagged") : ""}${esc(k.statement)}
+        <span class="muted small">(${esc(k.scope)})</span></p>
+      ${k.quotes.map((q) => `<blockquote>${esc(q)}</blockquote>`).join("")}
+      ${k.dispute ? `<p class="small error-text">Flagged: ${esc(k.dispute.reason)}</p>` : ""}
+      <div class="row">${k.status === "disputed"
+        ? `<button type="button" class="secondary" data-correct="${esc(k.ref.id)}">Correct it</button>
+           <button type="button" class="secondary" data-keep="${esc(k.ref.id)}">Keep it as it is</button>`
+        : `<button type="button" class="secondary" data-flag="${esc(k.ref.id)}">This material is wrong</button>`}</div></div>`;
   const targetCard = (t) => `<div class="card">
       <div>${tag(t.evidence.label, LABEL[t.evidence.label])} <strong>${esc(t.action)}</strong></div>
       <div class="small muted">${esc(t.mode.replace("_", " "))}${t.conditions.length ? ` · ${esc(t.conditions.join("; "))}` : ""}
         · ${esc(t.state)}${t.schedule ? ` · ${esc(NEED[t.schedule.need])}${t.schedule.due_at ? `, due ${esc(fmtTime(t.schedule.due_at))}` : ""}` : ""}</div>
-      ${o.without_exercise.includes(t.ref.id) ? '<div class="small error-text">No exercise can check this yet.</div>' : ""}
+      ${t.hold ? `<div class="small error-text">On hold: ${esc(sentence(t.hold))}${t.schedule ? " Its evidence and due check are kept." : ""}</div>`
+        : o.without_exercise.includes(t.ref.id) ? '<div class="small error-text">No exercise can check this yet.</div>' : ""}
       <details><summary class="small">What this rests on</summary>
-        ${t.knowledge.map((k) => `<p><span class="tag">${esc(k.form)}</span>${esc(k.statement)} <span class="muted small">(${esc(k.scope)})</span></p>
-          ${k.quotes.map((q) => `<blockquote>${esc(q)}</blockquote>`).join("")}`).join("")}
+        ${t.knowledge.map(claimLine).join("")}
         <p class="small muted">An answer should show: ${t.requirements.map((r) => esc(r.statement)).join("; ")}</p>
-      </details></div>`;
+      </details>
+      <div class="row"><a class="small" href="#/t/${esc(t.ref.id)}">History and judgments</a>
+        <button type="button" class="secondary" data-goal="${esc(t.ref.id)}">Edit this goal</button></div></div>`;
   const counts = o.counts;
   view.innerHTML = `
     <p><a href="#/">← Library</a></p>
@@ -318,7 +340,10 @@ async function outlinePage(id) {
       Time on this curriculum, including preparation: ${esc(fmtMs(o.effort.total_ms))}</p>
     ${c.sections.map((s) => `<h2>${esc(s.title)}</h2>${s.target_ids.map((t) => targetCard(byId[t])).join("")}`).join("")}
     <h2>Exercises</h2>
-    ${o.exercises.map((e) => `<div class="card">${esc(e.prompt)}<div class="small muted">checked by the outline preview (${esc(e.review)})</div></div>`).join("")}
+    ${o.exercises.map((e) => `<div class="card">${esc(e.prompt)}<div class="small muted">${e.reviewer === "learner-review"
+      ? "you confirmed it checks the edited goal" : `checked by the outline preview (${esc(e.review)})`}</div>
+      ${e.hold ? `<div class="small error-text">On hold: ${esc(sentence(e.hold))}</div>
+        ${e.rebindable ? `<div class="row"><button type="button" class="secondary" data-rebind="${esc(e.ref.id)}" data-base="${e.ref.revision}">It still checks the edited goal</button></div>` : ""}` : ""}</div>`).join("")}
     ${c.omitted.length ? `<details><summary>Left out of the outline</summary><ul>${c.omitted.map((m) => `<li>${esc(m.detail)} — ${esc(m.reason)}</li>`).join("")}</ul></details>` : ""}
     <details><summary>Source text</summary><div class="card small" style="white-space:pre-wrap">${esc(o.source.text)}</div></details>`;
   timer.set(counts.active ? "progress_inspection" : "authoring", { enrollment: o.enrollment, context: [c.ref] });
@@ -327,6 +352,260 @@ async function outlinePage(id) {
     location.hash = `#/s/${session.id}`;
   });
   document.getElementById("edit").addEventListener("click", () => editOutline(o));
+  view.querySelectorAll("[data-goal]").forEach((b) => b.addEventListener("click", () => editGoal(o, byId[b.dataset.goal])));
+  view.querySelectorAll("[data-flag]").forEach((b) => b.addEventListener("click", () => flagClaim(o, claims[b.dataset.flag])));
+  view.querySelectorAll("[data-correct]").forEach((b) => b.addEventListener("click", () => correctClaim(o, claims[b.dataset.correct])));
+  view.querySelectorAll("[data-keep]").forEach((b) => b.addEventListener("click", async () => {
+    const k = claims[b.dataset.keep];
+    if (!confirm("Keep this claim as it is? What rests on it can be practised again.")) return;
+    await api(`/knowledge/${k.ref.id}/revise`, { base: k.ref.revision, statement: k.statement, scope: k.scope, reason: "checked: kept as it is" });
+    route();
+  }));
+  view.querySelectorAll("[data-rebind]").forEach((b) => b.addEventListener("click", async () => {
+    if (!confirm("Does this exercise, as written, still check the edited goal? Earlier answers stay with the version they answered.")) return;
+    await api(`/exercises/${b.dataset.rebind}/rebind`, { base: Number(b.dataset.base) });
+    route();
+  }));
+}
+
+// --- changing what is learned ----------------------------------------------------------
+
+function changeForm(o, title, intro, fields, submit) {
+  view.innerHTML = `<p><a href="#/c/${esc(o.curriculum.ref.id)}">← Outline</a></p><h1>${esc(title)}</h1>
+    <p class="muted">${esc(intro)}</p>
+    <form id="change" class="card">${fields}
+      <label for="reason">Why</label><input id="reason" type="text" required>
+      <div class="row"><button type="submit">Save</button><span class="status" id="change-status"></span></div>
+    </form>`;
+  timer.set("authoring", { enrollment: o.enrollment, context: [o.curriculum.ref] });
+  document.getElementById("change").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      await submit(document.getElementById("reason").value);
+      go(`#/c/${o.curriculum.ref.id}`);
+    } catch (e) {
+      document.getElementById("change-status").innerHTML = `<span class="error-text">${esc(e.message)}</span>`;
+    }
+  });
+}
+
+const MODES = ["recognition", "recall", "explain", "reconstruct", "select", "describe_procedure", "execute"];
+
+function editGoal(o, t) {
+  changeForm(o, "Edit this goal",
+    "This makes a new version of the goal. Its earlier evidence and due check stay with the old version, and exercises written for it wait for your review.",
+    `<label for="g-action">What you want to be able to do</label><input id="g-action" type="text" value="${esc(t.action)}" required>
+     <label for="g-mode">Kind of performance</label><select id="g-mode">${MODES.map((m) => `<option ${m === t.mode ? "selected" : ""}>${m}</option>`).join("")}</select>
+     <label for="g-conditions">Conditions (one per line)</label><textarea id="g-conditions">${esc(t.conditions.join("\n"))}</textarea>
+     ${t.requirements.map((r, i) => `<label for="g-r${i}">An answer should show (${i + 1})</label><input id="g-r${i}" type="text" value="${esc(r.statement)}">`).join("")}`,
+    (reason) => api(`/targets/${t.ref.id}/revise`, {
+      base: t.ref.revision,
+      action: document.getElementById("g-action").value,
+      mode: document.getElementById("g-mode").value,
+      conditions: document.getElementById("g-conditions").value.split("\n"),
+      requirements: t.requirements.map((r, i) => ({ id: r.id, statement: document.getElementById(`g-r${i}`).value })),
+      reason,
+    }));
+}
+
+function flagClaim(o, k) {
+  changeForm(o, "This material is wrong",
+    `“${k.statement}” will be flagged. Goals and exercises resting on it wait until you correct it or keep it; everything else continues.`,
+    "", (reason) => api(`/knowledge/${k.ref.id}/flag`, { base: k.ref.revision, reason }));
+}
+
+function correctClaim(o, k) {
+  changeForm(o, "Correct this claim",
+    "A corrected claim changes the goals that rest on it: they get new versions, and earlier evidence stays with the old ones.",
+    `${k.dispute ? `<p class="small error-text">Flagged: ${esc(k.dispute.reason)}</p>` : ""}
+     <label for="k-statement">Claim</label><textarea id="k-statement">${esc(k.statement)}</textarea>
+     <label for="k-scope">Scope</label><input id="k-scope" type="text" value="${esc(k.scope)}">`,
+    (reason) => api(`/knowledge/${k.ref.id}/revise`, {
+      base: k.ref.revision,
+      statement: document.getElementById("k-statement").value,
+      scope: document.getElementById("k-scope").value,
+      reason,
+    }));
+}
+
+// --- history: old definitions, every judgment and its corrections ------------------------
+
+const judgmentCard = (j) => `<div class="small">
+    ${j.results.map((r) => `<div>${tag(r.outcome, OUTCOME[r.outcome])} ${esc(r.requirement)} <span class="muted">— ${esc(r.reason)}</span></div>`).join("")}
+    <div class="muted">${j.interpretation === "supported_misread" ? "Read as a misread of the task. " : ""}Judged by ${esc(j.assessor)}${j.revision_reason ? ` · corrected after: “${esc(j.revision_reason)}”` : ""}</div></div>`;
+
+function reviewLink(review) {
+  if (!review) return "";
+  if (["pending", "running"].includes(review.status)) return `<a class="small" href="#/rv/${esc(review.id)}">A review of this judgment is running</a>`;
+  if (review.status === "succeeded" && review.acceptance === "pending") return `<a class="small" href="#/rv/${esc(review.id)}">The review is ready for your decision</a>`;
+  return "";
+}
+
+async function historyPage(targetId) {
+  const h = await api(`/targets/${targetId}/history`);
+  const revisions = [...h.revisions].reverse();
+  view.innerHTML = `<p><button type="button" class="secondary" id="back">← Back</button></p>
+    <h1>${esc(h.revisions.at(-1).action)}</h1>
+    <p class="muted small">Every version of this goal keeps its own answers, judgments and due checks. Answers are folded away; opening one shows what you wrote and how it was judged.</p>
+    ${revisions.map((r) => `<div class="card">
+      <div><strong>Version ${r.ref.revision}</strong> ${r.current ? tag("independent", "current") : tag("untested", "replaced")}
+        ${tag(r.evidence.label, LABEL[r.evidence.label])}</div>
+      <div>${esc(r.action)}</div>
+      <div class="small muted">${esc(r.mode.replace("_", " "))}${r.conditions.length ? ` · ${esc(r.conditions.join("; "))}` : ""}</div>
+      <div class="small muted">An answer should show: ${r.requirements.map((q) => esc(q.statement)).join("; ")}</div>
+      ${r.mapping ? `<div class="small">Changed from the previous version: ${esc(r.mapping.reason)}</div>` : ""}
+      ${r.hold && r.current ? `<div class="small error-text">On hold: ${esc(r.hold)}</div>` : ""}
+      ${r.answers.map((a) => {
+        const current = a.judgments.at(-1);
+        const earlier = a.judgments.slice(0, -1);
+        return `<div class="card small">
+          <div>${esc(fmtTime(a.submitted_at))} · ${a.label ? tag(a.label, LABEL[a.label]) : "not graded yet"} ${esc(a.prompt)}</div>
+          <details><summary>Answer and judgment</summary><blockquote>${esc(a.response)}</blockquote>
+            ${current ? judgmentCard(current) : ""}
+            ${earlier.length ? `<details><summary>Earlier judgment${earlier.length > 1 ? "s" : ""} (kept)</summary>${earlier.map(judgmentCard).join("<hr>")}</details>` : ""}
+          </details>
+          <div class="row">${a.disputable
+            ? `<a href="#/d/${esc(a.attempt.id)}">This judgment is wrong</a>` : ""} ${reviewLink(a.review)}</div></div>`;
+      }).join("")}
+      ${r.schedule.length ? `<details><summary class="small">Check decisions</summary><ul class="small">${r.schedule.map((s) => `<li>${s.obligation.status === "open"
+        ? `${esc(NEED[s.need])}${s.due_at ? `, due ${esc(fmtTime(s.due_at))}` : ""}`
+        : `${s.obligation.kind === "initial" ? "First" : "Later"} check ${esc(DISPOSITION[s.obligation.status])}`}: ${esc(s.reason)}
+        ${s.resolution_rule ? " (recomputed after a correction)" : ""}</li>`).join("")}</ul></details>` : ""}
+    </div>`).join("")}`;
+  timer.set("progress_inspection", { context: [] });
+  document.getElementById("back").addEventListener("click", () => history.back());
+}
+
+// --- "this judgment is wrong" ---------------------------------------------------------------
+
+const DISPUTE_REASONS = ["I misread it", "My answer is valid", "The question is unclear"];
+const DISPOSITION = { consumed: "met", replaced: "replaced", invalidated: "no longer applies" };
+
+async function disputePage(attemptId) {
+  const f = await api(`/attempts/${attemptId}`);
+  view.innerHTML = `<p><a href="#/a/${esc(attemptId)}">← Feedback</a></p><h1>Question this judgment</h1>
+    <p class="muted">${esc(f.prompt)}</p>
+    <div class="card"><strong>Your answer</strong><p>${esc(f.attempt.response)}</p>
+      ${f.criteria.map((c) => `<div class="small">${tag(c.outcome, OUTCOME[c.outcome])} ${esc(c.requirement)}</div>`).join("")}</div>
+    <form id="dispute" class="card">
+      <fieldset><legend>What looks wrong?</legend>
+        ${DISPUTE_REASONS.map((r, i) => `<label class="choice"><input type="radio" name="why" value="${esc(r)}" ${i === 1 ? "checked" : ""}> ${esc(r)}</label>`).join("")}
+        <label class="choice"><input type="radio" name="why" value=""> Something else</label></fieldset>
+      <label for="detail">In your words <span class="muted">(optional)</span></label><textarea id="detail"></textarea>
+      <p class="small muted">The assessor checks the same answer again against the same rubric. Your reason is a claim to check, not a pass. Nothing changes until you accept the result.</p>
+      <div class="row"><button type="submit">Ask for a review</button><span class="status" id="dispute-status"></span></div>
+    </form>`;
+  timer.set("progress_inspection", { session: f.session, context: [f.attempt.ref] });
+  document.getElementById("dispute").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const picked = view.querySelector("input[name=why]:checked").value;
+    const detail = document.getElementById("detail").value.trim();
+    const reason = [picked, detail].filter(Boolean).join(": ");
+    try {
+      const { operation } = await api(`/attempts/${attemptId}/dispute`, { reason });
+      location.hash = `#/rv/${operation.id}`;
+    } catch (e) {
+      document.getElementById("dispute-status").innerHTML = `<span class="error-text">${esc(e.message)}</span>`;
+    }
+  });
+}
+
+function changeRows(rows, show) {
+  return rows.filter((r) => JSON.stringify(r.before) !== JSON.stringify(r.after))
+    .map((r) => `<li>${show(r)}</li>`).join("");
+}
+
+async function reviewPage(opId) {
+  const op = await api(`/operations/${opId}`);
+  const attemptId = op.input_snapshot.context.attempt.id;
+  const back = `<p><a href="#/a/${esc(attemptId)}">← Feedback</a></p>`;
+  timer.set("blocked_wait", { context: [op.ref] });
+  if (["pending", "running"].includes(op.status)) {
+    view.innerHTML = `${back}<h1>Reviewing your answer…</h1><p class="status">The same answer is being checked again against the same rubric.</p>`;
+    const poll = setTimeout(route, 2000);
+    leave = () => clearTimeout(poll);
+    return;
+  }
+  if (op.acceptance === "accepted" || op.acceptance === "cancelled") {
+    view.innerHTML = `${back}<h1>${op.acceptance === "accepted" ? "The corrected judgment is in place" : "The original judgment stays"}</h1>
+      <p><a href="#/a/${esc(attemptId)}">See the feedback</a></p>`;
+    return;
+  }
+  if (op.status !== "succeeded" || op.acceptance !== "pending") {
+    view.innerHTML = `${back}<h1>The review did not finish</h1><p>${esc(op.acceptance_reason || op.error || "")}</p>
+      <p class="muted">Nothing about your answer or its judgment changed.</p>
+      <div class="row"><button type="button" id="retry">Try the review again</button></div>`;
+    document.getElementById("retry").addEventListener("click", async () => {
+      const { operation } = await api(`/operations/${opId}/retry`, {});
+      location.hash = `#/rv/${operation.id}`;
+    });
+    return;
+  }
+  const p = await api(`/operations/${opId}/correction`);
+  timer.set("progress_inspection", { context: [op.ref] });
+  const decide = async (action) => {
+    try {
+      await api(`/operations/${opId}/correction/${action}`, action === "accept" ? { preview: p.digest } : {});
+      location.hash = `#/a/${attemptId}`;
+    } catch (e) {
+      if (e.status !== 409) throw e;
+      alert(e.message);  // the effect changed since this preview: show the new one
+      route();
+    }
+  };
+  if (!p.changes) {
+    view.innerHTML = `${back}<h1>The review kept the original judgment</h1>
+      <div class="card"><p>${esc(p.explanation)}</p></div>
+      <div class="row"><button type="button" id="keep">Back to the feedback</button></div>`;
+    document.getElementById("keep").addEventListener("click", () => decide("keep"));
+    return;
+  }
+  view.innerHTML = `${back}<h1>The review suggests a different judgment</h1>
+    <div class="card"><p>${esc(p.explanation)}</p></div>
+    <h2>What accepting changes</h2>
+    <p class="small muted">This changes the earlier judgment; no new answer is added. Dates are worked out from when you answered, not from today.</p>
+    <ul>${changeRows(p.criteria, (c) => `${esc(c.requirement)}: ${tag(c.before.outcome, OUTCOME[c.before.outcome])} → ${tag(c.after.outcome, OUTCOME[c.after.outcome])}${c.after.misread ? " (a misread, not counted as a mistake)" : ""}`)}
+      ${changeRows(p.targets, (t) => `${esc(t.action)}: ${tag(t.before.label, LABEL[t.before.label])} → ${tag(t.after.label, LABEL[t.after.label])}${t.after.schedule
+        ? ` · next: ${esc(NEED[t.after.schedule.need])}${t.after.schedule.due_at ? `, due ${esc(fmtTime(t.after.schedule.due_at))}` : ""}` : ""}`)}
+      ${p.concerns.map((c) => `<li>${esc(concernNote(c.after))}</li>`).join("")}</ul>
+    <div class="row"><button type="button" id="accept">Accept the corrected judgment</button>
+      <button type="button" class="secondary" id="keep">Keep the original</button></div>`;
+  document.getElementById("accept").addEventListener("click", () => decide("accept"));
+  document.getElementById("keep").addEventListener("click", () => decide("keep"));
+}
+
+// --- new material that repeats or contradicts what you have ----------------------------------
+
+async function proposalsPage(opId) {
+  const p = await api(`/operations/${opId}/proposals`);
+  const relation = { same: "the same claim as", conflicts: "contradicts" };
+  view.innerHTML = `<p><a href="#/">← Library</a></p><h1>${esc(p.title)}</h1>
+    <p>Some claims drafted from “${esc(p.source)}” match or contradict claims you already have. Nothing is merged without your decision.</p>
+    <form id="decide">${p.claims.map((c) => `<div class="card">
+      <p><strong>${esc(c.statement)}</strong> <span class="muted small">(${esc(c.scope)})</span></p>
+      ${c.quotes.map((q) => `<blockquote>${esc(q)}</blockquote>`).join("")}
+      ${c.proposals.map((x) => `<div class="small">Proposed: ${esc(relation[x.relation])}
+        <strong>${esc(x.existing.statement)}</strong> <span class="muted">(${esc(x.existing.scope)})</span> — ${esc(x.why)}
+        ${x.existing.status === "disputed" ? `<div class="error-text">You flagged that claim: ${esc(x.existing.dispute.reason)}</div>` : ""}</div>`).join("")}
+      ${c.choices.includes("reuse")
+        ? `<label class="choice"><input type="radio" name="${esc(c.key)}" value="reuse" required> Use the claim I already have (this source is added to it)</label>
+           <label class="choice"><input type="radio" name="${esc(c.key)}" value="separate"> Keep it as a separate claim</label>`
+        : c.choices.includes("hold")
+          ? '<p class="small error-text">Kept as a separate claim and put on hold until you settle it; a flag cannot be cleared by reusing it.</p>'
+          : '<p class="small">That claim was reworded after this outline was drafted, so this one stays a separate claim.</p>'}
+    </div>`).join("")}
+      <div class="row"><button type="submit">Accept the outline</button><span class="status" id="decide-status"></span></div></form>`;
+  timer.set("authoring", { context: [] });
+  document.getElementById("decide").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const decisions = Object.fromEntries([...view.querySelectorAll("input[type=radio]:checked")].map((i) => [i.name, i.value]));
+    try {
+      const { curriculum } = await api(`/operations/${opId}/accept`, { decisions });
+      location.hash = `#/c/${curriculum.id}`;
+    } catch (e) {
+      document.getElementById("decide-status").innerHTML = `<span class="error-text">${esc(e.message)}</span>`;
+    }
+  });
 }
 
 function editOutline(o) {
@@ -347,7 +626,7 @@ function editOutline(o) {
         purpose: document.getElementById("e-purpose").value,
         sections: c.sections.map((s, i) => ({ id: s.id, title: document.getElementById(`s-${i}`).value, target_ids: s.target_ids })),
       });
-      location.hash = `#/c/${c.ref.id}`;
+      go(`#/c/${c.ref.id}`);
     } catch (e) {
       document.getElementById("edit-status").innerHTML = `<span class="error-text">${esc(e.message)}</span>`;
     }
@@ -442,6 +721,7 @@ async function practicePage(sessionId) {
   let base = a.ref.revision;
   view.innerHTML = `
     <p class="small muted">${esc(PURPOSE[a.purpose] || PURPOSE.initial)}</p>
+    ${a.counts_as_practice ? '<p class="small">Earlier history changed after this was offered: your draft is kept, and this answer now counts as practice, not as a scheduled check.</p>' : ""}
     <h1>${esc(a.prompt)}</h1>
     <label for="answer">Your answer</label>
     <textarea id="answer" class="answer">${esc(restored ? backup : a.response)}</textarea>
@@ -550,6 +830,9 @@ async function feedbackPage(attemptId) {
     <div class="card"><strong>Your answer</strong><p>${highlight(f.attempt.response, quotes)}</p></div>
     <div class="card"><p>${esc(f.explanation)}</p></div>
     ${misread ? '<div class="card"><strong>This looks like a misread of the task, not a gap in what you know.</strong> Nothing more to practise here; it is not counted as a mistake.</div>' : ""}
+    ${f.earlier_judgments.length ? `<div class="card"><strong>This judgment was corrected</strong> after: “${esc(f.revision_reason)}”. No new answer was added.
+      <details><summary class="small">The earlier judgment (kept)</summary>${f.earlier_judgments.map(judgmentCard).join("<hr>")}</details></div>` : ""}
+    ${reviewLink(f.review) ? `<div class="card">${reviewLink(f.review)}</div>` : ""}
     ${note ? `<div class="card"><strong>What happens next.</strong> ${esc(note)}</div>` : ""}
     <h2>Each part of the answer</h2>
     ${f.criteria.map((c) => `<div class="card">
@@ -563,7 +846,8 @@ async function feedbackPage(attemptId) {
       <p class="small muted">Seeing this answer counts as practice, not as a later check.</p></details>
     <p class="small muted">Judged by ${esc(f.assessor?.name)} under protocol ${esc(f.assessor?.protocol_version)}.</p>
     <div class="row"><button type="button" id="next">Continue</button>
-      <button type="button" class="secondary" id="finish">Finish session</button></div>`;
+      <button type="button" class="secondary" id="finish">Finish session</button>
+      ${f.disputable ? `<a href="#/d/${esc(attemptId)}">This judgment is wrong</a>` : ""}</div>`;
   const session = await api(`/sessions/${f.session.id}`);
   timer.set("feedback", { session: f.session, enrollment: session.session.enrollments[0], context: [f.attempt.ref] });
   document.getElementById("next").addEventListener("click", () => { location.hash = `#/s/${f.session.id}/next`; });

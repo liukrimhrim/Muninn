@@ -24,6 +24,7 @@ from muninn.library import (
     Store,
     activate,
     active_store,
+    digest,
     export_library,
     new_id,
     restore_library,
@@ -84,6 +85,7 @@ OUTPUTS: dict[str, type[BaseModel]] = {
     content.TEACH_PROTOCOL["name"]: content.TeachingDraft,
     content.VARIANT_PROTOCOL["name"]: content.VariantDraft,
     evidence.ASSESS_PROTOCOL["name"]: evidence.AssessmentOutput,
+    evidence.REASSESS_PROTOCOL["name"]: evidence.AssessmentOutput,
 }
 AUTHORING_FOR_CONCERN = ("teaching_intervention", "exercise_variant")
 
@@ -111,6 +113,21 @@ class OperationP(_Strict):
     try_index: int
     acceptance: Literal["pending", "accepted", "rejected", "stale", "cancelled"]
     acceptance_reason: str | None
+    answered_by: str | None = None
+
+
+class TransitionP(_Strict):
+    """Links the revisions one intentional semantic change wrote (compatibility section 3)."""
+
+    scope: list[content.RefP]
+    category: Literal["curriculum", "assessment", "policy"]
+    before: list[content.RefP]
+    after: list[content.RefP]
+    actor: str
+    reason: str
+
+
+PAYLOADS: dict[str, type[BaseModel]] = {"operation": OperationP, "transition": TransitionP}
 
 
 def validate_records(records: list[Record]) -> list[str]:
@@ -119,14 +136,44 @@ def validate_records(records: list[Record]) -> list[str]:
     for r in records:
         if KIND_OWNER[r.kind] != OWNER:
             continue
-        if r.kind != "operation":
+        model = PAYLOADS.get(r.kind)
+        if model is None:
             errors.append(f"{r.kind} records are not supported by this release")
             continue
         try:
-            OperationP.model_validate(r.payload)
+            model.model_validate(r.payload)
         except ValidationError as e:
-            errors.append(f"operation {r.id} r{r.revision}: {e.errors()[0]['msg']}")
+            errors.append(f"{r.kind} {r.id} r{r.revision}: {e.errors()[0]['msg']}")
     return errors
+
+
+def _transition(
+    tx: Tx,
+    *,
+    category: Literal["curriculum", "assessment"],
+    scope: list[JSON],
+    actor: str,
+    reason: str,
+) -> JSON:
+    """Record the semantic change this command made: each revised record, before and after."""
+    after = [r for r in tx.written if r["kind"] not in ("operation", "transition")]
+    first: dict[tuple[str, str], int] = {}
+    for r in after:
+        first.setdefault((r["kind"], r["id"]), r["revision"])
+    before = [
+        content.RefP(kind=kind, id=id_, revision=revision - 1)
+        for (kind, id_), revision in first.items()
+        if revision > 1
+    ]
+    payload = TransitionP(
+        scope=[content.RefP(**r) for r in scope],
+        category=category,
+        before=before,
+        after=[content.RefP(**r) for r in after],
+        actor=actor,
+        reason=reason,
+    )
+    return tx.put("transition", payload.model_dump(), by=OWNER)
 
 
 VALIDATORS = (
@@ -164,6 +211,45 @@ def _group_accepted(tx: Tx, group: str) -> bool:
         r.payload["request_group"] == group and r.payload["acceptance"] == "accepted"
         for r in tx.current("operation", by=OWNER)
     )
+
+
+class _NeedsReview(Exception):  # noqa: N818 - a domain outcome, not a programming error
+    """A checked outline proposes reusing or contradicting existing claims."""
+
+
+REVIEW_PROPOSALS = "waiting for your review of how it relates to claims you already have"
+REVIEW_CORRECTION = "waiting for your decision on the reviewed judgment"
+
+
+def _reviews(snapshot: JSON) -> bool:
+    """Tell whether an operation's saved request reviews a judgment (``reassess-answer``)."""
+    return bool(snapshot["protocol"]["name"] == evidence.REASSESS_PROTOCOL["name"])
+
+
+def _waiting_review(tx: Tx, operation_id: str) -> tuple[Record, OperationP]:
+    """Return a finished review still waiting for the learner's decision."""
+    record = tx.require("operation", operation_id, by=OWNER)
+    op = OperationP.model_validate(record.payload)
+    if not _reviews(op.input_snapshot) or (op.status, op.acceptance) != ("succeeded", "pending"):
+        msg = "this review is not waiting for a decision"
+        raise ValueError(msg)
+    return record, op
+
+
+def _decide(tx: Tx, record: Record, op: OperationP, **update: Any) -> JSON:  # noqa: ANN401
+    """Record the learner's decision on an operation's waiting output."""
+    decided = op.model_copy(update=update)
+    return tx.put("operation", decided.model_dump(), by=OWNER, id=record.id, base=record.revision)
+
+
+def _change_content(tx: Tx, changed: JSON, *, scope: list[JSON], reason: str) -> JSON:
+    """Select the replaced goal revisions in enrollments and record the transition."""
+    practice.replace_goals(tx, curricula=changed["curricula"], replaced=changed["replaced"])
+    return _transition(tx, category="curriculum", scope=scope, actor="learner", reason=reason)
+
+
+class _Preview(Exception):  # noqa: N818 - control flow for a rolled-back dry run
+    """Carries a correction preview out of its rolled-back savepoint."""
 
 
 def _phase_id(operation_id: str, phase: str) -> str:
@@ -353,11 +439,12 @@ class App:
             update = self._outcome(tx, record, op, result, refused)
             if update["acceptance"] == "rejected" and op.try_index == 1:
                 retry.append(self._retry_with_reasons(tx, op, update["acceptance_reason"])["id"])
+            answered = {"answered_by": result.model} if result else {}
             return {
                 "operation": tx.put(
                     "operation",
                     op.model_copy(
-                        update={"status": "succeeded", "raw_response": raw, **update}
+                        update={"status": "succeeded", "raw_response": raw, **answered, **update}
                     ).model_dump(),
                     by=OWNER,
                     id=operation_id,
@@ -392,6 +479,8 @@ class App:
         try:
             with tx.savepoint():
                 outputs = self._accept(tx, record.ref, op, result)
+        except _NeedsReview as e:
+            return {"acceptance": "pending", "acceptance_reason": str(e) or REVIEW_PROPOSALS}
         except ValueError as e:
             return {"acceptance": "rejected", "acceptance_reason": str(e)}
         return {"acceptance": "accepted", "outputs": [content.RefP(**o) for o in outputs]}
@@ -418,6 +507,9 @@ class App:
             source = op.inputs[0]
             latest = content.current_definition(tx, "source", source.id)
             return latest is not None and latest["ref"]["revision"] == source.revision
+        if _reviews(op.input_snapshot):  # the judgment it reviews must still be current
+            current = evidence.assessment_for(tx, op.input_snapshot["context"]["attempt"]["id"])
+            return current is not None and current["ref"] == op.inputs[0].model_dump()
         attempt = op.inputs[0]
         latest = evidence.attempt_view(tx, attempt_id=attempt.id)
         offer = practice.offer_for(tx, attempt.id)
@@ -440,21 +532,19 @@ class App:
         if op.purpose == "draft_material":
             draft = content.DraftOutline.model_validate(result.output.model_dump())
             source = op.inputs[0].model_dump()
-            errors = content.check_draft(draft, content.definition(tx, source)["text"])
+            listed = op.input_snapshot["context"].get("existing", {})
+            errors = content.check_draft(draft, content.definition(tx, source)["text"], listed)
             if errors:
                 raise ValueError("; ".join(errors))
-            accepted = content.accept_draft(
-                tx,
-                source=source,
-                draft=draft,
-                authoring=operation,
-                purpose_given=bool(op.input_snapshot["context"].get("purpose_given")),
-            )
-            enrollment = practice.enroll(
-                tx, curriculum=accepted["curriculum"], goal_order=accepted["targets"]
-            )
-            return [accepted["curriculum"], enrollment, *accepted["exercises"]]
+            if content.needs_review(draft):
+                raise _NeedsReview
+            return _accept_outline(tx, operation, op, draft, {})
         out = evidence.AssessmentOutput.model_validate(result.output.model_dump())
+        if _reviews(op.input_snapshot):  # checked now, applied only when the learner accepts
+            errors = evidence.check_reassessment(tx, op.inputs[0].model_dump(), out)
+            if errors:
+                raise ValueError("; ".join(errors))
+            raise _NeedsReview(REVIEW_CORRECTION)
         attempt = op.inputs[0].model_dump()
         accepted = evidence.accept_assessment(
             tx, attempt=attempt, out=out, assessor=assessor, raw_response=result.raw
@@ -534,19 +624,59 @@ class App:
 
         def fn(tx: Tx) -> JSON:
             source = content.add_source(tx, title=title, text=text, origin=None)
-            request = content.draft_request(source_title=title, source_text=text, purpose=purpose)
+            existing = content.existing_claims(tx)
+            request = content.draft_request(
+                source_title=title, source_text=text, purpose=purpose, existing=existing
+            )
             op = self._new_operation(
                 tx,
                 purpose="draft_material",
                 intent="initial_outline",
                 inputs=[source],
                 request=request,
-                context={"purpose_given": bool(purpose)},
+                context={
+                    "purpose_given": bool(purpose),
+                    "existing": {key: claim["ref"] for key, claim in existing.items()},
+                },
             )
             return {"source": source, "operation": op}
 
         inputs = {"title": title, "text": text, "purpose": purpose}
         return self.store.run(request_id, "add_material", inputs, fn).result
+
+    def accept_material(
+        self, request_id: str, *, operation_id: str, decisions: dict[str, str]
+    ) -> JSON:
+        """Accept a reviewed outline with the learner's reuse decisions."""
+
+        def fn(tx: Tx) -> JSON:
+            record = tx.require("operation", operation_id, by=OWNER)
+            op = OperationP.model_validate(record.payload)
+            waiting = (op.intent, op.status, op.acceptance) == (
+                "initial_outline",
+                "succeeded",
+                "pending",
+            )
+            if not waiting:
+                msg = "this outline is not waiting for a review"
+                raise ValueError(msg)
+            if not self._inputs_current(tx, op):
+                msg = "its source changed after it was drafted"
+                raise Conflict(msg)
+            draft = content.DraftOutline.model_validate_json(op.raw_response or "")
+            outputs = _accept_outline(tx, record.ref, op, draft, decisions)
+            _decide(
+                tx,
+                record,
+                op,
+                acceptance="accepted",
+                acceptance_reason="reviewed by the learner",
+                outputs=[content.RefP(**o) for o in outputs],
+            )
+            return {"curriculum": outputs[0], "operation": record.ref}
+
+        inputs = {"operation": operation_id, "decisions": decisions}
+        return self.store.run(request_id, "accept_material", inputs, fn).result
 
     def edit_outline(  # noqa: PLR0913 - one keyword per edited field
         self,
@@ -579,6 +709,262 @@ class App:
             "sections": sections,
         }
         return self.store.run(request_id, "edit_outline", inputs, fn).result
+
+    def revise_target(  # noqa: PLR0913 - one keyword per edited field
+        self,
+        request_id: str,
+        *,
+        target_id: str,
+        base: int,
+        action: str,
+        mode: str,
+        conditions: list[str],
+        requirements: list[JSON],
+        reason: str,
+    ) -> JSON:
+        """Change a goal after practice: a new revision, selected wherever the old one was."""
+
+        def fn(tx: Tx) -> JSON:
+            changed = content.revise_target(
+                tx,
+                target_id=target_id,
+                base=base,
+                action=action,
+                mode=mode,
+                conditions=conditions,
+                requirements=requirements,
+                reason=reason,
+            )
+            transition = _change_content(tx, changed, scope=[changed["target"]], reason=reason)
+            return {
+                "target": changed["target"],
+                "mapping": changed["mapping"],
+                "transition": transition,
+            }
+
+        inputs = {
+            "target": target_id,
+            "base": base,
+            "action": action,
+            "mode": mode,
+            "conditions": conditions,
+            "requirements": requirements,
+            "reason": reason,
+        }
+        return self.store.run(request_id, "revise_target", inputs, fn).result
+
+    def flag_material(self, request_id: str, *, knowledge_id: str, base: int, reason: str) -> JSON:
+        """Flag a claim as wrong: what rests on it is held, everything else continues."""
+        return self.store.run(
+            request_id,
+            "flag_material",
+            {"knowledge": knowledge_id, "base": base, "reason": reason},
+            lambda tx: {
+                "knowledge": content.flag_knowledge(
+                    tx, knowledge_id=knowledge_id, base=base, reason=reason
+                )
+            },
+        ).result
+
+    def revise_material(  # noqa: PLR0913 - one keyword per edited field
+        self,
+        request_id: str,
+        *,
+        knowledge_id: str,
+        base: int,
+        statement: str,
+        scope: str,
+        reason: str,
+    ) -> JSON:
+        """Keep a flagged claim as it is, or correct it (a meaning change for its goals)."""
+
+        def fn(tx: Tx) -> JSON:
+            changed = content.revise_knowledge(
+                tx,
+                knowledge_id=knowledge_id,
+                base=base,
+                statement=statement,
+                scope=scope,
+                reason=reason,
+            )
+            transition = _change_content(tx, changed, scope=[changed["knowledge"]], reason=reason)
+            return {"knowledge": changed["knowledge"], "transition": transition}
+
+        inputs = {
+            "knowledge": knowledge_id,
+            "base": base,
+            "statement": statement,
+            "scope": scope,
+            "reason": reason,
+        }
+        return self.store.run(request_id, "revise_material", inputs, fn).result
+
+    def rebind_exercise(self, request_id: str, *, exercise_id: str, base: int) -> JSON:
+        """Confirm that a held exercise still checks the edited goals it covers."""
+        return self.store.run(
+            request_id,
+            "rebind_exercise",
+            {"exercise": exercise_id, "base": base},
+            lambda tx: {
+                "exercise": content.rebind_exercise(tx, exercise_id=exercise_id, base=base)
+            },
+        ).result
+
+    # --- corrections of judgments -----------------------------------------------------
+
+    def dispute_judgment(self, request_id: str, *, attempt_id: str, reason: str) -> JSON:
+        """Ask for a review of an accepted judgment ("this judgment is wrong").
+
+        A self-report is a claim to check: it saves a reassessment of the original
+        answer; nothing changes until the learner accepts the reviewed judgment.
+        """
+        if not reason.strip():
+            msg = "say why the judgment looks wrong"
+            raise ValueError(msg)
+
+        def fn(tx: Tx) -> JSON:
+            attempt = evidence.attempt_view(tx, attempt_id=attempt_id)
+            if not evidence.disputable(attempt):
+                raise ValueError(evidence.NOT_DISPUTABLE)
+            graded = evidence.assessment_for(tx, attempt_id)
+            if graded is None:
+                msg = "this answer has no judgment yet"
+                raise ValueError(msg)
+            live = [
+                o
+                for o in _operations(tx)
+                if o["inputs"]
+                and o["inputs"][0]["id"] == graded["ref"]["id"]
+                and o["acceptance"] == "pending"
+            ]
+            if live:
+                msg = "this judgment is already being reviewed"
+                raise ValueError(msg)
+            op = self._new_operation(
+                tx,
+                purpose="assess_answer",
+                intent=None,
+                inputs=[graded["ref"]],
+                request=evidence.reassessment_request(tx, graded["ref"], reason.strip()),
+                context={"reason": reason.strip(), "attempt": attempt["ref"]},
+            )
+            return {"operation": op}
+
+        inputs = {"attempt": attempt_id, "reason": reason}
+        return self.store.run(request_id, "dispute_judgment", inputs, fn).result
+
+    def _reviewed(self, tx: Tx, operation_id: str) -> tuple[Record, OperationP]:
+        """Return a waiting review whose judgment is still the current one."""
+        record, op = _waiting_review(tx, operation_id)
+        if not self._inputs_current(tx, op):
+            msg = "the judgment changed after this review started"
+            raise Conflict(msg)
+        return record, op
+
+    def _apply_correction(self, tx: Tx, record: Record, op: OperationP) -> JSON:
+        """Accept a reviewed judgment: one revision, rebuilt evidence, replayed needs."""
+        out = evidence.AssessmentOutput.model_validate_json(op.raw_response or "")
+        reason = op.input_snapshot["context"]["reason"]
+        attempt = op.input_snapshot["context"]["attempt"]
+        answered = op.answered_by or op.model.name  # the model that actually answered
+        corrected = evidence.revise_assessment(
+            tx,
+            assessment=op.inputs[0].model_dump(),
+            out=out,
+            assessor=op.model.model_copy(
+                update={"name": answered, "version": answered}
+            ).model_dump(),
+            raw_response=op.raw_response or "",
+            reason=reason,
+        )
+        practice.reconcile_correction(
+            tx,
+            attempt=attempt,
+            assessment=corrected["assessment"],
+            results=corrected["labels"],
+            out=out,
+        )
+        transition = _transition(
+            tx,
+            category="assessment",
+            scope=[attempt, corrected["assessment"]],
+            actor=f"learner request, reviewed by {op.model.name}",
+            reason=reason,
+        )
+        _decide(
+            tx,
+            record,
+            op,
+            acceptance="accepted",
+            acceptance_reason="accepted by the learner",
+            outputs=[content.RefP(**corrected["assessment"])],
+        )
+        return {"assessment": corrected["assessment"], "transition": transition}
+
+    def accept_correction(
+        self, request_id: str, *, operation_id: str, preview: str | None = None
+    ) -> JSON:
+        """Accept the reviewed judgment and recompute what depends on it, atomically.
+
+        ``preview`` is the digest the preview showed; when given, the accepted effect must
+        be exactly that one, or nothing is written and the preview must be looked at again.
+        """
+
+        def fn(tx: Tx) -> JSON:
+            record, op = self._reviewed(tx, operation_id)
+            applied = self._apply_correction(tx, record, op)
+            after = _correction_state(tx, op.input_snapshot["context"]["attempt"])
+            if preview is not None and digest(after) != preview:
+                msg = "the effect of this correction changed since its preview; look at it again"
+                raise Conflict(msg)
+            return applied
+
+        inputs = {"operation": operation_id, "preview": preview}
+        return self.store.run(request_id, "accept_correction", inputs, fn).result
+
+    def keep_judgment(self, request_id: str, *, operation_id: str) -> JSON:
+        """Keep the original judgment; the review stays on record and changes nothing."""
+
+        def fn(tx: Tx) -> JSON:
+            record, op = _waiting_review(tx, operation_id)
+            kept = _decide(
+                tx,
+                record,
+                op,
+                acceptance="cancelled",
+                acceptance_reason="kept the original judgment",
+            )
+            return {"operation": _op_state(tx.at(kept, by=OWNER).view)}
+
+        return self.store.run(request_id, "keep_judgment", {"operation": operation_id}, fn).result
+
+    def correction_preview(self, operation_id: str) -> JSON:
+        """Show exactly what accepting a reviewed judgment would change, writing nothing.
+
+        ponytail: a dry run of the real correction inside a rolled-back savepoint, so the
+        preview cannot drift from the effect; it takes the write lock for that moment.
+        """
+
+        def fn(tx: Tx) -> JSON:
+            record, op = self._reviewed(tx, operation_id)
+            attempt = op.input_snapshot["context"]["attempt"]
+            before = _correction_state(tx, attempt)
+
+            def apply_then_roll_back() -> None:
+                self._apply_correction(tx, record, op)
+                raise _Preview(_correction_state(tx, attempt))
+
+            try:
+                with tx.savepoint():
+                    apply_then_roll_back()
+            except _Preview as preview:
+                return {"before": before, "after": preview.args[0]}
+            msg = "the dry run did not finish"  # pragma: no cover - apply always raises
+            raise AssertionError(msg)
+
+        states = self.store.run(new_id(), "preview_correction", {"operation": operation_id}, fn)
+        after = states.result["after"]
+        return {**_compare(states.result["before"], after), "digest": digest(after)}
 
     # --- practice ------------------------------------------------------------------
 
@@ -907,6 +1293,102 @@ class App:
         return restore_library(path, text, clock=clock, validate=validate_library)
 
 
+# --- corrections: parts of the commands above -------------------------------------------
+
+
+def _correction_state(tx: Tx, attempt: JSON) -> JSON:
+    """Capture what a corrected judgment can change: criteria, targets, concerns."""
+    view = evidence.attempt_view(tx, attempt)
+    exercise = content.definition(tx, view["exercise"])
+    graded = evidence.assessment_for(tx, attempt["id"])
+    assert graded is not None  # noqa: S101 - only judged answers are reviewed
+    results = {r["criterion_id"]: r for r in graded["results"]}
+    misread = evidence.misread_criteria(graded)
+    return {
+        "explanation": graded["explanation"],
+        "criteria": [
+            {
+                "id": c["id"],
+                "requirement": c["requirement"],
+                "outcome": results[c["id"]]["outcome"],
+                "reason": results[c["id"]]["reason"],
+                "misread": c["id"] in misread,
+            }
+            for c in exercise["criteria"]
+        ],
+        "targets": [
+            {
+                "ref": t,
+                "action": content.definition(tx, t)["action"],
+                "label": evidence.target_evidence(tx, t)["label"],
+                "schedule": (
+                    {k: s[k] for k in ("need", "due_at", "hold_reason")}
+                    if (s := practice.schedule_view(tx, t))
+                    else None
+                ),
+            }
+            for t in exercise["targets"]
+        ],
+        "concerns": {
+            c["ref"]["id"]: c
+            for c in (practice.concern_view(tx, r) for r in practice.concern_ids_for(tx, attempt))
+        },
+    }
+
+
+def _compare(before: JSON, after: JSON) -> JSON:
+    """Pair each criterion, target and concern before and after a correction."""
+    criteria = [
+        {"id": b["id"], "requirement": b["requirement"], "before": b, "after": a}
+        for b, a in zip(before["criteria"], after["criteria"], strict=True)
+    ]
+    targets = [
+        {"ref": b["ref"], "action": b["action"], "before": b, "after": a}
+        for b, a in zip(before["targets"], after["targets"], strict=True)
+    ]
+    concerns = [
+        {"before": before["concerns"].get(cid), "after": c}
+        for cid, c in after["concerns"].items()
+        if before["concerns"].get(cid, {}).get("status") != c["status"]
+        or before["concerns"].get(cid, {}).get("route") != c["route"]
+        or before["concerns"].get(cid, {}).get("scope") != c["scope"]
+    ]
+    changed = any(c["before"] != c["after"] for c in criteria + targets) or bool(concerns)
+    return {
+        "explanation": after["explanation"],
+        "criteria": criteria,
+        "targets": targets,
+        "concerns": concerns,
+        "changes": changed,
+    }
+
+
+# --- material: parts of the commands above ---------------------------------------------
+
+
+def _listed_claims(tx: Tx, op: OperationP) -> dict[str, JSON]:
+    """Return each existing claim the drafting packet listed, as it stands now."""
+    return content.listed_claims(tx, op.input_snapshot["context"].get("existing", {}))
+
+
+def _accept_outline(
+    tx: Tx, operation: JSON, op: OperationP, draft: content.DraftOutline, decisions: dict[str, str]
+) -> list[JSON]:
+    accepted = content.accept_draft(
+        tx,
+        source=op.inputs[0].model_dump(),
+        draft=draft,
+        authoring=operation,
+        purpose_given=bool(op.input_snapshot["context"].get("purpose_given")),
+        existing=_listed_claims(tx, op),
+        decisions=decisions,
+    )
+    enrollment = practice.enroll(
+        tx, curriculum=accepted["curriculum"], goal_order=accepted["targets"]
+    )
+    return [accepted["curriculum"], enrollment, *accepted["exercises"]]
+
+
 # --- diagnosis and repair: parts of the commands above ------------------------------
 
 
@@ -1148,9 +1630,41 @@ def _due(tx: Tx, targets: list[JSON]) -> str | None:
     dues = [
         s["due_at"]
         for t in targets
-        if (s := practice.schedule_view(tx, t["id"])) is not None and s["due_at"] is not None
+        if (s := practice.schedule_view(tx, t)) is not None and s["due_at"] is not None
     ]
     return min(dues) if dues else None
+
+
+def proposals_view(tx: Tx, operation_id: str) -> JSON:
+    """Show how a drafted outline's claims relate to claims already in the library."""
+    record = tx.require("operation", operation_id, by=OWNER)
+    op = OperationP.model_validate(record.payload)
+    draft = content.DraftOutline.model_validate_json(op.raw_response or "")
+    existing = _listed_claims(tx, op)
+    return {
+        "operation": _op_state(record.view),
+        "title": draft.title,
+        "source": content.definition(tx, op.inputs[0].model_dump())["title"],
+        "claims": [
+            {
+                "key": k.key,
+                "statement": k.statement,
+                "scope": k.scope,
+                "quotes": k.quotes,
+                "proposals": [
+                    {
+                        "relation": p.relation,
+                        "why": p.why,
+                        "existing": _claim_view(tx, existing[p.key]),
+                    }
+                    for p in k.existing
+                ],
+                "choices": content.reuse_choices(k.existing, existing),
+            }
+            for k in draft.knowledge
+            if k.existing
+        ],
+    }
 
 
 def home_view(tx: Tx) -> JSON:
@@ -1187,14 +1701,32 @@ def home_view(tx: Tx) -> JSON:
     }
 
 
+def _reason(hold: content.Hold | None) -> str | None:
+    return hold.reason if hold else None
+
+
+def _claim_view(tx: Tx, claim: JSON) -> JSON:
+    """Show a claim as it stands now (its current revision, flag included)."""
+    current = content.current_definition(tx, "knowledge", claim["ref"]["id"]) or claim
+    return {
+        "ref": current["ref"],
+        "form": current["form"],
+        "statement": current["statement"],
+        "scope": current["scope"],
+        "quotes": [p["quote"] for p in current["sources"]],
+        "status": current["status"],
+        "dispute": current.get("dispute"),
+    }
+
+
 def _target_view(tx: Tx, target: JSON, enrollment: JSON | None) -> JSON:
     definition = content.definition(tx, target)
     knowledge = {k["id"]: content.definition(tx, k) for k in definition["content"]}
     entry = next(
-        (e for e in (enrollment or {}).get("practice", []) if e["target"]["id"] == target["id"]),
+        (e for e in (enrollment or {}).get("practice", []) if e["target"] == target),
         None,
     )
-    schedule = practice.schedule_view(tx, target["id"])
+    schedule = practice.schedule_view(tx, target)
     result = evidence.target_evidence(tx, target)
     return {
         "ref": target,
@@ -1205,15 +1737,8 @@ def _target_view(tx: Tx, target: JSON, enrollment: JSON | None) -> JSON:
             {"id": r["id"], "statement": r["statement"]}
             for r in definition["evidence_requirements"]
         ],
-        "knowledge": [
-            {
-                "form": k["form"],
-                "statement": k["statement"],
-                "scope": k["scope"],
-                "quotes": [p["quote"] for p in k["sources"]],
-            }
-            for k in knowledge.values()
-        ],
+        "knowledge": [_claim_view(tx, k) for k in knowledge.values()],
+        "hold": _reason(content.target_hold(tx, target)),
         "state": entry["state"] if entry else "not selected",
         "evidence": {"label": result["label"], "reasons": result["reasons"]},
         "schedule": {"need": schedule["need"], "due_at": schedule["due_at"]} if schedule else None,
@@ -1242,8 +1767,9 @@ def outline_view(tx: Tx, curriculum_id: str) -> JSON:
         raise LookupError(msg)
     enrollment = practice.enrollment_for(tx, curriculum_id)
     goals = [t for s in curriculum["sections"] for t in s["targets"]]
-    exercises = content.exercises_for(tx, goals)
-    covered = {t["id"] for e in exercises for t in e["targets"]}
+    exercises = content.practice_exercises(tx, {t["id"] for t in goals})
+    holds = {e["ref"]["id"]: content.exercise_hold(tx, e) for e in exercises}
+    covered = {t["id"] for e in exercises if holds[e["ref"]["id"]] is None for t in e["targets"]}
     targets = [_target_view(tx, t, enrollment) for t in goals]
     labels = [t["evidence"]["label"] for t in targets]
     return {
@@ -1268,8 +1794,12 @@ def outline_view(tx: Tx, curriculum_id: str) -> JSON:
             {
                 "id": e["ref"]["id"],
                 "prompt": e["prompt"],
+                "ref": e["ref"],
                 "target_ids": [t["id"] for t in e["targets"]],
                 "review": e["design_review"]["disposition"],
+                "reviewer": e["design_review"]["actor"],
+                "hold": _reason(holds[e["ref"]["id"]]),
+                "rebindable": (hold := holds[e["ref"]["id"]]) is not None and hold.kind == "stale",
             }
             for e in exercises
         ],
@@ -1299,10 +1829,11 @@ def practice_view(tx: Tx, session_id: str) -> JSON:
     session = practice.session_view(tx, session_id)
     shown = practice.open_offer(tx, session_id) or practice.waiting_offer(tx, session_id)
     attempts = _session_attempts(tx, session_id)
+    submitted = [a for a in attempts if a["status"] == "submitted"]
     current = (
         evidence.attempt_view(tx, attempt_id=shown["attempt"]["id"])
         if shown
-        else (attempts[-1] if attempts else None)
+        else (submitted[-1] if submitted else None)  # a released draft is not resumed here
     )
     view: JSON = {"session": session, "attempt": None}
     if current is not None:
@@ -1325,6 +1856,7 @@ def practice_view(tx: Tx, session_id: str) -> JSON:
             ],
             "assessment": _assessing(tx, current["ref"]["id"]),
             "feedback_ready": evidence.assessment_for(tx, current["ref"]["id"]) is not None,
+            "counts_as_practice": bool(shown and practice.revoked(tx, shown["ref"]["id"])),
         }
     return view
 
@@ -1336,11 +1868,7 @@ def feedback_view(tx: Tx, attempt_id: str) -> JSON:
     assessment = evidence.assessment_for(tx, attempt_id)
     results = {r["criterion_id"]: r for r in assessment["results"]} if assessment else {}
     help_by_criterion = evidence.criterion_help(tx, attempt)
-    misread: set[str] = (
-        set(assessment["interpretation_criteria"])
-        if assessment and (assessment["interpretation"] == "supported_misread")
-        else set()
-    )
+    misread: set[str] = evidence.misread_criteria(assessment) if assessment else set()
     return {
         "attempt": {
             "ref": attempt["ref"],
@@ -1376,6 +1904,120 @@ def feedback_view(tx: Tx, attempt_id: str) -> JSON:
         ],
         "assessment": _assessing(tx, attempt_id),
         "concern": practice.concern_for(tx, assessment["ref"]["id"]) if assessment else None,
+        "disputable": assessment is not None and evidence.disputable(attempt),
+        "revision_reason": assessment["revision_reason"] if assessment else None,
+        "earlier_judgments": [
+            _judgment(j, exercise) for j in evidence.assessment_history(tx, attempt_id)[:-1]
+        ],
+        "review": _review(tx, assessment),
+    }
+
+
+def _judgment(judgment: JSON, exercise: JSON) -> JSON:
+    """Show one revision of a judgment, criterion by criterion."""
+    requirement = {c["id"]: c["requirement"] for c in exercise["criteria"]}
+    return {
+        "ref": judgment["ref"],
+        "assessor": judgment["assessor"]["name"],
+        "results": [
+            {
+                "criterion_id": r["criterion_id"],
+                "requirement": requirement[r["criterion_id"]],
+                "outcome": r["outcome"],
+                "reason": r["reason"],
+            }
+            for r in judgment["results"]
+        ],
+        "interpretation": judgment["interpretation"],
+        "explanation": judgment["explanation"],
+        "revision_reason": judgment["revision_reason"],
+    }
+
+
+def _review(tx: Tx, assessment: JSON | None) -> JSON | None:
+    """Return the latest review of a judgment ("this judgment is wrong"), if any."""
+    if assessment is None:
+        return None
+    reviews = [
+        o
+        for o in _operations(tx)
+        if _reviews(o["input_snapshot"]) and o["inputs"][0]["id"] == assessment["ref"]["id"]
+    ]
+    return _op_state(reviews[-1]) if reviews else None
+
+
+def target_history_view(tx: Tx, target_id: str) -> JSON:
+    """Show every revision of a goal with its own evidence, judgments and schedule decisions.
+
+    Old definitions stay readable: each revision keeps the answers given under it, every
+    revision of their judgments (corrections included) and the reasons for its due dates.
+    """
+    revisions = content.revisions(tx, "target", target_id)
+    current = revisions[-1]["ref"]
+    return {
+        "target_id": target_id,
+        "revisions": [_revision_history(tx, r, current) for r in revisions],
+    }
+
+
+def _revision_history(tx: Tx, revision: JSON, current: JSON) -> JSON:
+    target = revision["ref"]
+    mapping = content.mapping_to(tx, target)
+    answers: list[JSON] = []
+    for event in evidence.chronology(tx, target):
+        if event["kind"] != "answer":
+            continue
+        attempt = evidence.attempt_view(tx, event["attempt"])
+        exercise = content.definition(tx, attempt["exercise"])
+        history = evidence.assessment_history(tx, attempt["ref"]["id"])
+        answers.append(
+            {
+                "attempt": attempt["ref"],
+                "purpose": attempt["purpose"],
+                "prompt": exercise["prompt"],
+                "response": attempt["response"],
+                "submitted_at": attempt["submitted_at"],
+                "label": event["label"],
+                "judgments": [
+                    {**_judgment(j, exercise), "current": n == len(history) - 1}
+                    for n, j in enumerate(history)
+                ],
+                "review": _review(tx, history[-1] if history else None),
+                "disputable": bool(history) and evidence.disputable(attempt),
+            }
+        )
+    return {
+        "ref": target,
+        "current": target == current,
+        "action": revision["action"],
+        "mode": revision["mode"],
+        "conditions": revision["conditions"],
+        "requirements": [
+            {"id": r["id"], "statement": r["statement"]} for r in revision["evidence_requirements"]
+        ],
+        "mapping": {"relation": mapping["relation"], "reason": mapping["reason"]}
+        if mapping
+        else None,
+        "hold": _reason(content.target_hold(tx, target)),
+        "evidence": {
+            k: v for k, v in evidence.target_evidence(tx, target).items() if k != "observations"
+        },
+        "answers": answers,
+        "schedule": [
+            {
+                "revision": h["ref"]["revision"],
+                "need": h["need"],
+                "due_at": h["due_at"],
+                "reason": h["reason"],
+                "obligation": {k: h["obligation"][k] for k in ("kind", "status")},
+                "hold_reason": h["hold_reason"],
+                "resolution_rule": h["resolution_rule"]["name"]
+                if h.get("resolution_rule")
+                else None,
+                "check_effects": [e["disposition"] for e in h.get("check_effects", [])],
+            }
+            for h in practice.schedule_history(tx, target)
+        ],
     }
 
 

@@ -7,13 +7,16 @@ deterministic checks in ``check_draft``. Accepting a draft gives no learner cred
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-from muninn.library import JSON, ModelRequest, Record, new_id, ref, validate_payloads
+from muninn.library import JSON, ModelRequest, Record, exact_key, new_id, ref, validate_payloads
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
+
     from muninn.library import Tx
 
 OWNER = "content"
@@ -70,6 +73,13 @@ class DependencyP(_Strict):
     role: str
 
 
+class DisputeP(_Strict):
+    """Why a claim is disputed, and the claims it conflicts with or repeats."""
+
+    reason: str
+    related: list[RefP]
+
+
 class KnowledgeP(_Strict):
     """A meaningful fact, relation, group or procedure with its scope and sources."""
 
@@ -79,6 +89,7 @@ class KnowledgeP(_Strict):
     sources: list[PassageP]
     dependencies: list[DependencyP]
     status: Literal["draft", "accepted", "disputed", "retired"]
+    dispute: DisputeP | None = None
 
 
 class RequirementP(_Strict):
@@ -185,6 +196,7 @@ class DesignReviewP(_Strict):
     checks: AlgorithmP
     disposition: Literal["provisional", "accepted", "held"]
     variation: VariationP | None = None
+    rebound_from: RefP | None = None
 
 
 class ExerciseP(_Strict):
@@ -237,6 +249,30 @@ class TeachingP(_Strict):
     status: Literal["draft", "accepted", "held", "retired"]
 
 
+class CriterionMapP(_Strict):
+    """One retained criterion reinterpreted for a destination requirement."""
+
+    from_exercise: RefP
+    from_criterion: str
+    to_target: RefP
+    to_requirement: str
+
+
+class MappingP(_Strict):
+    """How definitions relate across a change (compatibility section 6); never evidence."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    from_: list[RefP] = Field(alias="from")
+    to: list[RefP]
+    relation: Literal["equivalent", "reorganized", "split", "merged", "changed", "retired"]
+    disposition: Literal["proposed", "accepted", "rejected"]
+    criterion_map: list[CriterionMapP]
+    reviewer: str | None
+    reason: str
+    supersedes: RefP | None
+
+
 PAYLOADS: dict[str, type[BaseModel]] = {
     "source": SourceP,
     "knowledge": KnowledgeP,
@@ -244,6 +280,7 @@ PAYLOADS: dict[str, type[BaseModel]] = {
     "curriculum": CurriculumP,
     "exercise": ExerciseP,
     "teaching": TeachingP,
+    "mapping": MappingP,
 }
 
 
@@ -262,6 +299,14 @@ class DraftDependency(_Strict):
     role: str
 
 
+class DraftExisting(_Strict):
+    """How a drafted claim relates to a claim already in the library (a proposal)."""
+
+    key: str
+    relation: Literal["same", "conflicts"]
+    why: str
+
+
 class DraftKnowledge(_Strict):
     """A drafted knowledge unit with verbatim source quotes."""
 
@@ -271,6 +316,7 @@ class DraftKnowledge(_Strict):
     scope: str
     quotes: list[str]
     depends_on: list[DraftDependency]
+    existing: list[DraftExisting]
 
 
 class DraftRequirement(_Strict):
@@ -360,7 +406,7 @@ class DraftOutline(_Strict):
     doubts: list[str]
 
 
-DRAFT_PROTOCOL: JSON = {"name": "draft-initial-outline", "version": 1, "parameters": {}}
+DRAFT_PROTOCOL: JSON = {"name": "draft-initial-outline", "version": 2, "parameters": {}}
 CHECKS: JSON = {"name": "draft-checks", "version": 1, "parameters": {}}
 
 DRAFT_SYSTEM = """\
@@ -396,19 +442,40 @@ response, hints that point toward one criterion without giving it away, and real
 expected seconds.
 - List source details you deliberately left out in "omitted", with the reason.
 - If no purpose was given, infer a plausible one and set purpose_was_inferred to true.
+- Compare every drafted claim with the existing claims listed. Under "existing", name \
+an existing claim with relation "same" only when it has the same meaning under the same \
+conditions and scope, and "conflicts" when the two cannot both be true. Similar wording \
+under different conditions is neither. Say why in a few words. Never merge claims \
+yourself: the learner decides.
 """
 
 
-def draft_request(*, source_title: str, source_text: str, purpose: str | None) -> ModelRequest:
+def existing_claims(tx: Tx) -> dict[str, JSON]:
+    """Key every live claim in the library E1, E2, ... for a drafting packet."""
+    # ponytail: lists the whole library; send candidate matches only once libraries grow large.
+    live = [r.view for r in tx.current("knowledge", by=OWNER) if r.payload["status"] != "retired"]
+    return {f"E{n}": claim for n, claim in enumerate(live, 1)}
+
+
+def draft_request(
+    *,
+    source_title: str,
+    source_text: str,
+    purpose: str | None,
+    existing: dict[str, JSON] | None = None,
+) -> ModelRequest:
     """Prepare the initial-outline request; absent inputs are stated as absent."""
     stated_purpose = (
         f"<purpose>\n{purpose}\n</purpose>"
         if purpose
         else "The learner gave no purpose; no purpose was given, so suggest one."
     )
+    listing = "\n".join(
+        f"{key}: {c['statement']} (scope: {c['scope']})" for key, c in (existing or {}).items()
+    )
     user = (
         f"<title>\n{source_title}\n</title>\n{stated_purpose}\n"
-        "Existing knowledge in this library: none (no candidate claims, no reuse decisions).\n"
+        f"<existing_claims>\n{listing or 'none'}\n</existing_claims>\n"
         f"<source>\n{source_text}\n</source>\n"
         "Draft the outline."
     )
@@ -417,9 +484,21 @@ def draft_request(*, source_title: str, source_text: str, purpose: str | None) -
     )
 
 
-def check_draft(draft: DraftOutline, source_text: str) -> list[str]:
+def check_draft(
+    draft: DraftOutline, source_text: str, existing_keys: Collection[str] = ()
+) -> list[str]:
     """Return every deterministic reason to refuse a drafted outline."""
     errors = _check_knowledge(draft, source_text)
+    for k in draft.knowledge:
+        named = [e.key for e in k.existing]
+        errors += [
+            f"knowledge {k.key} names unknown existing claim {e}"
+            for e in named
+            if e not in existing_keys
+        ]
+        errors += _duplicates(f"existing claim for knowledge {k.key}:", named)
+        if sum(e.relation == "same" for e in k.existing) > 1:
+            errors.append(f"knowledge {k.key} cannot be the same claim as two existing ones")
     targets = {t.key: t for t in draft.targets}
     errors += _duplicates("target", [t.key for t in draft.targets])
     knowledge = {k.key for k in draft.knowledge}
@@ -560,17 +639,135 @@ def _passage(source: JSON, text: str, quote: str) -> PassageP:
     )
 
 
-def accept_draft(
-    tx: Tx, *, source: JSON, draft: DraftOutline, authoring: JSON, purpose_given: bool
+REUSE_FLAGGED = "a claim flagged as wrong cannot be reused; settle the flag first"
+REUSE_CONFLICT = "a conflicting claim cannot be reused; it is kept separate and held"
+REUSE_REWORDED = "that claim changed after this outline was drafted; it stays separate"
+
+
+def listed_claims(tx: Tx, listed: dict[str, JSON]) -> dict[str, JSON]:
+    """Return the current revision of each claim a drafting packet listed (key -> view).
+
+    ``reworded`` says its statement or scope changed after the packet was written, so a
+    "same claim" proposal no longer compares like with like.
+    """
+    claims: dict[str, JSON] = {}
+    for key, then in listed.items():
+        now = tx.require("knowledge", then["id"], by=OWNER)
+        old = tx.at(then, by=OWNER).payload
+        same = (old["statement"], old["scope"]) == (now.payload["statement"], now.payload["scope"])
+        claims[key] = {**now.view, "reworded": not same}
+    return claims
+
+
+def reuse_choices(proposals: list[DraftExisting], existing: dict[str, JSON]) -> list[str]:
+    """Say what the learner may decide about a drafted claim's proposals.
+
+    Only a "same" match with an unflagged claim can reuse it. A conflict, or a match with
+    a claim flagged as wrong, is kept separate and held: reuse cannot clear a flag. A
+    match with a claim reworded since drafting stays separate.
+    """
+    if any(p.relation == "conflicts" or existing[p.key]["status"] == "disputed" for p in proposals):
+        return ["hold"]
+    if any(existing[p.key].get("reworded") for p in proposals):
+        return ["separate"]
+    return ["reuse", "separate"]
+
+
+def needs_review(draft: DraftOutline) -> bool:
+    """Tell whether a draft proposes reuse or a contradiction the learner must decide first."""
+    return any(k.existing for k in draft.knowledge)
+
+
+def _reuse_plan(
+    draft: DraftOutline, existing: dict[str, JSON], decisions: dict[str, str]
+) -> tuple[dict[str, JSON], dict[str, DisputeP]]:
+    """Check the learner's decisions; return the claims to reuse and those to hold."""
+    reuse: dict[str, JSON] = {}
+    held: dict[str, DisputeP] = {}
+    for k in draft.knowledge:
+        choice = decisions.get(k.key)
+        if not k.existing:
+            if choice is not None:
+                msg = f"claim {k.key} has no proposal to decide"
+                raise ValueError(msg)
+            continue
+        choices = reuse_choices(k.existing, existing)
+        if choices == ["separate"]:
+            if choice == "reuse":
+                raise ValueError(REUSE_REWORDED)
+            continue
+        if "reuse" not in choices:
+            conflicts = [p for p in k.existing if p.relation == "conflicts"]
+            if choice == "reuse":
+                raise ValueError(REUSE_CONFLICT if conflicts else REUSE_FLAGGED)
+            flagged = [p for p in k.existing if p.relation == "same"]
+            reason = (
+                "conflicts with an existing claim: " + "; ".join(p.why for p in conflicts)
+                if conflicts
+                else "repeats a claim flagged as wrong: "
+                + existing[flagged[0].key]["dispute"]["reason"]
+            )
+            held[k.key] = DisputeP(
+                reason=reason,
+                related=[RefP(**existing[p.key]["ref"]) for p in conflicts or flagged],
+            )
+        elif choice == "reuse":
+            reuse[k.key] = existing[k.existing[0].key]
+        elif choice != "separate":
+            msg = f"decide whether claim {k.key} reuses the existing claim or stays separate"
+            raise ValueError(msg)
+    return reuse, held
+
+
+def _attach_source(tx: Tx, claim: JSON, passages: list[PassageP], why: str) -> JSON:
+    """Reuse an existing claim: attach the new passages (provenance) and map the reuse."""
+    payload = KnowledgeP.model_validate(tx.at(claim["ref"], by=OWNER).payload)
+    attached = payload.model_copy(update={"sources": [*payload.sources, *passages]})
+    after = tx.put(
+        "knowledge",
+        attached.model_dump(),
+        by=OWNER,
+        id=claim["ref"]["id"],
+        base=claim["ref"]["revision"],
+    )
+    _mapping(tx, old=claim["ref"], new=after, relation="equivalent", reason=why)
+    return after
+
+
+def accept_draft(  # noqa: PLR0913 - the checked draft and the learner's reuse decisions
+    tx: Tx,
+    *,
+    source: JSON,
+    draft: DraftOutline,
+    authoring: JSON,
+    purpose_given: bool,
+    existing: dict[str, JSON] | None = None,
+    decisions: dict[str, str] | None = None,
 ) -> JSON:
     """Write a checked draft as knowledge, targets, curriculum and exercises.
 
-    Record IDs are fresh; draft keys never become identities. Returns the curriculum,
-    the targets in goal order and the exercises.
+    Record IDs are fresh; draft keys never become identities. ``existing`` holds the
+    current revision of each claim the packet listed; ``decisions`` the learner's
+    "reuse"/"separate" per proposed match. Returns the curriculum, the targets in goal
+    order and the exercises.
     """
     text: str = tx.at(source, by=OWNER).payload["text"]
-    k_refs = {k.key: ref("knowledge", new_id(), 1) for k in draft.knowledge}
+    reuse, held = _reuse_plan(draft, existing or {}, decisions or {})
+    title = tx.at(source, by=OWNER).payload["title"]
+    k_refs = {
+        k.key: _attach_source(
+            tx,
+            reuse[k.key],
+            [_passage(source, text, q) for q in k.quotes],
+            f"the same claim in {title}: {k.existing[0].why}",
+        )
+        if k.key in reuse
+        else ref("knowledge", new_id(), 1)
+        for k in draft.knowledge
+    }
     for k in draft.knowledge:
+        if k.key in reuse:
+            continue
         payload = KnowledgeP(
             form=k.form,
             statement=k.statement,
@@ -579,7 +776,8 @@ def accept_draft(
             dependencies=[
                 DependencyP(ref=RefP(**k_refs[d.key]), role=d.role) for d in k.depends_on
             ],
-            status="accepted",
+            status="disputed" if k.key in held else "accepted",
+            dispute=held.get(k.key),
         )
         tx.put("knowledge", payload.model_dump(), by=OWNER, id=k_refs[k.key]["id"])
     t_refs = {t.key: ref("target", new_id(), 1) for t in draft.targets}
@@ -1155,6 +1353,266 @@ def edit_outline(  # noqa: PLR0913 - one keyword per edited field
     return tx.put("curriculum", revised.model_dump(), by=OWNER, id=curriculum_id, base=base)
 
 
+# --- changing what is learned (compatibility-design.md section 6) -----------------------
+
+
+def _mapping(tx: Tx, *, old: JSON, new: JSON, relation: str, reason: str) -> JSON:
+    payload = MappingP.model_validate(
+        {
+            "from": [old],
+            "to": [new],
+            "relation": relation,
+            "disposition": "accepted",
+            "criterion_map": [],
+            "reviewer": "learner",
+            "reason": reason,
+            "supersedes": None,
+        }
+    )
+    return tx.put("mapping", payload.model_dump(by_alias=True), by=OWNER)
+
+
+def revise_target(  # noqa: PLR0913 - one keyword per edited field
+    tx: Tx,
+    *,
+    target_id: str,
+    base: int,
+    action: str,
+    mode: str,
+    conditions: list[str],
+    requirements: list[JSON],
+    reason: str,
+) -> JSON:
+    """Append a changed revision of a goal and select it wherever the old one was.
+
+    Every edit is a changed contract: the old revision keeps its evidence, and exercises
+    bound to it are held (their exact refs go stale) until a review rebinds them.
+    Requirements keep their ids; only their wording can change here.
+    """
+    current = tx.require("target", target_id, by=OWNER)
+    old = TargetP.model_validate(current.payload)
+    statements = {r["id"]: r["statement"] for r in requirements}
+    if [r.id for r in old.evidence_requirements] != [r["id"] for r in requirements]:
+        msg = "a goal edit keeps the same requirements; add or remove them with a new exercise"
+        raise ValueError(msg)
+    if not action.strip() or not all(s.strip() for s in statements.values()):
+        msg = "a goal needs an action and nonempty requirements"
+        raise ValueError(msg)
+    new = TargetP.model_validate(
+        {
+            **old.model_dump(),
+            "action": action.strip(),
+            "mode": mode,
+            "conditions": [c.strip() for c in conditions if c.strip()],
+            "evidence_requirements": [
+                {**r.model_dump(), "statement": statements[r.id].strip()}
+                for r in old.evidence_requirements
+            ],
+        }
+    )
+    if new == old:
+        msg = "nothing changed"
+        raise ValueError(msg)
+    new_ref = tx.put("target", new.model_dump(), by=OWNER, id=target_id, base=base)
+    mapping = _mapping(tx, old=current.ref, new=new_ref, relation="changed", reason=reason)
+    replaced = {exact_key(current.ref): new_ref}
+    return {
+        "target": new_ref,
+        "mapping": mapping,
+        "replaced": [[current.ref, new_ref]],
+        "curricula": _select_replacements(tx, replaced),
+    }
+
+
+def flag_knowledge(tx: Tx, *, knowledge_id: str, base: int, reason: str) -> JSON:
+    """Mark a claim as disputed ("this material is wrong"); its meaning is unchanged.
+
+    Nothing is re-versioned: goals and exercises resting on it are held by derivation
+    (``target_hold``), so keeping the claim later releases them again.
+    """
+    if not reason.strip():
+        msg = "say what is wrong with it"
+        raise ValueError(msg)
+    current = tx.require("knowledge", knowledge_id, by=OWNER)
+    claim = KnowledgeP.model_validate(current.payload)
+    flagged = claim.model_copy(
+        update={"status": "disputed", "dispute": DisputeP(reason=reason.strip(), related=[])}
+    )
+    return tx.put("knowledge", flagged.model_dump(), by=OWNER, id=knowledge_id, base=base)
+
+
+def revise_knowledge(  # noqa: PLR0913 - one keyword per edited field
+    tx: Tx, *, knowledge_id: str, base: int, statement: str, scope: str, reason: str
+) -> JSON:
+    """Settle or correct a claim.
+
+    The same wording keeps the claim and clears its flag (a status-only revision). New
+    wording is a meaning change: claims that build on it, then goals citing any of them,
+    get new revisions (with ``changed`` mappings) and are selected in place of the old.
+    """
+    current = tx.require("knowledge", knowledge_id, by=OWNER)
+    claim = KnowledgeP.model_validate(current.payload)
+    if not statement.strip() or not scope.strip():
+        msg = "a claim needs a statement and a scope"
+        raise ValueError(msg)
+    same = (statement.strip(), scope.strip()) == (claim.statement, claim.scope)
+    if same and claim.status != "disputed":
+        msg = "nothing changed"
+        raise ValueError(msg)
+    settled = claim.model_copy(
+        update={
+            "statement": statement.strip(),
+            "scope": scope.strip(),
+            "status": "accepted",
+            "dispute": None,
+        }
+    )
+    new_ref = tx.put("knowledge", settled.model_dump(), by=OWNER, id=knowledge_id, base=base)
+    if same:
+        return {"knowledge": new_ref, "replaced": [], "curricula": []}
+    _mapping(tx, old=current.ref, new=new_ref, relation="changed", reason=reason)
+    claims = _cascade_claims(tx, {knowledge_id: new_ref}, reason)
+    replaced = _cascade_targets(tx, claims, reason)
+    return {
+        "knowledge": new_ref,
+        "replaced": replaced,
+        "curricula": _select_replacements(tx, {exact_key(old): new for old, new in replaced}),
+    }
+
+
+def _cited(refs: list[RefP], changed: dict[str, JSON]) -> list[RefP]:
+    return [RefP(**changed[r.id]) if r.id in changed else r for r in refs]
+
+
+def _cascade_claims(tx: Tx, changed: dict[str, JSON], reason: str) -> dict[str, JSON]:
+    """Version every claim that builds on a changed one, transitively; return id -> new ref."""
+    # ponytail: rescans the library until nothing changes (quadratic in the claims that
+    # change); walk a dependents index instead once libraries hold thousands of claims.
+    grew = True
+    while grew:
+        grew = False
+        for record in tx.current("knowledge", by=OWNER):
+            claim = KnowledgeP.model_validate(record.payload)
+            if record.id in changed:
+                continue
+            deps = [
+                d.model_copy(update={"ref": RefP(**changed[d.ref.id])})
+                if d.ref.id in changed
+                else d
+                for d in claim.dependencies
+            ]
+            if deps != claim.dependencies:
+                new = claim.model_copy(update={"dependencies": deps})
+                after = tx.put(
+                    "knowledge", new.model_dump(), by=OWNER, id=record.id, base=record.revision
+                )
+                _mapping(tx, old=record.ref, new=after, relation="changed", reason=reason)
+                changed[record.id] = after
+                grew = True
+    return changed
+
+
+def _cascade_targets(tx: Tx, changed: dict[str, JSON], reason: str) -> list[list[JSON]]:
+    """Give every goal citing a changed claim a new revision; return [old, new] pairs."""
+    replaced: list[list[JSON]] = []
+    for record in tx.current("target", by=OWNER):
+        target = TargetP.model_validate(record.payload)
+        new = target.model_copy(
+            update={
+                "content": _cited(target.content, changed),
+                "evidence_requirements": [
+                    r.model_copy(update={"knowledge_refs": _cited(r.knowledge_refs, changed)})
+                    for r in target.evidence_requirements
+                ],
+            }
+        )
+        if new != target:
+            after = tx.put("target", new.model_dump(), by=OWNER, id=record.id, base=record.revision)
+            _mapping(tx, old=record.ref, new=after, relation="changed", reason=reason)
+            replaced.append([record.ref, after])
+    return replaced
+
+
+def rebind_exercise(tx: Tx, *, exercise_id: str, base: int) -> JSON:
+    """Bind a reviewed exercise to the current revision of each goal it covers.
+
+    The learner's review says the same prompt and criteria still check the edited goals.
+    Earlier answers stay bound to the revision they answered; nothing is re-stamped.
+    """
+    current = tx.require("exercise", exercise_id, by=OWNER)
+    old = ExerciseP.model_validate(current.payload)
+    hold = exercise_hold(tx, current.view)
+    if old.use != "practice" or hold is None or hold.kind != "stale":
+        msg = "only a practice exercise written for an earlier version of its goal can be rebound"
+        raise ValueError(msg)
+    latest = {t.id: tx.require("target", t.id, by=OWNER) for t in old.targets}
+    for c in old.criteria:
+        for cov in c.covers:
+            known = {r["id"] for r in latest[cov.target.id].payload["evidence_requirements"]}
+            if not set(cov.requirement_ids) <= known:
+                msg = "the edited goal no longer has a requirement this exercise checks"
+                raise ValueError(msg)
+    holds = [h for t in latest.values() if (h := target_hold(tx, t.ref))]
+    if holds:
+        raise ValueError(holds[0].reason)
+
+    def now(t: RefP) -> RefP:
+        return RefP(**latest[t.id].ref)
+
+    new = old.model_copy(
+        update={
+            "targets": [now(t) for t in old.targets],
+            "criteria": [
+                c.model_copy(
+                    update={
+                        "covers": [
+                            cov.model_copy(update={"target": now(cov.target)}) for cov in c.covers
+                        ]
+                    }
+                )
+                for c in old.criteria
+            ],
+            "design_review": old.design_review.model_copy(
+                update={
+                    "actor": "learner-review",
+                    "disposition": "accepted",
+                    "rebound_from": RefP(**current.ref),
+                }
+            ),
+            "status": "accepted",
+        }
+    )
+    if new.targets == old.targets:
+        msg = "this exercise already checks the current goals"
+        raise ValueError(msg)
+    return tx.put("exercise", new.model_dump(), by=OWNER, id=exercise_id, base=base)
+
+
+def _select_replacements(tx: Tx, replaced: dict[tuple[str, int], JSON]) -> list[list[JSON]]:
+    """Revise every curriculum that selects a replaced revision; return [old, new] pairs."""
+    revised: list[list[JSON]] = []
+    for record in tx.current("curriculum", by=OWNER):
+        old = CurriculumP.model_validate(record.payload)
+        sections = [
+            s.model_copy(
+                update={
+                    "targets": [
+                        RefP(**replaced.get(exact_key(t.model_dump()), t.model_dump()))
+                        for t in s.targets
+                    ]
+                }
+            )
+            for s in old.sections
+        ]
+        if sections != old.sections:
+            new = old.model_copy(update={"sections": sections})
+            after = tx.put(
+                "curriculum", new.model_dump(), by=OWNER, id=record.id, base=record.revision
+            )
+            revised.append([record.ref, after])
+    return revised
+
+
 # --- read views ----------------------------------------------------------------
 
 
@@ -1169,22 +1627,99 @@ def current_definition(tx: Tx, kind: str, id_: str) -> JSON | None:
     return record.view if record else None
 
 
+def revisions(tx: Tx, kind: str, id_: str) -> list[JSON]:
+    """Return every revision of a content record, oldest first (old definitions kept)."""
+    return [r.view for r in tx.history(kind, id_, by=OWNER)]
+
+
+def mapping_to(tx: Tx, exact: JSON) -> JSON | None:
+    """Return the accepted mapping that explains how a revision replaced its predecessor."""
+    for r in tx.current("mapping", by=OWNER):
+        if exact in r.payload["to"] and r.payload["disposition"] == "accepted":
+            return r.view
+    return None
+
+
 def curricula(tx: Tx) -> list[JSON]:
     """Return every curriculum's current revision."""
     return [r.view for r in tx.current("curriculum", by=OWNER)]
 
 
 def exercises_for(tx: Tx, targets: list[JSON]) -> list[JSON]:
-    """Return accepted practice exercises that cover only the given targets, oldest first.
+    """Return usable practice exercises that cover only the given exact targets, oldest first.
 
     Clarification questions and verification variants belong to a concern; they are
-    never offered as ordinary practice.
+    never offered as ordinary practice. A held exercise (``exercise_hold``) is not usable.
     """
-    ids = {t["id"] for t in targets}
+    keys = {exact_key(t) for t in targets}
     return [
         r.view
         for r in tx.current("exercise", by=OWNER)
-        if r.payload["status"] == "accepted"
-        and r.payload.get("use", "practice") == "practice"
-        and {t["id"] for t in r.payload["targets"]} <= ids
+        if r.payload.get("use", "practice") == "practice"
+        and {exact_key(t) for t in r.payload["targets"]} <= keys
+        and exercise_hold(tx, r.view) is None
     ]
+
+
+def practice_exercises(tx: Tx, target_ids: set[str]) -> list[JSON]:
+    """Return every current practice exercise touching these targets, usable or held."""
+    return [
+        r.view
+        for r in tx.current("exercise", by=OWNER)
+        if r.payload.get("use", "practice") == "practice"
+        and any(t["id"] in target_ids for t in r.payload["targets"])
+    ]
+
+
+def _disputed(tx: Tx, refs: list[JSON]) -> JSON | None:
+    """Return the first currently disputed claim among ``refs`` and what they build on."""
+    seen: set[str] = set()
+    todo = [r["id"] for r in refs]
+    while todo:
+        claim = tx.get("knowledge", todo.pop(0), by=OWNER)
+        if claim is None or claim.id in seen:
+            continue
+        seen.add(claim.id)
+        if claim.payload["status"] == "disputed":
+            return claim.view
+        todo += [d["ref"]["id"] for d in claim.payload["dependencies"]]
+    return None
+
+
+@dataclass(frozen=True)
+class Hold:
+    """Why a definition cannot be practised now: a stale revision, its status, or a flag."""
+
+    kind: Literal["stale", "status", "disputed"]
+    reason: str
+
+
+def target_hold(tx: Tx, target: JSON) -> Hold | None:
+    """Say why an exact goal revision cannot be practised now, or None when it can."""
+    current = tx.require("target", target["id"], by=OWNER)
+    if current.revision != target["revision"]:
+        return Hold("stale", "replaced by a newer version")
+    if current.payload["status"] != "accepted":
+        return Hold("status", f"this goal is {current.payload['status']}")
+    disputed = _disputed(tx, current.payload["content"])
+    if disputed is not None:
+        return Hold("disputed", f"rests on material flagged as wrong: {disputed['statement']}")
+    return None
+
+
+def exercise_hold(tx: Tx, exercise: JSON) -> Hold | None:
+    """Say why an exercise cannot be offered now (a stale or disputed mapping), or None.
+
+    A stale mapping (``kind == "stale"``) is the one a learner's review can rebind.
+    """
+    if exercise["status"] != "accepted":
+        return Hold("status", f"this exercise is {exercise['status']}")
+    for t in exercise["targets"]:
+        hold = target_hold(tx, t)
+        if hold is not None and hold.kind == "stale":
+            return Hold(
+                "stale", f"written for an earlier version of: {definition(tx, t)['action']}"
+            )
+        if hold is not None:
+            return hold
+    return None

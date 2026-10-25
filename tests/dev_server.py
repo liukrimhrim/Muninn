@@ -6,6 +6,11 @@ never judgment quality. The larger task always shows a connection error with two
 possible causes, so the clarification → teaching → fresh check flow can be walked.
 Words in an answer pick other paths: "misread" (a supported misread of the task) and,
 on the clarification, "not sure" (the concern ends still uncertain).
+
+Slice 3: "This judgment is wrong" is reviewed as all criteria shown (a reason containing
+"keep" leaves the judgment as it was). Material starting "Notes on searching"
+(``tests.drafts.NOTES_SOURCE``) proposes reusing the binary-search claims, and
+``tests.drafts.VOCAB_SOURCE`` adds an unrelated curriculum.
 """
 
 import json
@@ -17,7 +22,15 @@ import uvicorn
 
 from muninn.web import create_app
 from muninn.workflows import OUTPUTS, ProviderResult
-from tests.drafts import hypothesis, outline, question, teaching, variant
+from tests.drafts import (
+    hypothesis,
+    notes_outline,
+    outline,
+    question,
+    teaching,
+    variant,
+    vocab_outline,
+)
 
 
 def judged(outcomes: dict[str, str], quote: str, **extra: Any) -> dict[str, Any]:
@@ -63,6 +76,27 @@ def assess(user: str) -> dict[str, Any]:
     )
 
 
+def reassess(user: str) -> dict[str, Any]:
+    answer = user.split("<answer>\n", 1)[1].split("\n</answer>", 1)[0]
+    quote = answer[: min(len(answer), 12)]
+    if "keep" in user.split("<learner_disputes_it>", 1)[1]:
+        earlier = user.split("<earlier_judgment>\n", 1)[1].split("\nInterpretation:", 1)[0]
+        outcomes: dict[str, str] = {}
+        for line in earlier.splitlines():
+            key, rest = line.split(": ", 1)
+            outcomes[key] = rest.split(" — ", 1)[0]
+        return judged(outcomes, quote)
+    return judged({"c1": "demonstrated", "c2": "demonstrated", "c3": "demonstrated"}, quote)
+
+
+def draft(request: Any) -> dict[str, Any]:
+    if "Notes on searching" in request.user:
+        return notes_outline(request)
+    if "Tarvi" in request.user:
+        return vocab_outline()
+    return outline()
+
+
 class ScreenProvider:
     model = "scripted-ui-check"
 
@@ -72,9 +106,10 @@ class ScreenProvider:
     def complete(self, request: Any) -> ProviderResult:
         name = request.protocol["name"]
         output = {
-            "draft-initial-outline": outline,
+            "draft-initial-outline": lambda: draft(request),
             "author-teaching": teaching,
             "author-variant": variant,
+            "reassess-answer": lambda: reassess(request.user),
         }.get(name, lambda: assess(request.user))()
         parsed = OUTPUTS[name].model_validate(output)
         return ProviderResult(output=parsed, raw=json.dumps(output), model=self.model)

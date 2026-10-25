@@ -114,7 +114,52 @@ class Archive(Cmd):
     archive: str
 
 
-def create_app(  # noqa: C901 - one route table
+class GoalEdit(Cmd):
+    """A changed goal: action, mode, conditions and requirement wording."""
+
+    base: int
+    action: str
+    mode: str
+    conditions: list[str]
+    requirements: list[dict[str, Any]]
+    reason: str
+
+
+class Flag(Cmd):
+    """Why a claim looks wrong."""
+
+    base: int
+    reason: str
+
+
+class ClaimEdit(Cmd):
+    """A settled or corrected claim."""
+
+    base: int
+    statement: str
+    scope: str
+    reason: str
+
+
+class Decisions(Cmd):
+    """The learner's reuse decisions per drafted claim."""
+
+    decisions: dict[str, str]
+
+
+class Dispute(Cmd):
+    """Why a judgment looks wrong."""
+
+    reason: str
+
+
+class Acceptance(Cmd):
+    """Accept a reviewed judgment exactly as its preview showed it."""
+
+    preview: str | None = None
+
+
+def create_app(  # noqa: C901, PLR0915 - one route table
     data_dir: Path,
     *,
     provider: Provider | None = None,
@@ -180,6 +225,18 @@ def create_app(  # noqa: C901 - one route table
     def operation(operation_id: str) -> Any:  # noqa: ANN401
         return core.operation(operation_id)
 
+    @api.get("/api/operations/{operation_id}/proposals")
+    def proposals(operation_id: str) -> Any:  # noqa: ANN401
+        return read(workflows.proposals_view, operation_id)
+
+    @api.get("/api/operations/{operation_id}/correction")
+    def correction(operation_id: str) -> Any:  # noqa: ANN401
+        return core.correction_preview(operation_id)
+
+    @api.get("/api/targets/{target_id}/history")
+    def target_history(target_id: str) -> Any:  # noqa: ANN401
+        return read(workflows.target_history_view, target_id)
+
     @api.post("/api/materials")
     def add_material(body: Material, background: BackgroundTasks) -> Any:  # noqa: ANN401
         result = core.add_material(
@@ -204,6 +261,62 @@ def create_app(  # noqa: C901 - one route table
             purpose=body.purpose,
             sections=body.sections,
         )
+
+    @api.post("/api/operations/{operation_id}/accept")
+    def accept_material(operation_id: str, body: Decisions) -> Any:  # noqa: ANN401
+        return core.accept_material(
+            body.request_id, operation_id=operation_id, decisions=body.decisions
+        )
+
+    @api.post("/api/targets/{target_id}/revise")
+    def revise_target(target_id: str, body: GoalEdit) -> Any:  # noqa: ANN401
+        return core.revise_target(
+            body.request_id,
+            target_id=target_id,
+            base=body.base,
+            action=body.action,
+            mode=body.mode,
+            conditions=body.conditions,
+            requirements=body.requirements,
+            reason=body.reason,
+        )
+
+    @api.post("/api/knowledge/{knowledge_id}/flag")
+    def flag(knowledge_id: str, body: Flag) -> Any:  # noqa: ANN401
+        return core.flag_material(
+            body.request_id, knowledge_id=knowledge_id, base=body.base, reason=body.reason
+        )
+
+    @api.post("/api/knowledge/{knowledge_id}/revise")
+    def revise_claim(knowledge_id: str, body: ClaimEdit) -> Any:  # noqa: ANN401
+        return core.revise_material(
+            body.request_id,
+            knowledge_id=knowledge_id,
+            base=body.base,
+            statement=body.statement,
+            scope=body.scope,
+            reason=body.reason,
+        )
+
+    @api.post("/api/exercises/{exercise_id}/rebind")
+    def rebind(exercise_id: str, body: AtRevision) -> Any:  # noqa: ANN401
+        return core.rebind_exercise(body.request_id, exercise_id=exercise_id, base=body.base)
+
+    @api.post("/api/attempts/{attempt_id}/dispute")
+    def dispute(attempt_id: str, body: Dispute, background: BackgroundTasks) -> Any:  # noqa: ANN401
+        result = core.dispute_judgment(body.request_id, attempt_id=attempt_id, reason=body.reason)
+        background.add_task(core.run_operation, result["operation"]["id"])
+        return result
+
+    @api.post("/api/operations/{operation_id}/correction/accept")
+    def accept_correction(operation_id: str, body: Acceptance) -> Any:  # noqa: ANN401
+        return core.accept_correction(
+            body.request_id, operation_id=operation_id, preview=body.preview
+        )
+
+    @api.post("/api/operations/{operation_id}/correction/keep")
+    def keep(operation_id: str, body: Cmd) -> Any:  # noqa: ANN401
+        return core.keep_judgment(body.request_id, operation_id=operation_id)
 
     @api.post("/api/curricula/{curriculum_id}/sessions")
     def start(curriculum_id: str, body: Cmd) -> Any:  # noqa: ANN401

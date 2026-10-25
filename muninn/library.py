@@ -139,6 +139,11 @@ def ref(kind: str, id_: str, revision: int) -> JSON:
     return {"kind": kind, "id": id_, "revision": revision}
 
 
+def exact_key(reference: JSON) -> tuple[str, int]:
+    """Return what identifies one exact revision in a ref: its id and revision."""
+    return (reference["id"], reference["revision"])
+
+
 @dataclass(frozen=True)
 class Record:
     """One revision of a portable record."""

@@ -1,6 +1,6 @@
 import pytest
 
-from muninn.content import DraftOutline, check_draft, draft_request
+from muninn.content import DraftExisting, DraftOutline, check_draft, draft_request, reuse_choices
 from tests.drafts import SOURCE, outline
 
 
@@ -168,3 +168,28 @@ def test_a_fresh_instance_with_the_same_coverage_passes():
 def test_a_variant_that_is_not_a_fresh_comparable_task_is_refused(mutate, expected):
     errors = variant_errors(mutate)
     assert any(expected in e for e in errors), errors
+
+
+def test_proposals_must_name_listed_claims_and_one_match_at_most():
+    def with_existing(*existing):
+        draft = outline()
+        draft["knowledge"][0]["existing"] = list(existing)
+        return check_draft(DraftOutline.model_validate(draft), SOURCE, {"E1", "E2"})
+
+    same = {"key": "E1", "relation": "same", "why": "same claim"}
+    assert with_existing(same) == []
+    assert "unknown existing claim E9" in with_existing({**same, "key": "E9"})[0]
+    assert "two existing ones" in with_existing(same, {**same, "key": "E2"})[0]
+
+
+@pytest.mark.parametrize(
+    ("relation", "status", "choices"),
+    [
+        ("same", "accepted", ["reuse", "separate"]),
+        ("same", "disputed", ["hold"]),  # reuse cannot clear a flag
+        ("conflicts", "accepted", ["hold"]),  # a contradiction stays distinct and held
+    ],
+)
+def test_only_a_match_with_an_unflagged_claim_can_be_reused(relation, status, choices):
+    proposal = DraftExisting(key="E1", relation=relation, why="because")
+    assert reuse_choices([proposal], {"E1": {"status": status}}) == choices
