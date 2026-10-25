@@ -1,0 +1,15 @@
+#!/bin/sh
+# Quality gate: ruff (ALL rules) + format check + mypy --strict + pyright strict.
+# `bin/lint fix` also applies autofixes/formatting.
+REPO="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+set -e
+if [ "$1" = "fix" ]; then
+  uv run --project "$REPO" ruff check --fix "$REPO"
+  uv run --project "$REPO" ruff format "$REPO"
+else
+  uv run --project "$REPO" ruff check "$REPO"
+  uv run --project "$REPO" ruff format --check "$REPO"
+fi
+uv run --project "$REPO" mypy "$REPO/muninn" "$REPO/tests"
+uv run --project "$REPO" pyright
+echo "lint: all green"

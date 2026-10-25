@@ -1,6 +1,31 @@
-# General memorization-oriented learning: research and design
+# Muninn
 
-This repository currently contains a design investigation, not a learning application.
+A local web app for memorization-oriented learning: paste material, get a source-linked outline and exercises, answer in your own words, and get criterion-by-criterion feedback that separates independent, helped and unsettled evidence. Built from the design in this repository; start with [START-HERE.md](START-HERE.md).
+
+**Status:** build slice 1 of 5 ("one saved learning encounter", [issue](.scratch/first-build/issues/01-one-saved-learning-encounter.md)). Diagnosis/repair, corrections, FSRS reviews and qualification on fresh material come in later slices.
+
+## Run it
+
+Needs [uv](https://docs.astral.sh/uv/) and an Anthropic API key. Drafting and assessment send your source text and answers to the Anthropic API (`claude-opus-5-5`); everything else stays in a local SQLite file under `data/`.
+
+```sh
+export ANTHROPIC_API_KEY=...
+uv run python -m muninn            # http://127.0.0.1:8770
+```
+
+```sh
+bin/lint                           # ruff (all rules), format, mypy --strict, pyright strict
+uv run pytest                      # real SQLite store, scripted model
+uv run python -m tests.dev_server  # UI check with a scripted model, no key needed (port 8766)
+```
+
+Export and restore live on the home page. A restore always goes into a new store file; the previous one stays in `data/`.
+
+---
+
+## Design: general memorization-oriented learning
+
+The design investigation below predates the application and remains the reference for the later build slices.
 
 The product scope is a general system for retaining facts, relationships, connected structures, and procedures across subjects. Kubernetes appears in the existing spike as one procedural example; it does not define the product scope or first release.
 

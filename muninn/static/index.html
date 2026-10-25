@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Muninn</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <a href="#/" class="brand">Muninn</a>
+    <span class="tagline">remember the nodes, the edges and the shape</span>
+  </header>
+  <div id="timer-banner" class="banner" hidden>
+    Time is being recorded in another tab.
+    <button type="button" id="take-timer">Record time in this tab instead</button>
+  </div>
+  <main id="view" tabindex="-1" aria-live="polite"></main>
+  <script src="/app.js"></script>
+</body>
+</html>

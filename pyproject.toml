@@ -1,0 +1,67 @@
+[project]
+name = "muninn"
+version = "0.1.0"
+description = "Memorization-oriented learning: knowledge, connections and the evidence of using them."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=2.3.0",
+    "fastapi>=0.162.0",
+    "pydantic>=2.14.1",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=2.4.0",
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "ruff>=0.17.2",
+]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812", # conflicts with ruff format
+    "D203",   # incompatible with D211
+    "D213",   # incompatible with D212
+    "CPY001", # the LICENSE file covers copyright
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",    # pytest requires assert
+    "D1",      # a docstring per test function is filler
+    "ANN",     # annotating every fixture arg is filler
+    "PLR2004", # magic values in asserts are the expected values
+    "PLC0415", # in-test imports control import timing
+    "ARG",     # test doubles must match real signatures
+]
+
+[tool.mypy]
+strict = true
+exclude = ["\\.venv/", "\\.scratch/"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+include = ["muninn", "tests"]
+executionEnvironments = [
+    { root = "tests", extraPaths = ["."], reportMissingParameterType = false, reportUnknownParameterType = false, reportUnknownArgumentType = false, reportUnknownMemberType = false, reportUnknownVariableType = false, reportUnknownLambdaType = false, reportPrivateUsage = false },
+]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = [".scratch", "sources"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

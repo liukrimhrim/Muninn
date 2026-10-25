@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "muninn-ui-check",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "python", "-m", "tests.dev_server"],
+      "port": 8766
+    },
+    {
+      "name": "muninn",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "python", "-m", "muninn", "--port", "8770"],
+      "port": 8770
+    }
+  ]
+}
