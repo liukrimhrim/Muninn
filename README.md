@@ -6,10 +6,14 @@ A local web app for memorization-oriented learning: paste material, get a source
 
 ## Run it
 
-Needs [uv](https://docs.astral.sh/uv/) and an Anthropic API key. Drafting, assessment and authoring of teaching and fresh questions send your source text and answers to the Anthropic API (`claude-opus-5-5`); everything else stays in a local SQLite file under `data/`.
+Needs [uv](https://docs.astral.sh/uv/) and access to Claude, either way:
+
+- **Your Claude subscription**, through the [Claude Code](https://code.claude.com) CLI signed in once (`claude`, then `/login`). Each model call runs `claude -p` isolated from your own Claude Code setup (no tools, skills, settings, hooks or CLAUDE.md) and counts against your plan's usage. This is the default when `ANTHROPIC_API_KEY` is not set.
+- **An Anthropic API key** in `ANTHROPIC_API_KEY`, billed to your API account. The default when the key is set.
+
+Choose explicitly with `--provider claude-code|anthropic` (or `MUNINN_PROVIDER`). Either way, drafting, assessment and authoring of teaching and fresh questions send your source text and answers to Claude (`claude-opus-5-5`); everything else stays in a local SQLite file under `data/`.
 
 ```sh
-export ANTHROPIC_API_KEY=...
 uv run python -m muninn            # http://127.0.0.1:8770
 ```
 
@@ -18,7 +22,7 @@ bin/lint                           # ruff (all rules), format, mypy --strict, py
 uv run pytest                      # real SQLite store, scripted model
 uv run python -m tests.dev_server  # UI check with a scripted model, no key needed (port 8766)
 curl -X POST 'http://127.0.0.1:8766/dev/clock?hours=25'  # move the UI check's clock past a due time
-uv run python -m tests.qualify             # live run of the acceptance pack (needs ANTHROPIC_API_KEY)
+uv run python -m tests.qualify             # live run of the acceptance pack (same provider choice)
 uv run python -m tests.qualify --scripted  # the same harness with a scripted stand-in
 ```
 

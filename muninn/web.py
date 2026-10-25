@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from muninn import workflows
-from muninn.workflows import AnthropicProvider, App, Conflict, open_app, restore_into
+from muninn.workflows import App, Conflict, choose_provider, open_app, restore_into
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -215,7 +215,7 @@ def create_app(  # noqa: C901, PLR0915 - one route table
 ) -> FastAPI:
     """Build the web application over the active store in ``data_dir``."""
     tick = clock or (lambda: datetime.now(UTC))
-    core: App = open_app(data_dir, provider or AnthropicProvider(), clock=tick)
+    core: App = open_app(data_dir, provider or choose_provider(None), clock=tick)
     api = FastAPI(title="Muninn")
     api.state.core = core
 

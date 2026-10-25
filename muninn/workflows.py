@@ -9,6 +9,10 @@ Domain decisions stay with their owners; this module only orders them.
 from __future__ import annotations
 
 import contextlib
+import json
+import os
+import subprocess
+import tempfile
 import uuid
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, Protocol
@@ -1738,6 +1742,112 @@ class AnthropicProvider:
         if response.parsed_output is None:
             raise ProviderError(kind="malformed", detail="no structured output", raw=raw)
         return ProviderResult(output=response.parsed_output, raw=raw, model=response.model)
+
+
+class ClaudeCodeProvider:
+    """Claude through the local Claude Code CLI, signed in with the learner's own subscription.
+
+    Runs the unmodified ``claude`` binary headless (``claude -p``) for one schema-bound
+    reply. The call is isolated from the user's own Claude Code setup: no tools, skills,
+    MCP servers, settings, hooks or CLAUDE.md, a replaced system prompt, an empty working
+    directory, and an environment without API keys (a key would take precedence over the
+    subscription login). The request text goes in on stdin as data.
+    """
+
+    # The environment the CLI needs to find the user's login; nothing else is passed.
+    _ENV = ("HOME", "USER", "LOGNAME", "PATH", "LANG", "LC_ALL", "TMPDIR", "SHELL")
+
+    def __init__(
+        self,
+        model: str = "claude-opus-5-5",
+        *,
+        effort: str = "high",
+        timeout_s: float = 600,
+        executable: str = "claude",
+    ) -> None:
+        """Configure the model, effort, per-call timeout and CLI path."""
+        self.model = model
+        self.parameters: JSON = {"effort": effort, "transport": "claude-code-cli"}
+        self._timeout_s = timeout_s
+        self._executable = executable
+
+    def complete(self, request: ModelRequest) -> ProviderResult:
+        """Run one isolated headless call and return its validated structured output."""
+        # the SDK's own transform, so both providers send one output contract
+        from anthropic import transform_schema  # noqa: PLC0415
+
+        schema = transform_schema(request.output.model_json_schema())
+        argv = [
+            self._executable,
+            "-p",
+            "--output-format", "json",
+            "--json-schema", json.dumps(schema),
+            "--model", self.model,
+            "--effort", self.parameters["effort"],
+            "--system-prompt", request.system,
+            "--tools", "",
+            "--setting-sources", "",
+            "--strict-mcp-config",
+            "--disable-slash-commands",
+            "--no-session-persistence",
+            "--max-turns", "3",
+        ]  # fmt: skip
+        env = {name: os.environ[name] for name in self._ENV if name in os.environ}
+        try:
+            with tempfile.TemporaryDirectory(prefix="muninn-claude-") as cwd:
+                done = subprocess.run(  # noqa: S603 - fixed argv, request text only on stdin
+                    argv,
+                    input=request.user,
+                    capture_output=True,
+                    text=True,
+                    timeout=self._timeout_s,
+                    cwd=cwd,
+                    env=env,
+                    check=False,
+                )
+        except subprocess.TimeoutExpired as e:
+            raise ProviderError(kind="timeout", detail=f"no reply in {self._timeout_s:g} s") from e
+        except OSError as e:
+            raise ProviderError(
+                kind="unavailable", detail=f"cannot run {self._executable}: {e}"
+            ) from e
+        try:
+            reply = json.loads(done.stdout)
+        except json.JSONDecodeError as e:
+            tail = (done.stderr or done.stdout)[-300:]
+            raise ProviderError(
+                kind="unavailable", detail=f"claude exited {done.returncode}: {tail}"
+            ) from e
+        return self._result(request, reply)
+
+    def _result(self, request: ModelRequest, reply: JSON) -> ProviderResult:
+        message = str(reply.get("result") or "")
+        if reply.get("is_error"):
+            if "authenticate" in message.lower() or "login" in message.lower():
+                message += " (sign in once in a terminal: run `claude`, then /login)"
+            raise ProviderError(kind="unavailable", detail=message or "claude reported an error")
+        structured = reply.get("structured_output")
+        if structured is None:
+            raise ProviderError(kind="malformed", detail="no structured output", raw=message)
+        raw = json.dumps(structured, ensure_ascii=False)
+        try:
+            output = request.output.model_validate(structured)
+        except ValidationError as e:
+            raise ProviderError(kind="malformed", detail=str(e), raw=raw) from e
+        usage: dict[str, JSON] = reply.get("modelUsage") or {}
+        served = max(usage, key=lambda m: usage[m].get("outputTokens", 0), default=self.model)
+        return ProviderResult(output=output, raw=raw, model=served)
+
+
+def choose_provider(name: str | None) -> Provider:
+    """Return the named provider; by default the API when a key is set, else Claude Code."""
+    chosen = name or ("anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "claude-code")
+    if chosen == "claude-code":
+        return ClaudeCodeProvider()
+    if chosen == "anthropic":
+        return AnthropicProvider()
+    msg = f"unknown provider {chosen!r}; use 'anthropic' or 'claude-code'"
+    raise ValueError(msg)
 
 
 # --- opening the active store -----------------------------------------------------------

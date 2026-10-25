@@ -1,6 +1,8 @@
 """Run the acceptance pack through the real drafting and assessment provider; write a report.
 
-``uv run python -m tests.qualify`` runs it live (needs ``ANTHROPIC_API_KEY``);
+``uv run python -m tests.qualify`` runs it live, through the Anthropic API when
+``ANTHROPIC_API_KEY`` is set and otherwise through your Claude Code login
+(``--provider`` chooses explicitly);
 ``uv run python -m tests.qualify --scripted`` proves the harness with a scripted stand-in.
 
 Drafting goes through the application's own commands and a real store, one library for
@@ -26,7 +28,7 @@ from typing import Any
 
 from muninn import content, evidence, workflows
 from muninn.library import digest, new_id
-from muninn.workflows import AnthropicProvider, ProviderError, open_app
+from muninn.workflows import ProviderError, open_app
 from tests.conftest import ScriptedProvider
 
 PACK = Path(__file__).parent.parent / "qualification" / "pack-v1.json"
@@ -589,19 +591,26 @@ def main(argv: list[str] | None = None) -> int:
     """Run the pack and write the report; return the process exit code."""
     parser = argparse.ArgumentParser(description="Run the acceptance pack; write a report.")
     parser.add_argument("--scripted", action="store_true", help="use the scripted stand-in")
+    parser.add_argument(
+        "--provider",
+        choices=["anthropic", "claude-code"],
+        help="live model access (default: the API when ANTHROPIC_API_KEY is set, else Claude Code)",
+    )
     parser.add_argument("--pack", type=Path, default=PACK)
     parser.add_argument("--out", type=Path, default=REPORTS, help="directory for the report")
     parser.add_argument("--data", type=Path, help="library directory (default: a new temp dir)")
     args = parser.parse_args(argv)
-    if not args.scripted and not os.environ.get("ANTHROPIC_API_KEY"):
+    if args.provider == "anthropic" and not os.environ.get("ANTHROPIC_API_KEY"):
         print(  # noqa: T201 - command-line output
-            "ANTHROPIC_API_KEY is not set: the live run needs it. "
-            "Use --scripted to check the harness without a model.",
+            "ANTHROPIC_API_KEY is not set: the API provider needs it. Use --provider "
+            "claude-code for your Claude Code login, or --scripted to check the harness.",
             file=sys.stderr,
         )
         return 2
     pack = json.loads(args.pack.read_text())
-    provider: workflows.Provider = scripted(pack) if args.scripted else AnthropicProvider()
+    provider: workflows.Provider = (
+        scripted(pack) if args.scripted else workflows.choose_provider(args.provider)
+    )
     data = args.data or Path(tempfile.mkdtemp(prefix="muninn-qualify-"))
     results = run(pack, provider, data)
     text = report(pack, results, scripted=args.scripted, data=data, provider=provider.model)

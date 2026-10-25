@@ -775,10 +775,10 @@ def test_held_out_text_in_any_drafting_request_is_caught(tmp_path):
     }
 
 
-def test_the_live_run_refuses_to_start_without_a_key(monkeypatch, tmp_path):
-    # the live run needs ANTHROPIC_API_KEY; without it nothing runs and nothing is written
+def test_the_api_provider_refuses_to_start_without_a_key(monkeypatch, tmp_path):
+    # the API route needs ANTHROPIC_API_KEY; without it nothing runs and nothing is written
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    assert qualify.main(["--out", str(tmp_path / "reports")]) == 2
+    assert qualify.main(["--provider", "anthropic", "--out", str(tmp_path / "reports")]) == 2
     assert not (tmp_path / "reports").exists()
 
 
