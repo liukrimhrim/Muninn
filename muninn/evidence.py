@@ -346,7 +346,7 @@ class AssessmentOutput(_Strict):
     explanation: str
 
 
-ASSESS_PROTOCOL: JSON = {"name": "assess-answer", "version": 4, "parameters": {}}
+ASSESS_PROTOCOL: JSON = {"name": "assess-answer", "version": 5, "parameters": {}}
 BRANCH_NEXT = {
     "demonstrated": {"resolve", "teach"},
     "error": {"teach"},
@@ -396,7 +396,8 @@ inability.
 Propose a question only when its possible answers would change what help is useful. \
 Write its branches before asking: a demonstrated answer resolves the concern or points \
 to one hypothesis to teach, an error points to the hypothesis to teach, an inconclusive \
-answer leaves it still uncertain. Each question criterion re-observes one original \
+answer leaves it still uncertain. Write exactly one branch for each possible result. \
+Each question criterion re-observes one original \
 criterion (about_criterion_key) that was not demonstrated. Never ask merely to fill \
 every criterion; leave question null when the answer already shows what help fits, or \
 when nothing needs asking.
@@ -442,7 +443,7 @@ def assessment_request(
     )
 
 
-REASSESS_PROTOCOL: JSON = {"name": "reassess-answer", "version": 3, "parameters": {}}
+REASSESS_PROTOCOL: JSON = {"name": "reassess-answer", "version": 4, "parameters": {}}
 
 REASSESS_SYSTEM = (
     ASSESS_SYSTEM

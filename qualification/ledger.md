@@ -6,7 +6,7 @@ Every case ID the [first-build plan](../.scratch/skill-maintenance/first-build-p
 |---|---|
 | **existing** | An earlier slice's test already asserts the required consequence at an agreed seam: the real store, commands or HTTP, or (marked "pure rule") the owning module's pure rule function on hand-made inputs. |
 | **new** | A deterministic test added in slice 5, through the real store and commands (`tests/test_qualification.py` unless named). |
-| **live** | Needs the real model on the [acceptance pack](pack-v2.json): run `uv run python -m tests.qualify` (Claude subscription by default, or `ANTHROPIC_API_KEY`). First live run: `reports/pack-v1-20261025T223208Z-live.md`, adjudicated 2026-11-01. |
+| **live** | Needs the real model on the [acceptance pack](pack-v3.json): run `uv run python -m tests.qualify` (Claude subscription by default, or `ANTHROPIC_API_KEY`). Live runs: `reports/pack-v1-20261025T223208Z-live.md` (adjudicated 2026-11-01) and `reports/pack-v2-20261102T074432Z-live.md` (adjudicated 2026-11-02). |
 | **human** | Needs a person, real elapsed time or a decision that is not the build's to make; the reason is given. |
 | **known gap** | The situation can arise in this build, and the build does not do what the design asks (deferred work). Each is in the pilot limits statement. |
 | **not reachable** | No command in this build can produce the situation (the reason names the missing capability). Recorded so it is not mistaken for coverage; each is a known limit in the pilot limits statement. |

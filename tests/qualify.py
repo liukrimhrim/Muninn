@@ -31,7 +31,7 @@ from muninn.library import digest, new_id
 from muninn.workflows import ProviderError, open_app
 from tests.conftest import ScriptedProvider
 
-PACK = Path(__file__).parent.parent / "qualification" / "pack-v2.json"
+PACK = Path(__file__).parent.parent / "qualification" / "pack-v3.json"
 REPORTS = Path(__file__).parent.parent / "qualification" / "reports"
 SCRIPTED_NOTE = (
     "SCRIPTED RUN: every output below comes from a scripted stand-in, not a model. "
