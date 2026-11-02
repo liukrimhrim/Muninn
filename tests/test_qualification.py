@@ -744,7 +744,7 @@ def test_the_harness_reports_every_finding_and_never_a_percentage(tmp_path):
     # abstention and prompt version; never a quality percentage (proved with the stand-in)
     out = tmp_path / "reports"
     assert qualify.main(["--scripted", "--out", str(out), "--data", str(tmp_path / "lib")]) == 0
-    (path,) = out.glob("pack-v1-*-scripted.md")
+    (path,) = out.glob("pack-v2-*-scripted.md")
     text = path.read_text()
     assert "%" not in text
     assert "SCRIPTED RUN" in text
@@ -759,7 +759,7 @@ def test_the_harness_reports_every_finding_and_never_a_percentage(tmp_path):
     assert "- H3-c c1: reference not_shown, model cannot_judge (scripted)" in findings
     assert "- H3-c: a question was expected; the model proposed none" in findings
     assert "**Substantive errors the checks found (0):**" in findings
-    assert "assess-answer` v3" in text  # the prompt versions are named
+    assert "assess-answer` v4" in text  # the prompt versions are named
 
 
 def test_held_out_text_in_any_drafting_request_is_caught(tmp_path):

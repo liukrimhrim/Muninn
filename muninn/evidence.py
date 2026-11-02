@@ -346,7 +346,7 @@ class AssessmentOutput(_Strict):
     explanation: str
 
 
-ASSESS_PROTOCOL: JSON = {"name": "assess-answer", "version": 3, "parameters": {}}
+ASSESS_PROTOCOL: JSON = {"name": "assess-answer", "version": 4, "parameters": {}}
 BRANCH_NEXT = {
     "demonstrated": {"resolve", "teach"},
     "error": {"teach"},
@@ -371,6 +371,13 @@ including spelling and punctuation. An omitted explanation, shorthand, or a vali
 method the rubric did not anticipate is not automatically an error: accept equivalent \
 reasoning. You assess written recall and reasoning, never actual execution or \
 permanent mastery.
+
+One wrong statement is one error: judge it under the criterion it conflicts with. A \
+criterion whose required content is simply absent is not_shown, even when another part \
+of the answer is wrong. When the answer gives the reason a criterion names, even in a \
+shortened form, judge it demonstrated; a step the criterion's own reason implies does \
+not need to be spelled out. Use cannot_judge only when the wording supports readings \
+that would change the result.
 
 Help listed as shown during this answer helped this answer; it does not disappear when \
 the answer is correct. Preserve demonstrated parts when another part fails; a \
@@ -435,7 +442,7 @@ def assessment_request(
     )
 
 
-REASSESS_PROTOCOL: JSON = {"name": "reassess-answer", "version": 2, "parameters": {}}
+REASSESS_PROTOCOL: JSON = {"name": "reassess-answer", "version": 3, "parameters": {}}
 
 REASSESS_SYSTEM = (
     ASSESS_SYSTEM
