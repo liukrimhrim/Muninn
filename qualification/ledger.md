@@ -10,6 +10,7 @@ Every case ID the [first-build plan](../.scratch/skill-maintenance/first-build-p
 | **human** | Needs a person, real elapsed time or a decision that is not the build's to make; the reason is given. |
 | **known gap** | The situation can arise in this build, and the build does not do what the design asks (deferred work). Each is in the pilot limits statement. |
 | **not reachable** | No command in this build can produce the situation (the reason names the missing capability). Recorded so it is not mistaken for coverage; each is a known limit in the pilot limits statement. |
+| **waits for the first format change** | Needs a migration between released storage formats. Format 1 is released (2026-11-02, `tests/fixtures/format-1/`) and no migration exists yet; the first format change must ship one that upgrades that fixture. |
 
 Several cases have two halves (a deterministic invariant and a semantic or human half); both are listed. `Q::` abbreviates `tests/test_qualification.py::`.
 
@@ -163,7 +164,7 @@ Several cases have two halves (a deterministic invariant and a semantic or human
 | M06 historical context | new | `Q::test_reading_any_page_writes_nothing_and_calls_no_model`; S/T reproducibility of the live report: `tests/test_slice4_exit_check.py::test_every_capability_transition_holds_across_a_restart` (same pages before and after restore at the same clock) |
 | M07 budget without reverse import | existing | `tests/test_architecture.py` (Practice cannot import Measurement); `tests/test_sessions.py` budgets |
 | M08 external failure | existing | `tests/test_workflows.py::test_an_assessment_timeout_preserves_the_answer_and_changes_nothing_else`, `…test_an_invented_quote_is_refused_and_retried_once` |
-| M09 version continuity | existing + human | Export/restore of every module's records: all exit checks with `FailIfCalled`. A real physical migration waits for the first format change (human decision: declare format 1 released and freeze its fixture) |
+| M09 version continuity | existing + new | Export/restore of every module's records: all exit checks with `FailIfCalled`. Format 1 is released (2026-11-02, `muninn-0.1.0`): a copy of its frozen baseline `tests/fixtures/format-1/` opens and restores with the same fingerprint and expected values (`tests/test_format1.py`). No migration exists yet; the migration half starts with the first real format change |
 | M10 locality experiment | human | A judgment over real change history; slice 5's edits are listed in the issue (each cross-module edit names its contract) |
 
 ## Review-response cases V01–V12
@@ -188,10 +189,10 @@ Several cases have two halves (a deterministic invariant and a semantic or human
 | Case | Disposition | Where / why |
 |---|---|---|
 | C01 round trip | existing | `tests/test_library.py::test_restore_into_an_empty_store_reproduces_the_library`; every exit check restores with `FailIfCalled` |
-| C02 physical upgrade | human | No released format exists to upgrade from; the design forbids inventing one. Decide when format 1 is released and freeze its fixture |
-| C03 multi-release path | human | As C02 |
-| C04 crash before migration commit | human | As C02 (no migration exists) |
-| C05 crash after migration commit | human | As C02 |
+| C02 physical upgrade | waits for the first format change | Format 1 is released (2026-11-02, `tests/fixtures/format-1/`) and no migration exists yet; the first format change's migration must upgrade that fixture |
+| C03 multi-release path | waits for the first format change | As C02 (one released format so far) |
+| C04 crash before migration commit | waits for the first format change | As C02 |
+| C05 crash after migration commit | waits for the first format change | As C02 |
 | C06 failed verification | existing | For restore: `tests/test_library.py::test_owner_validation_errors_refuse_the_restore`, `…test_a_tampered_or_truncated_archive_is_refused`; for migrations as C02 |
 | C07 recovery after use | new (defect fixed) | `Q::test_a_restore_never_hides_work_the_archive_does_not_contain` |
 | C08 future/invalid archive | existing | `tests/test_library.py::test_a_corrupt_archive_is_refused_before_anything_is_created`, `…test_a_tampered_or_truncated_archive_is_refused`, `…test_a_store_from_a_newer_release_is_refused_unchanged` |
@@ -251,8 +252,8 @@ Several cases have two halves (a deterministic invariant and a semantic or human
 | Setup/feedback consume time or diagnostics cannot fit | existing (`tests/test_sessions.py`) |
 | No usable exercise or model output exists | existing (`tests/test_workflows.py::test_two_refusals_leave_a_visible_authoring_need_and_no_third_call`, `tests/test_repair.py::test_teaching_refused_twice_is_not_ready_and_never_tried_a_third_time`) |
 | A later session and schedule correction | existing (slice 4 exit check) + human: the genuinely elapsed later session |
-| Export/restore and a later architecture upgrade | existing (every exit check) + new (C07/C19/C20) + human (first format change) |
-| Interrupted migration or unsupported newer format | existing (C08) + human (C04/C05, no migration exists) |
+| Export/restore and a later architecture upgrade | existing (every exit check) + new (C07/C19/C20; the format-1 fixture opens and restores, `tests/test_format1.py`) + waits for the first format change (C02/C03: format 1 is released and no migration exists yet) |
+| Interrupted migration or unsupported newer format | existing (C08) + waits for the first format change (C04/C05: format 1 is released and no migration exists yet) |
 | Curriculum reorganization versus changed meaning | new (C09/O09) + existing (`tests/test_corrections.py`) |
 | Model or scheduling policy changes | existing + not reachable (C13) |
 | Progress, retention and efficiency metrics | O01–O18 rows above |
@@ -264,4 +265,4 @@ Several cases have two halves (a deterministic invariant and a semantic or human
 3. **Live learner flow in a real browser** on previously unauthored material with the real model (still open from slices 1–4).
 4. **Genuinely elapsed later session** (still open from slice 4): practise, wait at least a day of real time, return and take the due checks.
 5. **Learner comprehension of the progress views (O12):** an uncoached learner, timed, on the questions in O12; record confusion as a failed clarity observation.
-6. **Declare format 1 released** (or not) and freeze its baseline fixture; C02–C05 and M09's migration half start then.
+6. ~~**Declare format 1 released** (or not) and freeze its baseline fixture~~ Done 2026-11-02: format 1 is released with `muninn-0.1.0`; its baseline fixture is frozen at `tests/fixtures/format-1/`. C02–C05 and M09's migration half start with the first real format change; no migration exists yet.

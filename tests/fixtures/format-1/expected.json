@@ -1,0 +1,1407 @@
+{
+  "release": "muninn-0.1.0",
+  "format_version": 1,
+  "schema_version": 1,
+  "library_id": "ca83c7dc-3e25-400f-b8bb-afe47582cf49",
+  "through_sequence": 196,
+  "receipts": 70,
+  "fingerprint": "8720dc66351ef8a49876de4c6fffa1f9ce026f457169cbfd4f771e32113f721d",
+  "record_kinds": {
+    "activity_span": 9,
+    "assessment": 7,
+    "attempt": 17,
+    "concern": 3,
+    "condition_checkpoint": 1,
+    "curriculum": 4,
+    "enrollment": 6,
+    "exercise": 5,
+    "exposure": 3,
+    "knowledge": 7,
+    "mapping": 2,
+    "measurement_cohort": 2,
+    "operation": 39,
+    "practice_offer": 21,
+    "projection": 13,
+    "review": 2,
+    "schedule": 24,
+    "selection": 8,
+    "session": 5,
+    "session_feedback": 1,
+    "source": 3,
+    "study": 2,
+    "target": 6,
+    "teaching": 1,
+    "timing_run": 3,
+    "transition": 2
+  },
+  "missing_kinds": [
+    "measurement_report"
+  ],
+  "frozen_at": "2026-10-28T09:47:00.000Z",
+  "ids": {
+    "curricula": {
+      "binary_search": "9e44f35a-3a46-4e73-ab76-e16cf28077d2",
+      "tarvi": "9a55d224-64a4-4937-9585-7ec2f9388651",
+      "notes": "05b19d2e-a29a-40eb-9a90-ba651ea1c9a7"
+    },
+    "targets": {
+      "fact": {
+        "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+        "kind": "target",
+        "revision": 1
+      },
+      "connection": {
+        "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+        "kind": "target",
+        "revision": 1
+      },
+      "word": {
+        "id": "92d8ae37-6ed4-411c-b3a7-c84095b32872",
+        "kind": "target",
+        "revision": 1
+      },
+      "notes_explain": {
+        "id": "77f67dd2-191b-478d-882c-6fdec09b0ede",
+        "kind": "target",
+        "revision": 1
+      },
+      "notes_linear": {
+        "id": "8b2ac757-caee-47f0-9169-1d1c974f66d1",
+        "kind": "target",
+        "revision": 1
+      },
+      "notes_linear_revised": {
+        "kind": "target",
+        "id": "8b2ac757-caee-47f0-9169-1d1c974f66d1",
+        "revision": 2
+      }
+    },
+    "attempts": {
+      "hinted": "a95eb30c-7e75-497c-9bf2-f4731fc3ae38",
+      "ambiguous": "4f69ba51-0d0d-4f3c-b558-9e4d1e61c2ac",
+      "misread": "a7282646-0e5c-41da-9b19-1829817285b2",
+      "independent": "a53579dc-d5a8-4cf9-82c3-1f41d78bd57f",
+      "superseded_grade": "da09a709-f432-4a47-9bfb-890438f3a866",
+      "verification": "54dd18fd-102d-4042-80c1-b32f0edcaea3",
+      "unassessed": "b0cea688-c7ce-49b4-b22d-cffcab6dc4c2",
+      "draft": "2f4672b1-06ab-4c1d-b3a5-028f8a6bc3ae"
+    },
+    "claims": {
+      "flagged": "2b2446b4-102c-45e7-a7b3-e9985aa54291",
+      "reused": "d758e954-85e8-4800-8978-e1217c96dd3a"
+    },
+    "study": "e1549769-34de-40e3-8be7-3c17d2438901",
+    "checkpoint": {
+      "kind": "condition_checkpoint",
+      "id": "3fc82038-b61d-406c-aad2-fba916283fc3",
+      "revision": 1
+    },
+    "cohort": "a306589b-0eff-4583-8a32-4e5b57637e3b"
+  },
+  "lost_response": {
+    "request_id": "bca151e9-06b7-4750-b04a-a69e2bf248e1",
+    "command": "submit_answer",
+    "inputs": {
+      "attempt_id": "b0cea688-c7ce-49b4-b22d-cffcab6dc4c2",
+      "base": 1,
+      "response": "It must be sorted. Each comparison throws away half, so it takes about log2(n) steps."
+    },
+    "result": {
+      "attempt": {
+        "kind": "attempt",
+        "id": "b0cea688-c7ce-49b4-b22d-cffcab6dc4c2",
+        "revision": 2
+      },
+      "operation": {
+        "kind": "operation",
+        "id": "4ca33108-486c-4d81-ac8c-6f4c96a082c7",
+        "revision": 1
+      }
+    }
+  },
+  "observed": {
+    "curricula": {
+      "Binary search": {
+        "ref": {
+          "kind": "curriculum",
+          "id": "9e44f35a-3a46-4e73-ab76-e16cf28077d2",
+          "revision": 1
+        },
+        "title": "Binary search",
+        "enrollment": {
+          "kind": "enrollment",
+          "id": "703471f8-d1e4-4303-b74c-7ab9cec6986b",
+          "revision": 2
+        },
+        "goal_order": [
+          {
+            "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+            "kind": "target",
+            "revision": 1
+          },
+          {
+            "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+            "kind": "target",
+            "revision": 1
+          }
+        ],
+        "targets": [
+          [
+            {
+              "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+              "kind": "target",
+              "revision": 1
+            },
+            "active",
+            null
+          ],
+          [
+            {
+              "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+              "kind": "target",
+              "revision": 1
+            },
+            "active",
+            null
+          ]
+        ],
+        "exercises": [
+          [
+            {
+              "kind": "exercise",
+              "id": "05500d73-023d-4783-bfe9-2fb446203dd3",
+              "revision": 1
+            },
+            null
+          ]
+        ]
+      },
+      "Tarvi words": {
+        "ref": {
+          "kind": "curriculum",
+          "id": "9a55d224-64a4-4937-9585-7ec2f9388651",
+          "revision": 1
+        },
+        "title": "Tarvi words",
+        "enrollment": {
+          "kind": "enrollment",
+          "id": "ca4ed386-542f-4cc9-b831-df8c51b72cc4",
+          "revision": 2
+        },
+        "goal_order": [
+          {
+            "id": "92d8ae37-6ed4-411c-b3a7-c84095b32872",
+            "kind": "target",
+            "revision": 1
+          }
+        ],
+        "targets": [
+          [
+            {
+              "id": "92d8ae37-6ed4-411c-b3a7-c84095b32872",
+              "kind": "target",
+              "revision": 1
+            },
+            "active",
+            null
+          ]
+        ],
+        "exercises": [
+          [
+            {
+              "kind": "exercise",
+              "id": "8a38f1a9-1391-43ba-ab9b-f9280ec3892d",
+              "revision": 1
+            },
+            null
+          ]
+        ]
+      },
+      "Searching notes": {
+        "ref": {
+          "kind": "curriculum",
+          "id": "05b19d2e-a29a-40eb-9a90-ba651ea1c9a7",
+          "revision": 2
+        },
+        "title": "Searching notes",
+        "enrollment": {
+          "kind": "enrollment",
+          "id": "038a5cd5-543f-44be-b9fa-d491d7625d67",
+          "revision": 2
+        },
+        "goal_order": [
+          {
+            "id": "77f67dd2-191b-478d-882c-6fdec09b0ede",
+            "kind": "target",
+            "revision": 1
+          },
+          {
+            "id": "8b2ac757-caee-47f0-9169-1d1c974f66d1",
+            "kind": "target",
+            "revision": 2
+          }
+        ],
+        "targets": [
+          [
+            {
+              "id": "77f67dd2-191b-478d-882c-6fdec09b0ede",
+              "kind": "target",
+              "revision": 1
+            },
+            "unstarted",
+            "rests on material flagged as wrong: Binary search requires a sorted array."
+          ],
+          [
+            {
+              "id": "8b2ac757-caee-47f0-9169-1d1c974f66d1",
+              "kind": "target",
+              "revision": 2
+            },
+            "unstarted",
+            null
+          ]
+        ],
+        "exercises": [
+          [
+            {
+              "kind": "exercise",
+              "id": "4a060469-737e-44a5-b90a-5475c9ccf266",
+              "revision": 1
+            },
+            "rests on material flagged as wrong: Binary search requires a sorted array."
+          ],
+          [
+            {
+              "kind": "exercise",
+              "id": "19abf902-43f9-4f0b-8b6b-15853480d76b",
+              "revision": 1
+            },
+            "written for an earlier version of: State how linear search proceeds"
+          ]
+        ]
+      }
+    },
+    "attempts": {
+      "hinted": {
+        "ref": {
+          "kind": "attempt",
+          "id": "a95eb30c-7e75-497c-9bf2-f4731fc3ae38",
+          "revision": 3
+        },
+        "session": {
+          "id": "38bc23e9-4398-4508-a3a0-3896568ca7e2",
+          "kind": "session",
+          "revision": 1
+        },
+        "exercise": {
+          "id": "05500d73-023d-4783-bfe9-2fb446203dd3",
+          "kind": "exercise",
+          "revision": 1
+        },
+        "purpose": "initial",
+        "status": "submitted",
+        "response": "It must be sorted. Each comparison throws away half, so it takes about log2(n) steps.",
+        "started_at": "2026-10-24T10:05:00.000Z",
+        "submitted_at": "2026-10-24T10:08:00.000Z",
+        "assistance": [
+          {
+            "criterion_ids": [
+              "c2"
+            ],
+            "shown_at": null,
+            "study": null,
+            "text": "Think about what one comparison rules out.",
+            "time_evidence": [
+              {
+                "basis": "qualified_clock",
+                "earliest_at": "2026-10-24T10:06:00.000Z",
+                "explanation": "between the hint being sent and its display being acknowledged",
+                "field": "shown_at",
+                "latest_at": "2026-10-24T10:06:00.000Z",
+                "precision": "bounded",
+                "raw_client_at": null
+              }
+            ]
+          }
+        ],
+        "verification_of": null,
+        "offer": {
+          "ref": {
+            "kind": "practice_offer",
+            "id": "b3f84e9a-5b56-4679-9115-ed3635283d90",
+            "revision": 3
+          },
+          "state": "settled",
+          "roles": [
+            [
+              {
+                "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+                "kind": "target",
+                "revision": 1
+              },
+              "owner"
+            ],
+            [
+              {
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "kind": "target",
+                "revision": 1
+              },
+              "owner"
+            ]
+          ]
+        },
+        "assessing": {
+          "id": "f0d8d625-bcfc-4499-afb0-53b7afce9912",
+          "status": "succeeded",
+          "acceptance": "accepted",
+          "reason": null,
+          "try_index": 1
+        },
+        "assessments": [
+          {
+            "ref": {
+              "kind": "assessment",
+              "id": "3165c689-49c2-46d1-8d2c-3ff457a5e3ad",
+              "revision": 1
+            },
+            "outcomes": {
+              "c1": "demonstrated",
+              "c2": "demonstrated",
+              "c3": "demonstrated"
+            },
+            "interpretation": "ordinary",
+            "interpretation_criteria": [],
+            "supersedes": null,
+            "revision_reason": null
+          }
+        ]
+      },
+      "ambiguous": {
+        "ref": {
+          "kind": "attempt",
+          "id": "4f69ba51-0d0d-4f3c-b558-9e4d1e61c2ac",
+          "revision": 2
+        },
+        "session": {
+          "id": "38bc23e9-4398-4508-a3a0-3896568ca7e2",
+          "kind": "session",
+          "revision": 1
+        },
+        "exercise": {
+          "id": "05500d73-023d-4783-bfe9-2fb446203dd3",
+          "kind": "exercise",
+          "revision": 1
+        },
+        "purpose": "initial",
+        "status": "submitted",
+        "response": "It must be sorted. Each comparison throws away half, so it takes about log2(n) steps.",
+        "started_at": "2026-10-24T10:12:00.000Z",
+        "submitted_at": "2026-10-24T10:12:00.000Z",
+        "assistance": [],
+        "verification_of": null,
+        "offer": {
+          "ref": {
+            "kind": "practice_offer",
+            "id": "3bd9772a-11b4-40cd-9869-8e80837ce4e9",
+            "revision": 3
+          },
+          "state": "settled",
+          "roles": [
+            [
+              {
+                "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ],
+            [
+              {
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ]
+          ]
+        },
+        "assessing": {
+          "id": "cd085135-d179-46c6-9e72-8ef8ee69dbe0",
+          "status": "succeeded",
+          "acceptance": "accepted",
+          "reason": null,
+          "try_index": 1
+        },
+        "assessments": [
+          {
+            "ref": {
+              "kind": "assessment",
+              "id": "21c55449-3041-4e77-a60a-82c0bc6be5c8",
+              "revision": 1
+            },
+            "outcomes": {
+              "c1": "demonstrated",
+              "c2": "demonstrated",
+              "c3": "cannot_judge"
+            },
+            "interpretation": "unresolved",
+            "interpretation_criteria": [
+              "c3"
+            ],
+            "supersedes": null,
+            "revision_reason": null
+          }
+        ]
+      },
+      "misread": {
+        "ref": {
+          "kind": "attempt",
+          "id": "a7282646-0e5c-41da-9b19-1829817285b2",
+          "revision": 2
+        },
+        "session": {
+          "id": "38bc23e9-4398-4508-a3a0-3896568ca7e2",
+          "kind": "session",
+          "revision": 1
+        },
+        "exercise": {
+          "id": "05500d73-023d-4783-bfe9-2fb446203dd3",
+          "kind": "exercise",
+          "revision": 1
+        },
+        "purpose": "initial",
+        "status": "submitted",
+        "response": "It must be sorted. Each comparison throws away half, so it takes about log2(n) steps.",
+        "started_at": "2026-10-24T10:15:00.000Z",
+        "submitted_at": "2026-10-24T10:15:00.000Z",
+        "assistance": [],
+        "verification_of": null,
+        "offer": {
+          "ref": {
+            "kind": "practice_offer",
+            "id": "d3456b2f-7cf5-43b9-a659-29601715553c",
+            "revision": 3
+          },
+          "state": "settled",
+          "roles": [
+            [
+              {
+                "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ],
+            [
+              {
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ]
+          ]
+        },
+        "assessing": {
+          "id": "fca92e79-65b9-4d35-9174-8a1c305e26fd",
+          "status": "succeeded",
+          "acceptance": "accepted",
+          "reason": null,
+          "try_index": 1
+        },
+        "assessments": [
+          {
+            "ref": {
+              "kind": "assessment",
+              "id": "0028cf85-ad8e-448c-89fd-c6a75ad9a484",
+              "revision": 1
+            },
+            "outcomes": {
+              "c1": "demonstrated",
+              "c2": "demonstrated",
+              "c3": "error"
+            },
+            "interpretation": "supported_misread",
+            "interpretation_criteria": [
+              "c3"
+            ],
+            "supersedes": null,
+            "revision_reason": null
+          }
+        ]
+      },
+      "independent": {
+        "ref": {
+          "kind": "attempt",
+          "id": "a53579dc-d5a8-4cf9-82c3-1f41d78bd57f",
+          "revision": 2
+        },
+        "session": {
+          "id": "d8f22854-cc55-4583-ad74-00f1b8d30aa2",
+          "kind": "session",
+          "revision": 1
+        },
+        "exercise": {
+          "id": "8a38f1a9-1391-43ba-ab9b-f9280ec3892d",
+          "kind": "exercise",
+          "revision": 1
+        },
+        "purpose": "initial",
+        "status": "submitted",
+        "response": "Blue.",
+        "started_at": "2026-10-24T10:20:00.000Z",
+        "submitted_at": "2026-10-24T10:20:00.000Z",
+        "assistance": [],
+        "verification_of": null,
+        "offer": {
+          "ref": {
+            "kind": "practice_offer",
+            "id": "c502e798-3c91-4003-83ff-aa77b3fa9762",
+            "revision": 3
+          },
+          "state": "settled",
+          "roles": [
+            [
+              {
+                "id": "92d8ae37-6ed4-411c-b3a7-c84095b32872",
+                "kind": "target",
+                "revision": 1
+              },
+              "owner"
+            ]
+          ]
+        },
+        "assessing": {
+          "id": "b093cfa0-4087-41c7-b59e-7feeaff3fca1",
+          "status": "succeeded",
+          "acceptance": "accepted",
+          "reason": null,
+          "try_index": 1
+        },
+        "assessments": [
+          {
+            "ref": {
+              "kind": "assessment",
+              "id": "f498b0cc-9fef-4195-ac20-ba2f3dcc9c57",
+              "revision": 1
+            },
+            "outcomes": {
+              "c1": "demonstrated"
+            },
+            "interpretation": "ordinary",
+            "interpretation_criteria": [],
+            "supersedes": null,
+            "revision_reason": null
+          }
+        ]
+      },
+      "superseded_grade": {
+        "ref": {
+          "kind": "attempt",
+          "id": "da09a709-f432-4a47-9bfb-890438f3a866",
+          "revision": 2
+        },
+        "session": {
+          "id": "8a2e72f3-4e64-4c18-957f-24894133b085",
+          "kind": "session",
+          "revision": 1
+        },
+        "exercise": {
+          "id": "05500d73-023d-4783-bfe9-2fb446203dd3",
+          "kind": "exercise",
+          "revision": 1
+        },
+        "purpose": "initial",
+        "status": "submitted",
+        "response": "It must be sorted. Each comparison throws away half, so it takes about log2(n) steps.",
+        "started_at": "2026-10-25T11:22:00.000Z",
+        "submitted_at": "2026-10-25T11:22:00.000Z",
+        "assistance": [],
+        "verification_of": null,
+        "offer": {
+          "ref": {
+            "kind": "practice_offer",
+            "id": "2dfec364-581f-4a57-a54e-716579eb13f6",
+            "revision": 3
+          },
+          "state": "settled",
+          "roles": [
+            [
+              {
+                "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ],
+            [
+              {
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "kind": "target",
+                "revision": 1
+              },
+              "owner"
+            ]
+          ]
+        },
+        "assessing": {
+          "id": "b6194b0a-1261-44e2-a172-ab6ba02d6e98",
+          "status": "succeeded",
+          "acceptance": "accepted",
+          "reason": null,
+          "try_index": 1
+        },
+        "assessments": [
+          {
+            "ref": {
+              "kind": "assessment",
+              "id": "ba4f8fec-4fc4-4457-99d9-d298ac77e372",
+              "revision": 1
+            },
+            "outcomes": {
+              "c1": "demonstrated",
+              "c2": "demonstrated",
+              "c3": "demonstrated"
+            },
+            "interpretation": "ordinary",
+            "interpretation_criteria": [],
+            "supersedes": null,
+            "revision_reason": null
+          },
+          {
+            "ref": {
+              "kind": "assessment",
+              "id": "ba4f8fec-4fc4-4457-99d9-d298ac77e372",
+              "revision": 2
+            },
+            "outcomes": {
+              "c1": "demonstrated",
+              "c2": "demonstrated",
+              "c3": "error"
+            },
+            "interpretation": "ordinary",
+            "interpretation_criteria": [],
+            "supersedes": {
+              "id": "ba4f8fec-4fc4-4457-99d9-d298ac77e372",
+              "kind": "assessment",
+              "revision": 1
+            },
+            "revision_reason": "I made a mistake"
+          }
+        ]
+      },
+      "verification": {
+        "ref": {
+          "kind": "attempt",
+          "id": "54dd18fd-102d-4042-80c1-b32f0edcaea3",
+          "revision": 2
+        },
+        "session": {
+          "id": "8a2e72f3-4e64-4c18-957f-24894133b085",
+          "kind": "session",
+          "revision": 1
+        },
+        "exercise": {
+          "id": "b2030692-91bf-405d-a8ab-47c62fca0c72",
+          "kind": "exercise",
+          "revision": 1
+        },
+        "purpose": "verification",
+        "status": "submitted",
+        "response": "It must be sorted. Each comparison throws away half, so it takes about log2(n) steps.",
+        "started_at": "2026-10-25T11:39:00.000Z",
+        "submitted_at": "2026-10-25T11:42:00.000Z",
+        "assistance": [],
+        "verification_of": {
+          "concern": {
+            "id": "2dbba580-1461-4088-b45a-a9384beaed32",
+            "kind": "concern",
+            "revision": 2
+          },
+          "cycle_id": "dcd50d7e-735e-47d5-aaca-a98a699293ec",
+          "scope": [
+            {
+              "requirement_ids": [
+                "r2"
+              ],
+              "target": {
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "kind": "target",
+                "revision": 1
+              }
+            }
+          ],
+          "studies": [
+            {
+              "id": "e1549769-34de-40e3-8be7-3c17d2438901",
+              "kind": "study",
+              "revision": 2
+            }
+          ]
+        },
+        "offer": {
+          "ref": {
+            "kind": "practice_offer",
+            "id": "de3b643d-57a9-4dee-879e-69da1320c078",
+            "revision": 3
+          },
+          "state": "settled",
+          "roles": [
+            [
+              {
+                "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ],
+            [
+              {
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ]
+          ]
+        },
+        "assessing": {
+          "id": "7577d278-d484-416a-b4ae-e0784fb10f4c",
+          "status": "succeeded",
+          "acceptance": "accepted",
+          "reason": null,
+          "try_index": 1
+        },
+        "assessments": [
+          {
+            "ref": {
+              "kind": "assessment",
+              "id": "53fde29f-352e-4469-9f1c-f53fc697d610",
+              "revision": 1
+            },
+            "outcomes": {
+              "c1": "demonstrated",
+              "c2": "demonstrated",
+              "c3": "error"
+            },
+            "interpretation": "ordinary",
+            "interpretation_criteria": [],
+            "supersedes": null,
+            "revision_reason": null
+          }
+        ]
+      },
+      "unassessed": {
+        "ref": {
+          "kind": "attempt",
+          "id": "b0cea688-c7ce-49b4-b22d-cffcab6dc4c2",
+          "revision": 2
+        },
+        "session": {
+          "id": "8a2e72f3-4e64-4c18-957f-24894133b085",
+          "kind": "session",
+          "revision": 1
+        },
+        "exercise": {
+          "id": "05500d73-023d-4783-bfe9-2fb446203dd3",
+          "kind": "exercise",
+          "revision": 1
+        },
+        "purpose": "initial",
+        "status": "submitted",
+        "response": "It must be sorted. Each comparison throws away half, so it takes about log2(n) steps.",
+        "started_at": "2026-10-25T11:45:00.000Z",
+        "submitted_at": "2026-10-25T11:45:00.000Z",
+        "assistance": [],
+        "verification_of": null,
+        "offer": {
+          "ref": {
+            "kind": "practice_offer",
+            "id": "e8211a56-fd72-4ed5-93b8-00982756e257",
+            "revision": 2
+          },
+          "state": "submitted",
+          "roles": [
+            [
+              {
+                "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ],
+            [
+              {
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ]
+          ]
+        },
+        "assessing": {
+          "id": "4ca33108-486c-4d81-ac8c-6f4c96a082c7",
+          "status": "pending",
+          "acceptance": "pending",
+          "reason": null,
+          "try_index": 1
+        },
+        "assessments": []
+      },
+      "draft": {
+        "ref": {
+          "kind": "attempt",
+          "id": "2f4672b1-06ab-4c1d-b3a5-028f8a6bc3ae",
+          "revision": 2
+        },
+        "session": {
+          "id": "8a2e72f3-4e64-4c18-957f-24894133b085",
+          "kind": "session",
+          "revision": 1
+        },
+        "exercise": {
+          "id": "05500d73-023d-4783-bfe9-2fb446203dd3",
+          "kind": "exercise",
+          "revision": 1
+        },
+        "purpose": "initial",
+        "status": "draft",
+        "response": "It must be",
+        "started_at": "2026-10-25T11:47:00.000Z",
+        "submitted_at": null,
+        "assistance": [],
+        "verification_of": null,
+        "offer": {
+          "ref": {
+            "kind": "practice_offer",
+            "id": "9e4d0d30-3f1f-4363-b398-ba09460e45c7",
+            "revision": 1
+          },
+          "state": "reserved",
+          "roles": [
+            [
+              {
+                "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ],
+            [
+              {
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "kind": "target",
+                "revision": 1
+              },
+              "extra"
+            ]
+          ]
+        },
+        "assessing": null,
+        "assessments": []
+      }
+    },
+    "targets": {
+      "fact": {
+        "label": "independent",
+        "schedule": {
+          "ref": {
+            "kind": "schedule",
+            "id": "ab2aa9de-df6e-42e3-8ce1-e8ed9a000b71",
+            "revision": 6
+          },
+          "type": "recall",
+          "policy": "fsrs-recall",
+          "need": "held",
+          "due_at": null,
+          "obligation": {
+            "id": "b31773a3-0f1a-4d97-9870-0f31998435db",
+            "kind": "initial",
+            "status": "open"
+          },
+          "hold_reason": "waiting for your recall rating",
+          "reason": "admitted for practice",
+          "next_offer": {
+            "at": "2026-10-26T11:42:00.000Z",
+            "basis": [
+              {
+                "id": "54dd18fd-102d-4042-80c1-b32f0edcaea3",
+                "kind": "attempt",
+                "revision": 2
+              }
+            ],
+            "reason": "offered 24 hours after the latest relevant exposure"
+          },
+          "revisions": 6,
+          "fsrs_card": null
+        }
+      },
+      "connection": {
+        "label": "error",
+        "schedule": {
+          "ref": {
+            "kind": "schedule",
+            "id": "05699004-de3c-4c76-a9d8-46652216a25d",
+            "revision": 11
+          },
+          "type": "capability",
+          "policy": "capability-interval",
+          "need": "repair",
+          "due_at": "2026-10-26T11:39:00.000Z",
+          "obligation": {
+            "id": "c8495595-45ab-4efa-a43c-02ca74e3e742",
+            "kind": "later",
+            "status": "open"
+          },
+          "hold_reason": null,
+          "reason": "supported error on a focused check",
+          "next_offer": {
+            "at": "2026-10-26T11:42:00.000Z",
+            "basis": [
+              {
+                "id": "54dd18fd-102d-4042-80c1-b32f0edcaea3",
+                "kind": "attempt",
+                "revision": 2
+              }
+            ],
+            "reason": "offered 24 hours after the latest relevant exposure"
+          },
+          "revisions": 11,
+          "fsrs_card": null
+        }
+      },
+      "word": {
+        "label": "independent",
+        "schedule": {
+          "ref": {
+            "kind": "schedule",
+            "id": "71fa6b20-c22e-4036-ba93-a68721b92beb",
+            "revision": 7
+          },
+          "type": "recall",
+          "policy": "fsrs-recall",
+          "need": "independent_check",
+          "due_at": "2026-10-25T10:20:00.000Z",
+          "obligation": {
+            "id": "5f12a8d1-b133-4dc3-8480-21449f05904a",
+            "kind": "later",
+            "status": "open"
+          },
+          "hold_reason": null,
+          "reason": "next review from the recall schedule",
+          "next_offer": {
+            "at": "2026-10-26T11:22:00.000Z",
+            "basis": [
+              {
+                "id": "3fc82038-b61d-406c-aad2-fba916283fc3",
+                "kind": "condition_checkpoint",
+                "revision": 1
+              }
+            ],
+            "reason": "offered 24 hours after the latest relevant exposure"
+          },
+          "revisions": 7,
+          "fsrs_card": {
+            "card_id": 1,
+            "difficulty": 5.112170705601056,
+            "due": "2026-10-25T10:20:00+00:00",
+            "last_review": "2026-10-24T10:20:00+00:00",
+            "stability": 1.2931,
+            "state": 2,
+            "step": null
+          }
+        }
+      },
+      "notes_explain": {
+        "label": "untested",
+        "schedule": null
+      },
+      "notes_linear": {
+        "label": "untested",
+        "schedule": null
+      },
+      "notes_linear_revised": {
+        "label": "untested",
+        "schedule": null
+      }
+    },
+    "reviews": [
+      [
+        {
+          "ref": {
+            "kind": "review",
+            "id": "c6eb5112-65f2-41f3-9aa9-33879c9818ba",
+            "revision": 1
+          },
+          "choice": "remembered",
+          "rating": "good",
+          "occurred_at": "2026-10-24T10:20:00.000Z",
+          "rated_at": "2026-10-24T10:21:00.000Z",
+          "supersedes": null
+        },
+        {
+          "ref": {
+            "kind": "review",
+            "id": "c6eb5112-65f2-41f3-9aa9-33879c9818ba",
+            "revision": 2
+          },
+          "choice": "difficult",
+          "rating": "hard",
+          "occurred_at": "2026-10-24T10:20:00.000Z",
+          "rated_at": "2026-10-24T10:22:00.000Z",
+          "supersedes": {
+            "id": "c6eb5112-65f2-41f3-9aa9-33879c9818ba",
+            "kind": "review",
+            "revision": 1
+          }
+        }
+      ]
+    ],
+    "concerns": [
+      {
+        "ref": {
+          "kind": "concern",
+          "id": "2dbba580-1461-4088-b45a-a9384beaed32",
+          "revision": 3
+        },
+        "status": "open",
+        "route": "repair",
+        "kind": "error",
+        "scope": [
+          {
+            "requirement_ids": [
+              "r2"
+            ],
+            "target": {
+              "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+              "kind": "target",
+              "revision": 1
+            }
+          }
+        ],
+        "origin": {
+          "id": "da09a709-f432-4a47-9bfb-890438f3a866",
+          "kind": "attempt",
+          "revision": 2
+        },
+        "cycles": [
+          {
+            "id": "dcd50d7e-735e-47d5-aaca-a98a699293ec",
+            "outcome": "unsuccessful",
+            "studies": [
+              {
+                "id": "e1549769-34de-40e3-8be7-3c17d2438901",
+                "kind": "study",
+                "revision": 2
+              }
+            ],
+            "verification": {
+              "id": "54dd18fd-102d-4042-80c1-b32f0edcaea3",
+              "kind": "attempt",
+              "revision": 2
+            }
+          }
+        ]
+      }
+    ],
+    "study": {
+      "ref": {
+        "kind": "study",
+        "id": "e1549769-34de-40e3-8be7-3c17d2438901",
+        "revision": 2
+      },
+      "session": {
+        "id": "8a2e72f3-4e64-4c18-957f-24894133b085",
+        "kind": "session",
+        "revision": 1
+      },
+      "status": "completed",
+      "started_at": "2026-10-25T11:34:00.000Z",
+      "completed_at": "2026-10-25T11:39:00.000Z",
+      "concern": {
+        "id": "2dbba580-1461-4088-b45a-a9384beaed32",
+        "kind": "concern",
+        "revision": 1
+      },
+      "teaching": {
+        "ref": {
+          "id": "c9a75219-f66d-4821-a22a-2ad8a149465a",
+          "kind": "teaching",
+          "revision": 1
+        },
+        "status": "accepted",
+        "approach": "worked example: reverse the halving sequence",
+        "quotes": [
+          "discards the half that cannot contain it"
+        ],
+        "review": "accepted"
+      }
+    },
+    "claims": {
+      "flagged": {
+        "ref": {
+          "kind": "knowledge",
+          "id": "2b2446b4-102c-45e7-a7b3-e9985aa54291",
+          "revision": 2
+        },
+        "statement": "Binary search requires a sorted array.",
+        "status": "disputed",
+        "dispute": {
+          "reason": "it also needs random access",
+          "related": []
+        },
+        "sources": [
+          {
+            "id": "6f00061f-6cab-456a-8d8b-167767da62d0",
+            "kind": "source",
+            "revision": 1
+          }
+        ]
+      },
+      "reused": {
+        "ref": {
+          "kind": "knowledge",
+          "id": "d758e954-85e8-4800-8978-e1217c96dd3a",
+          "revision": 2
+        },
+        "statement": "Because each comparison discards the half that cannot contain the target, the search needs only about log2(n) comparisons.",
+        "status": "accepted",
+        "dispute": null,
+        "sources": [
+          {
+            "id": "7c7a4076-39ea-4e4a-a78e-0ac6269ee894",
+            "kind": "source",
+            "revision": 1
+          },
+          {
+            "id": "6f00061f-6cab-456a-8d8b-167767da62d0",
+            "kind": "source",
+            "revision": 1
+          }
+        ]
+      }
+    },
+    "mapping": {
+      "ref": {
+        "kind": "mapping",
+        "id": "ae9ace39-d309-4e12-8c89-513d060f1f1d",
+        "revision": 1
+      },
+      "from": [
+        {
+          "id": "8b2ac757-caee-47f0-9169-1d1c974f66d1",
+          "kind": "target",
+          "revision": 1
+        }
+      ],
+      "to": [
+        {
+          "id": "8b2ac757-caee-47f0-9169-1d1c974f66d1",
+          "kind": "target",
+          "revision": 2
+        }
+      ],
+      "relation": "changed",
+      "disposition": "accepted",
+      "reason": "the goal should say the list may be unsorted"
+    },
+    "checkpoint": {
+      "ref": {
+        "kind": "condition_checkpoint",
+        "id": "3fc82038-b61d-406c-aad2-fba916283fc3",
+        "revision": 1
+      },
+      "targets": [
+        {
+          "id": "92d8ae37-6ed4-411c-b3a7-c84095b32872",
+          "kind": "target",
+          "revision": 1
+        }
+      ],
+      "established_at": "2026-10-25T11:22:00.000Z",
+      "purpose": "exposure_ended",
+      "basis": "learner_confirmation"
+    },
+    "tracking": {
+      "ref": {
+        "kind": "measurement_cohort",
+        "id": "a306589b-0eff-4583-8a32-4e5b57637e3b",
+        "revision": 2
+      },
+      "curriculum": {
+        "kind": "curriculum",
+        "id": "9e44f35a-3a46-4e73-ab76-e16cf28077d2",
+        "revision": 1
+      },
+      "lifecycle": "active",
+      "frozen_at": "2026-10-24T10:16:00.000Z",
+      "population": [
+        [
+          {
+            "kind": "target",
+            "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+            "revision": 1
+          },
+          "selected"
+        ],
+        [
+          {
+            "kind": "target",
+            "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+            "revision": 1
+          },
+          "selected"
+        ]
+      ],
+      "windows": [
+        {
+          "start": "2026-10-24T10:16:00.000Z",
+          "end": "2026-10-31T10:16:00.000Z",
+          "endpoints": [
+            [
+              {
+                "kind": "target",
+                "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+                "revision": 1
+              },
+              null
+            ],
+            [
+              {
+                "kind": "target",
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "revision": 1
+              },
+              {
+                "kind": "attempt",
+                "id": "da09a709-f432-4a47-9bfb-890438f3a866",
+                "revision": 1
+              }
+            ]
+          ]
+        },
+        {
+          "start": "2026-10-31T10:16:00.000Z",
+          "end": "2026-11-07T10:16:00.000Z",
+          "endpoints": [
+            [
+              {
+                "kind": "target",
+                "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+                "revision": 1
+              },
+              null
+            ],
+            [
+              {
+                "kind": "target",
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "revision": 1
+              },
+              null
+            ]
+          ]
+        },
+        {
+          "start": "2026-11-07T10:16:00.000Z",
+          "end": "2026-11-14T10:16:00.000Z",
+          "endpoints": [
+            [
+              {
+                "kind": "target",
+                "id": "d8d0f446-658f-44d8-924f-015e7a2fec04",
+                "revision": 1
+              },
+              null
+            ],
+            [
+              {
+                "kind": "target",
+                "id": "47e1601f-406d-4040-892d-c819cb0bb40d",
+                "revision": 1
+              },
+              null
+            ]
+          ]
+        }
+      ]
+    },
+    "timing_runs": [
+      {
+        "ref": {
+          "kind": "timing_run",
+          "id": "91240630-aac2-4b52-98b9-48710ad1ce6b",
+          "revision": 2
+        },
+        "document_run_id": "tab-1",
+        "generation": 1,
+        "status": "interrupted",
+        "close_reason": "taken over by another tab"
+      },
+      {
+        "ref": {
+          "kind": "timing_run",
+          "id": "52fc8efe-fabc-48c8-b704-751df679f5cb",
+          "revision": 1
+        },
+        "document_run_id": "tab-2",
+        "generation": 2,
+        "status": "active",
+        "close_reason": null
+      }
+    ],
+    "session_feedback": [
+      {
+        "ref": {
+          "kind": "session_feedback",
+          "id": "acaa157a-09b7-4a6a-b3a5-d4270fe86068",
+          "revision": 1
+        },
+        "session": {
+          "id": "d8f22854-cc55-4583-ad74-00f1b8d30aa2",
+          "kind": "session",
+          "revision": 2
+        },
+        "effort": "easy",
+        "usefulness": "useful",
+        "note": null
+      }
+    ],
+    "effort": {
+      "total_ms": 2100000,
+      "by_category": {
+        "answer": 1440000,
+        "feedback": 240000,
+        "assessment_correction": 120000,
+        "study": 300000
+      },
+      "groups": {
+        "learning": 1980000,
+        "overhead": 120000
+      },
+      "unattributed_ms": 0,
+      "disputed_ms": 0,
+      "unplaced_known_ms": 0,
+      "unknown_tails": 1,
+      "stale_spans": 1
+    },
+    "home_due": {
+      "checks": 1,
+      "repairs": 1,
+      "blocked": 1,
+      "curricula": [
+        "9e44f35a-3a46-4e73-ab76-e16cf28077d2",
+        "9a55d224-64a4-4937-9585-7ec2f9388651"
+      ],
+      "oldest": "2026-10-25T10:20:00.000Z"
+    }
+  },
+  "gaps": {
+    "two subject curricula sharing one unchanged target": "not reachable: no flow creates a shared exact target; reuse links claims, never goals (the fixture has one reused claim), and linking an admitted goal into a second enrollment was deferred in slice 4 (ledger CCA04, P19, C09)",
+    "a retired target": "not reachable: no command retires a goal or removes it from a curriculum (ledger C10, deferred in slice 3); revise_target writes a 'changed' mapping and keeps the old revision 'accepted', only deselected",
+    "a held mapping": "not reachable: every mapping is written 'accepted' (content._mapping); what a change holds is the exercise written for the old goal, derived at read time",
+    "measurement_report records": "not reachable: no command saves a report (saved reports are deferred: ledger X12, P08, P31, B07), and Measurement has no payload contract for the kind"
+  }
+}

@@ -28,7 +28,7 @@ uv run python -m tests.qualify --scripted  # the same harness with a scripted st
 
 The qualification report (in `qualification/reports/`) lists every substantive error, disagreement with the pack's reference judgments, abstention and prompt version, and never a quality percentage.
 
-Export and restore live on the home page. A restore always goes into a new store file; the previous one stays in `data/`. An older export of the same library is refused when the current library holds learning the export lacks, so a restore never hides later work.
+Export and restore live on the home page. A restore always goes into a new store file; the previous one stays in `data/`. An older export of the same library is refused when the current library holds learning the export lacks, so a restore never hides later work. Storage format 1 was released on 2026-11-02 with `muninn-0.1.0`; its frozen baseline library is in [`tests/fixtures/format-1/`](tests/fixtures/format-1/), and any later format change must ship a migration that upgrades it.
 
 ---
 
