@@ -4,14 +4,43 @@
     {
       "name": "muninn-ui-check",
       "runtimeExecutable": "uv",
-      "runtimeArgs": ["run", "python", "-m", "tests.dev_server"],
+      "runtimeArgs": [
+        "run",
+        "python",
+        "-m",
+        "tests.dev_server"
+      ],
       "port": 8766
     },
     {
       "name": "muninn",
       "runtimeExecutable": "uv",
-      "runtimeArgs": ["run", "python", "-m", "muninn", "--port", "8770"],
+      "runtimeArgs": [
+        "run",
+        "python",
+        "-m",
+        "muninn",
+        "--port",
+        "8770"
+      ],
       "port": 8770
+    },
+    {
+      "name": "muninn-demo",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "python",
+        "-m",
+        "muninn",
+        "--data",
+        "data/example",
+        "--port",
+        "8772",
+        "--provider",
+        "claude-code"
+      ],
+      "port": 8772
     }
   ]
 }

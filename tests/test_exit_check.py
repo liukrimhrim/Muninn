@@ -95,7 +95,7 @@ def test_the_summary_separates_evidence_and_counts_time_once(browser):
     assert summary["effort"]["total_ms"] == 240_000
     assert summary["effort"]["groups"] == {"learning": 180_000, "waiting": 60_000}
     assert sorted(t["label"] for t in summary["targets"]) == ["error", "independent"]
-    assert summary["headline"] == "Practiced today; later recall not checked yet."
+    assert summary["headline"] == "You practised today. We haven't checked yet whether it stuck."
 
 
 def span(run, session, category, minutes, *, ordinal):

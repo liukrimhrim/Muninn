@@ -132,7 +132,7 @@ def test_every_capability_transition_holds_across_a_restart(browser, clock):  # 
         "due_at": None,
         "next_offer": {
             "at": at(1, 10, 0),
-            "reason": "offered 24 hours after the latest relevant exposure",
+            "reason": "ready 24 hours after you last saw the answer",
         },
     }
     attempt = b.get(f"/sessions/{s1['id']}")["attempt"]["ref"]
@@ -287,7 +287,11 @@ def test_repair_dates_checks_from_practice_and_an_immediate_success_never_advanc
     assert schedule(b, c, goal)["due_at"] == at(2, 10, 20)  # a new 24 h check after practice
     checks = b.get(f"/curricula/{c}/checks")["targets"][0]["checks"]
     assert [(h["status"], h["due_at"], h["ended"]) for h in checks] == [
-        ("replaced", at(1, 10, 5), "replaced after teaching"),  # the failed check stays visible
+        (
+            "replaced",
+            at(1, 10, 5),
+            "replaced after an explanation",
+        ),  # the failed check stays visible
         ("open", at(2, 10, 20), None),
     ]
     assert [(a["role"], a["label"]) for a in checks[0]["answers"]] == [
@@ -340,7 +344,7 @@ def test_recall_reviews_and_budgets_keep_unmet_needs_and_survive_restore(browser
     b.post(f"/sessions/{roomy['id']}/end", base=current["ref"]["revision"], reason="time up")
     summary = b.get(f"/sessions/{roomy['id']}/summary")
     assert [(u["action"], u["reason"], u["waiting_since"]) for u in summary["unmet"]] == [
-        ("Recall what mavo means", "the session's time ran out", at(2, 10, 0))
+        ("Recall what mavo means", "the session ran out of time", at(2, 10, 0))
     ]
     assert schedule(b, v, word)["due_at"] == at(2, 10, 0)  # nothing was marked done
 

@@ -111,8 +111,8 @@ def test_the_fixture_holds_every_record_kind_this_build_can_write():
     assert (seen["mapping"]["relation"], seen["mapping"]["disposition"]) == ("changed", "accepted")
     notes = seen["curricula"]["Searching notes"]
     assert [hold.split(":")[0] for _ref, hold in notes["exercises"]] == [
-        "rests on material flagged as wrong",
-        "written for an earlier version of",
+        "it uses a fact you said is wrong",
+        "it was written for an older version of the goal",
     ]
     claims = seen["claims"]
     assert (claims["flagged"]["status"], len(claims["reused"]["sources"])) == ("disputed", 2)

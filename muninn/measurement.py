@@ -591,9 +591,9 @@ COST_MEMBERSHIP: JSON = {"name": "cost-membership", "version": 1, "parameters": 
 CLAIMS = [evidence.QUALIFICATION, evidence.LATER_CHECK_CLAIM]
 BASELINE_RULE = "the last submitted answer for each exact goal before tracking began"
 ASSIGNMENT_RULE = "the first ordinary owned check offered for the goal in this window"
-NO_OFFER = "no ordinary check was offered in this window"
+NO_OFFER = "no regular check came up this week"
 STOPPED = "tracking was stopped"
-UNANSWERED = "the assigned check was not answered"
+UNANSWERED = "the check wasn't answered"
 
 
 def _member(tx: Tx, target: JSON, frozen_at: str, usable: list[JSON]) -> MemberP:
@@ -805,7 +805,7 @@ def _answer_raw(tx: Tx, attempt_id: str, target: JSON) -> tuple[str, str | None]
     if found is None:
         return "U", "not graded yet"
     if found["judged"] not in RAW_OF and found["judged"] != "helped":
-        return "U", "; ".join(found["reasons"])
+        return "U", " ".join(found["reasons"])
     if found["help"] == "shown":
         return "H", "answered with help"
     return RAW_OF[found["judged"]], None
@@ -814,7 +814,7 @@ def _answer_raw(tx: Tx, attempt_id: str, target: JSON) -> tuple[str, str | None]
 def _raw(tx: Tx, cohort: CohortP, endpoint: EndpointP, window: WindowP) -> tuple[str, str | None]:
     """Return an endpoint's raw outcome S/E/H/U/M/N and why, at the current time."""
     if tx.now < window.end:
-        return "N", "this window has not closed yet"
+        return "N", "this week isn't over yet"
     if endpoint.assigned_attempt is None:
         stopped = cohort.stopped_at is not None and cohort.stopped_at < window.end
         return "M", STOPPED if stopped else NO_OFFER

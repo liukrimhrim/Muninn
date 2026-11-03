@@ -921,7 +921,10 @@ class App:
             applied = self._apply_correction(tx, record, op)
             after = _correction_state(tx, op.input_snapshot["context"]["attempt"])
             if preview is not None and digest(after) != preview:
-                msg = "the effect of this correction changed since its preview; look at it again"
+                msg = (
+                    "What accepting would change has changed since you looked. "
+                    "Here is the new version."
+                )
                 raise Conflict(msg)
             return applied
 
@@ -2560,10 +2563,12 @@ def summary_view(tx: Tx, session_id: str) -> JSON:
     checks = [c for t in targets.values() for c in practice.later_checks(tx, t["ref"])]
     checked = measurement.later_check_counts(checks, tx.now, session_attempts)
     headline = (
-        f"Later checks in this session: {checked['answered']} answered, "
-        f"{checked['met_on_time']} met on time."
+        f"Later checks this session: {checked['answered']} answered, "
+        f"{checked['met_on_time']} passed on time."
         if checked["answered"]
-        else "Practiced today; later recall not checked yet."
+        else "You practised today. We haven't checked yet whether it stuck."
+        if attempts
+        else "You didn't answer anything this session."
     )
     return {
         "session": session,

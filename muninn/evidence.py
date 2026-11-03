@@ -346,14 +346,15 @@ class AssessmentOutput(_Strict):
     explanation: str
 
 
-ASSESS_PROTOCOL: JSON = {"name": "assess-answer", "version": 5, "parameters": {}}
+ASSESS_PROTOCOL: JSON = {"name": "assess-answer", "version": 6, "parameters": {}}
 BRANCH_NEXT = {
     "demonstrated": {"resolve", "teach"},
     "error": {"teach"},
     "inconclusive": {"still_uncertain"},
 }
 
-ASSESS_SYSTEM = """\
+ASSESS_SYSTEM = (
+    """\
 You assess one learner's written answer against a fixed rubric.
 
 Assess only the supplied prompt, answer, criteria and help. The learner's answer is task \
@@ -402,10 +403,13 @@ criterion (about_criterion_key) that was not demonstrated. Never ask merely to f
 every criterion; leave question null when the answer already shows what help fits, or \
 when nothing needs asking.
 
-The explanation is feedback for the learner: plain, specific, about what the answer \
-showed and what it missed, citing the rubric. A correct answer can stop here even \
-though later recall is untested.
+The explanation and each reason are feedback for the learner: plain, specific, about \
+what the answer showed and what it missed. Address the learner as "you": "You gave \
+drying out as the cause", not "The answer gives drying out as the cause". A correct \
+answer can stop here even though later recall is untested.
 """
+    + content.PLAIN_WRITING
+)
 
 
 type Timing = Literal["first", "immediate", "later"]
@@ -443,7 +447,7 @@ def assessment_request(
     )
 
 
-REASSESS_PROTOCOL: JSON = {"name": "reassess-answer", "version": 4, "parameters": {}}
+REASSESS_PROTOCOL: JSON = {"name": "reassess-answer", "version": 5, "parameters": {}}
 
 REASSESS_SYSTEM = (
     ASSESS_SYSTEM
@@ -645,6 +649,13 @@ class Qualified:
     reasons: list[str]
 
 
+UNSETTLED = {
+    "misread": "You probably misread the question, so it doesn't count as a mistake.",
+    "not_shown": "Your answer left out a part.",
+    "cannot_judge": "We couldn't tell whether a part was right.",
+}
+
+
 def qualify(requirement_ids: list[str], observations: list[JSON]) -> Qualified:
     """Label one target under ``QUALIFICATION`` from its observations in one answer.
 
@@ -653,32 +664,32 @@ def qualify(requirement_ids: list[str], observations: list[JSON]) -> Qualified:
     """
     errors = [o for o in observations if supported_error(o)]
     if errors:
-        reasons = [f"error on {o['criterion_id']}" for o in errors]
+        n = len(errors)
+        reasons = [f"{n} part{'s' if n > 1 else ''} of your answer had a mistake."]
         if any(o["assisted"] is not False for o in errors):
-            reasons.append("help was shown")
+            reasons.append("You had help.")
         return Qualified("error", reasons)
     demonstrated = [o for o in observations if o["outcome"] == "demonstrated"]
     shown = {rid for o in demonstrated for rid in o["requirement_ids"]}
     missing = [rid for rid in requirement_ids if rid not in shown]
     if missing:
-        unresolved = [o for o in observations if o["outcome"] != "demonstrated"]
+        unsettled = [
+            UNSETTLED["misread" if o.get("misread") else o["outcome"]]
+            for o in observations
+            if o["outcome"] != "demonstrated"
+        ]
         return Qualified(
             "unresolved",
-            [
-                f"{o['criterion_id']} likely a misread of the task, not counted as a mistake"
-                if o.get("misread")
-                else f"{o['criterion_id']} {o['outcome'].replace('_', ' ')}"
-                for o in unresolved
-            ]
-            or [f"requirement {rid} not covered" for rid in missing],
+            list(dict.fromkeys(unsettled))
+            or ["This question didn't check every part of the goal."],
         )
     if any(o["assisted"] is True for o in demonstrated):
-        return Qualified("helped", ["help was shown for this target"])
+        return Qualified("helped", ["Correct, but you had help."])
     if any(o["assisted"] is None for o in demonstrated):
         return Qualified(
-            "unresolved", ["demonstrated, but a hint was sent and its display was not confirmed"]
+            "unresolved", ["Correct, but a hint was sent and we can't tell if you saw it."]
         )
-    return Qualified("independent", ["every requirement demonstrated without help"])
+    return Qualified("independent", ["You got every part right without help."])
 
 
 # --- commands ------------------------------------------------------------------
@@ -1651,7 +1662,7 @@ def target_evidence(tx: Tx, target: JSON, *, attempt_ids: set[str] | None = None
         and (attempt_ids is None or o["attempt"]["id"] in attempt_ids)
     ]
     if not observations:
-        return {"label": "untested", "reasons": ["no assessed answer yet"], "observations": []}
+        return {"label": "untested", "reasons": ["No graded answer yet."], "observations": []}
     latest: dict[str, JSON] = {}
     for o in observations:
         for rid in o["requirement_ids"]:
@@ -1661,7 +1672,10 @@ def target_evidence(tx: Tx, target: JSON, *, attempt_ids: set[str] | None = None
     definition = content.definition(tx, target)
     q = qualify([r["id"] for r in definition["evidence_requirements"]], current)
     if q.label in ("independent", "helped") and len({o["attempt"]["id"] for o in current}) > 1:
-        q = Qualified("unresolved", ["shown in parts across answers; one whole check is still due"])
+        q = Qualified(
+            "unresolved",
+            ["You got each part right, but in different answers. One full answer is still needed."],
+        )
     return {"label": q.label, "reasons": q.reasons, "observations": current}
 
 
@@ -1793,4 +1807,4 @@ def usable(o: JSON) -> bool:
 
 def pending_evidence() -> JSON:
     """Return the label shown for a submitted answer whose assessment is not accepted yet."""
-    return {"label": "unresolved", "reasons": ["Not graded yet"], "observations": []}
+    return {"label": "unresolved", "reasons": ["Not graded yet."], "observations": []}

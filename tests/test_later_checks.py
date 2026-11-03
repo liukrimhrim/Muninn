@@ -177,9 +177,7 @@ def test_a_view_never_closed_certifies_no_delay_until_the_learner_confirms_it(ma
     session = app.start_session(rid(), curriculum_id=curriculum)["session"]
     blocked = app.next_exercise(rid(), session_id=session["id"])
     assert blocked["kind"] == "none"
-    assert [x["reason"] for x in blocked["left"]] == [
-        "an earlier view of the answer may still be open"
-    ]
+    assert [x["reason"] for x in blocked["left"]] == ["the answer may still be open on your screen"]
     assert blocked["left"][0]["confirm_closed"] is True
     assert schedule(app, goal)["next_offer"]["at"] is None
 
@@ -269,7 +267,7 @@ def test_a_recall_review_is_the_learners_own_rating_and_fsrs_dates_the_next(make
     assert (waiting["type"], waiting["need"], waiting["hold_reason"]) == (
         "recall",
         "held",
-        "waiting for your recall rating",
+        "waiting for you to rate how well you remembered",
     )
     rating = app.read(workflows.feedback_view, first["attempt"]["id"])["ratings"]
     assert [(r["choices"], r["choice"]) for r in rating] == [
@@ -459,8 +457,8 @@ def test_a_repaired_check_is_kept_as_history_and_caught_up_is_reachable_again(ma
     view = app.read(workflows.later_checks_view, curriculum)
     (row,) = view["targets"]
     assert [(c["status"], c["due_at"], c["ended"]) for c in row["checks"]] == [
-        ("replaced", "2026-10-25T10:00:00.000Z", "replaced after teaching"),  # failed, kept
-        ("consumed", "2026-10-26T11:05:00.000Z", "met on time"),
+        ("replaced", "2026-10-25T10:00:00.000Z", "replaced after an explanation"),  # failed, kept
+        ("consumed", "2026-10-26T11:05:00.000Z", "passed on time"),
         ("open", "2026-11-02T11:05:00.000Z", None),
     ]
     assert [(a["role"], a["label"]) for a in row["checks"][0]["answers"]] == [("owner", "error")]

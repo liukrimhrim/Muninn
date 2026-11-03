@@ -191,7 +191,7 @@ def test_first_independent_success_schedules_a_check_a_day_after_the_answer(make
     assert (recall["type"], recall["need"], recall["hold_reason"], recall["due_at"]) == (
         "recall",
         "held",
-        "waiting for your recall rating",
+        "waiting for you to rate how well you remembered",
         None,
     )
     for t in (fact, connection):
@@ -261,7 +261,7 @@ def test_an_unacknowledged_hint_cannot_certify_independence(make_app):
     _, t2 = targets(app, op)
     result = app.store.read(lambda tx: evidence.target_evidence(tx, t2))
     assert result["label"] == "unresolved"
-    assert "not confirmed" in result["reasons"][0]
+    assert "can't tell if you saw it" in result["reasons"][0]
     # the demonstration still earns a check tomorrow, but cannot consume the first obligation
     schedule = app.store.read(lambda tx: practice.schedule_view(tx, t2))
     assert (schedule["obligation"]["kind"], schedule["need"]) == ("initial", "independent_check")

@@ -641,7 +641,7 @@ def _admitted(tx: Tx, target: JSON, exercise: JSON) -> ScheduleP:
         need="initial",
         basis=[Ref(**exercise["ref"])],
         previous=None,
-        reason="admitted for practice",
+        reason="added to your practice",
         obligation=ObligationP(
             id=new_id(),
             kind="initial",
@@ -676,7 +676,7 @@ def mark_submitted(tx: Tx, *, attempt_id: str) -> None:
 
 # --- content changes (compatibility-design.md section 6) ----------------------------------
 
-GOAL_CHANGED = "the goal changed; the work done on its earlier version is kept"
+GOAL_CHANGED = "the goal changed, but your work on the old version is kept"
 
 
 def replace_goals(tx: Tx, *, curricula: list[list[JSON]], replaced: list[list[JSON]]) -> None:
@@ -777,13 +777,13 @@ CORRECTION_RULE: JSON = {
         "later_check_days": LATER_CHECK_DAYS,
     },
 }
-REANCHORED = "reanchored from a real later check"
-INVALIDATED = "its generating answer no longer qualifies after a corrected judgment"
-LATER_PENDING = "a later answer is still being assessed"
+REANCHORED = "rescheduled from a later check you passed"
+INVALIDATED = "the answer that set this up no longer counts after a grade was changed"
+LATER_PENDING = "a newer answer is still being graded"
 TOO_SOON = "answered too soon after seeing the answer; this check stays due"
-AWAITING_RATING = "waiting for your recall rating"
-VIEW_OPEN = "an earlier view of the answer may still be open"
-DEFERRED = "offered 24 hours after the latest relevant exposure"
+AWAITING_RATING = "waiting for you to rate how well you remembered"
+VIEW_OPEN = "the answer may still be open on your screen"
+DEFERRED = "ready 24 hours after you last saw the answer"
 
 
 type Successors = dict[tuple[str, str, int], str]
@@ -865,9 +865,9 @@ def _fold_owned(tx: Tx, target: JSON, state: _Replay, answer: JSON, ids: Success
     if label in ("independent", "helped") and at is None:
         state.set(
             "held",
-            f"{label} demonstration at an unknown time",
+            f"correct {'without' if label == 'independent' else 'with'} help, at an unknown time",
             basis,
-            hold_reason="answer time unknown; a later check needs a known start",
+            hold_reason="we don't know when you answered, so we can't date the next check",
         )
         state.due_at = None
     elif label == "independent" and state.current.kind == "initial" and state.due_at is None:
@@ -875,10 +875,12 @@ def _fold_owned(tx: Tx, target: JSON, state: _Replay, answer: JSON, ids: Success
             "consumed",
             _later(attempt, ids),
             basis=basis,
-            reason="first independent demonstration",
+            reason="first correct answer without help",
             consumed_by=attempt,
         )
-        state.set("independent_check", "first later check 24 hours after the demonstration", basis)
+        state.set(
+            "independent_check", "first later check 24 hours after your correct answer", basis
+        )
         state.due_at = _after(at, FIRST_CHECK)
     elif label == "independent":
         if state.due_at is not None and at < state.due_at:
@@ -887,23 +889,25 @@ def _fold_owned(tx: Tx, target: JSON, state: _Replay, answer: JSON, ids: Success
             state.set(state.need, TOO_SOON, basis)
             return
         state.close(
-            "consumed", _later(attempt, ids), basis=basis, reason="met on time", consumed_by=attempt
+            "consumed",
+            _later(attempt, ids),
+            basis=basis,
+            reason="passed on time",
+            consumed_by=attempt,
         )
-        state.set("independent_check", "next check seven days after an on-time check", basis)
+        state.set("independent_check", "next check 7 days after passing on time", basis)
         state.due_at = _after(at, LATER_CHECK)
     elif label == "helped":
-        state.set(
-            "independent_check", "independent retrieval 24 hours after helped practice", basis
-        )
+        state.set("independent_check", "check without help 24 hours after you had help", basis)
         state.due_at = _after(at, FIRST_CHECK)
     elif label == "error":
-        state.set("repair", "supported error", basis)
+        state.set("repair", "a mistake in your answer", basis)
     else:
         outcomes = {o["outcome"] for o in answer["observations"]}
         if outcomes == {"demonstrated"} and at is not None:  # shown; independence unknown
             state.set(
                 "independent_check",
-                "independent check 24 hours after an answer whose help is unknown",
+                "check without help 24 hours later, since we can't tell if you saw a hint",
                 basis,
             )
             state.due_at = _after(at, FIRST_CHECK)
@@ -914,7 +918,9 @@ def _fold_owned(tx: Tx, target: JSON, state: _Replay, answer: JSON, ids: Success
         )
         state.set(
             "clarify" if "cannot_judge" in outcomes else state.need,
-            "likely misread; not counted as a mistake" if misread else "evidence incomplete",
+            "probably a misread question, not a mistake"
+            if misread
+            else "we couldn't tell from the answer",
             basis,
         )
 
@@ -956,14 +962,16 @@ def _fold_descendant(  # noqa: PLR0913 - the answer, its offer and the replay so
         disposition: Literal["reanchored", "no_advance"] = "reanchored"
     else:
         if answer["label"] == "error":
-            state.set("repair", "supported error", basis)
+            state.set("repair", "a mistake in your answer", basis)
         disposition = "no_advance"
     state.effects[offer["ref"]["id"]] = CheckEffectP(
         offer=Ref(**offer["ref"]),
         disposition=disposition,
         revokes_reservation=False,
         basis=basis,
-        reason=REANCHORED if disposition == "reanchored" else "earlier history changed; no advance",
+        reason=REANCHORED
+        if disposition == "reanchored"
+        else "an earlier result changed, so this answer didn't move the schedule",
     )
 
 
@@ -1039,19 +1047,19 @@ def _fold_recall(tx: Tx, target: JSON, state: _Replay, answer: JSON, ids: Succes
             "consumed",
             _later(Ref(**answer["attempt"]), ids),
             basis=[Ref(**review["ref"])],
-            reason=f"reviewed: {review['choice']}",
+            reason=f"you rated your recall: {review['choice']}",
             consumed_by=Ref(**answer["attempt"]),
         )
         need: Need = "repair" if answer["label"] == "error" else "independent_check"
-        state.set(need, "next review from the recall schedule", [Ref(**review["ref"])])
+        state.set(need, "next review set from your rating", [Ref(**review["ref"])])
         state.due_at = due
         return False
     if answer["label"] == "error":
-        state.set("repair", "supported error", basis)
+        state.set("repair", "a mistake in your answer", basis)
     elif answer["label"] == "helped":
-        state.set(state.need, "helped; a hint cannot stand in for a recall review", basis)
+        state.set(state.need, "you had help, so this doesn't count as a review", basis)
     elif answer["label"] != "independent":
-        state.set(state.need, "evidence incomplete", basis)
+        state.set(state.need, "we couldn't tell from the answer", basis)
     return answer["label"] in RATEABLE and (
         state.current.kind == "initial" or _qualifies(tx, target, answer)
     )
@@ -1161,10 +1169,12 @@ def _study(state: _Replay, event: JSON, ids: Successors, *, recall: bool) -> Non
     study = Ref(**event["study"])
     if recall:
         need: Need = "independent_check" if state.need == "repair" else state.need
-        state.set(need, "teaching completed; reviews follow the recall schedule", [study])
+        state.set(need, "you finished an explanation; reviews stay on their schedule", [study])
         return
-    state.close("replaced", _later(study, ids), basis=[study], reason="replaced after teaching")
-    state.set("independent_check", "independent check 24 hours after completed teaching", [study])
+    state.close(
+        "replaced", _later(study, ids), basis=[study], reason="replaced after an explanation"
+    )
+    state.set("independent_check", "check without help 24 hours after the explanation", [study])
     state.due_at = _after(event["at"], FIRST_CHECK)
 
 
@@ -1207,9 +1217,7 @@ def _replay(tx: Tx, target: JSON, history: list[JSON]) -> _Replay:  # noqa: C901
         assessed.add(event["attempt"]["id"])
         if not owned:
             if event["label"] == "error":
-                state.set(
-                    "repair", "supported error on a focused check", [Ref(**event["assessment"])]
-                )
+                state.set("repair", "a mistake on another question", [Ref(**event["assessment"])])
             continue
         assert offer  # noqa: S101 - owned implies an offer and a slot
         assert slot  # noqa: S101
@@ -1263,7 +1271,7 @@ def _unsettled_owners(
                 disposition="held",
                 revokes_reservation=True,
                 basis=state.basis,
-                reason="earlier history changed; this draft now counts as practice",
+                reason="an earlier result changed, so this draft now counts as practice",
             )
         elif offer["state"] == "submitted":
             effect = CheckEffectP(
@@ -1271,7 +1279,7 @@ def _unsettled_owners(
                 disposition="pending",
                 revokes_reservation=False,
                 basis=state.basis,
-                reason="earlier history changed; this answer is still being assessed",
+                reason="an earlier result changed, and this answer is still being graded",
             )
             if state.need != "repair":
                 state.need, state.hold_reason = "held", effect.reason
@@ -1523,7 +1531,7 @@ def _update_concerns(  # noqa: PLR0913 - the accepted assessment and its context
         )
 
 
-LATER_SUCCESS = "an independent later check showed it"
+LATER_SUCCESS = "you got it right on a later check without help"
 
 
 def _settle_later_checks(
@@ -1673,7 +1681,9 @@ def _after_clarification(
             update={
                 "question": None,
                 "status": "resolved",
-                "resolution_reason": "the clarification showed it; no repair needed",
+                "resolution_reason": (
+                    "the follow-up question showed you know it, so nothing needs fixing"
+                ),
             }
         )
     if branch.next == "teach":
@@ -1719,12 +1729,14 @@ def _after_verification(concern: ConcernP, observations: list[JSON], view: JSON)
     update: JSON = {
         "recovered": {
             "status": "resolved",
-            "resolution_reason": "recovered on a fresh check; the later check is still due",
+            "resolution_reason": (
+                "you got it right on the new question, and a later check is still due"
+            ),
         },
         "assisted": WAITING_LATER,
         "incomplete": {
             "route": "assessment_review",
-            "resolution_reason": "the fresh check did not show the repaired part",
+            "resolution_reason": "the new question didn't show whether the fix worked",
         },
         "unsuccessful": {"route": "repair"}
         if failed < UNSUCCESSFUL_CYCLE_LIMIT
@@ -1736,11 +1748,13 @@ def _after_verification(concern: ConcernP, observations: list[JSON], view: JSON)
 WAITING_LATER: JSON = {
     "status": "open",
     "route": "later_check",
-    "resolution_reason": "shown with help on the fresh check; an independent later check is due",
+    "resolution_reason": (
+        "you got the new question right with help, so a check without help is due later"
+    ),
 }
 STOPPED_REPAIR: JSON = {
     "route": "content_review",
-    "resolution_reason": "these two approaches have not resolved this yet",
+    "resolution_reason": "two explanations haven't fixed this yet",
 }
 
 
@@ -1774,7 +1788,7 @@ def after_study(tx: Tx, *, study: JSON) -> None:
 
 # --- corrected judgments (module design: "Accept a corrected assessment") -----------------
 
-CORRECTED_AWAY = "a corrected judgment no longer supports this; the work done on it is kept"
+CORRECTED_AWAY = "a changed grade means this no longer applies, but your work on it is kept"
 SUPPORT: dict[str, set[str]] = {"error": {"error"}, "uncertainty": {"not_shown", "cannot_judge"}}
 
 
@@ -1894,7 +1908,9 @@ def _recheck_cycle(concern: ConcernP, observations: list[JSON], view: JSON) -> C
             update={
                 "cycles": cycles,
                 "status": "resolved",
-                "resolution_reason": "recovered on a fresh check (a corrected judgment)",
+                "resolution_reason": (
+                    "you got it right on the new question (after a grade was changed)"
+                ),
             }
         )
     return concern.model_copy(update={"cycles": cycles})
@@ -1962,13 +1978,13 @@ def _concern_step(tx: Tx, session_id: str, record: Record) -> JSON | None:
 # --- what to do next: bounded-session-1 (everyday-learning-design.md section 4) ----------
 
 PLAN_CANDIDATES = 12
-NO_EXERCISE = "no usable exercise can check this yet"
+NO_EXERCISE = "no question can check this yet"
 TOO_LONG = "too long for the time left"
-NOT_REACHED = "not reached in this session"
-TIME_UP = "the session's time ran out"
-WAITING_GRADE = "waiting for the grade of an answer"
-REPAIR_PAUSED = "its repair is paused"
-UNKNOWN_LENGTH = "includes an explanation of unknown length"
+NOT_REACHED = "we didn't get to it this session"
+TIME_UP = "the session ran out of time"
+WAITING_GRADE = "waiting for an answer to be graded"
+REPAIR_PAUSED = "fixing this is paused"
+UNKNOWN_LENGTH = "it includes an explanation, and we can't tell how long that takes"
 
 
 type Goals = dict[tuple[str, int], tuple[JSON, tuple[int, int, str], str]]
@@ -2500,11 +2516,11 @@ CAUGHT_UP_RULE: JSON = {"name": "caught-up", "version": 1, "parameters": {}}
 WAITING: dict[str, str] = {
     "not_started": "not started yet",
     "paused": "paused",
-    "held": "its material is on hold",
-    "unresolved": "has an unresolved need",
+    "held": "on hold",
+    "unresolved": "still needs work",
     "grading": "an answer is still being graded",
-    "first_check_pending": "first later check pending",
-    "after_repair_pending": "later check after repair pending",
+    "first_check_pending": "waiting for its first later check",
+    "after_repair_pending": "waiting for a later check after a fix",
     "due": "a later check is due",
 }
 

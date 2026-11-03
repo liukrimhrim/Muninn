@@ -406,10 +406,41 @@ class DraftOutline(_Strict):
     doubts: list[str]
 
 
-DRAFT_PROTOCOL: JSON = {"name": "draft-initial-outline", "version": 2, "parameters": {}}
+PLAIN_WRITING = """
+How to write. The learner reads everything you write: titles, purposes, claims, scopes, \
+goals, conditions, what an answer must show, prompts, criteria, hints, reference \
+answers, feedback, teaching, doubts, omissions and practice. So:
+- Write the way a good school textbook does: plain everyday English, exact, and \
+addressed to the reader as "you". Use short sentences with one idea each.
+- The learner added the material themselves. Call it "your text". Never call it "the \
+source", "the text" or "the passage".
+- Assume the learner knows nothing about this app and has not just reread their text. \
+Every sentence must make sense on its own.
+- Use the text's own words for its terms. Do not add technical or academic wording \
+that the text does not use.
+- Start a goal with what the learner does, in a few words: "Say what a red flag on the \
+beach means", "Explain why ice floats on water".
+- Write what an answer must show, and each point a question is graded on, as the fact \
+itself, the way an answer key lists it: "Ice is lighter than the same amount of water." \
+Then say what else counts as correct. Do not start it with "The answer", "Says" or \
+"States that".
+- Add a condition only when it changes the task, in a few words, such as "from memory". \
+Do not start it with "Given".
+- Keep a scope to a few words, and do not repeat the claim in it.
+- Write each doubt as the open question itself, in one short sentence, without \
+mentioning the text: "How long reheated bread stays fresh." The learner sees doubts \
+under "Your text doesn't answer these questions, so Muninn won't ask about them".
+- Write each omission as one short sentence.
+- Write practice as the topic an explanation would cover, in a few words that fit \
+after "a short lesson on": "how starch changes after baking".
+- Do not use the words rubric, criterion or requirement when writing to the learner.
+- No filler, no praise and no hype.
+"""
+DRAFT_PROTOCOL: JSON = {"name": "draft-initial-outline", "version": 3, "parameters": {}}
 CHECKS: JSON = {"name": "draft-checks", "version": 1, "parameters": {}}
 
-DRAFT_SYSTEM = """\
+DRAFT_SYSTEM = (
+    """\
 You prepare study material for one learner who wants to remember knowledge and use it: \
 facts, relationships, connected explanations and procedures, in any subject.
 
@@ -448,6 +479,8 @@ conditions and scope, and "conflicts" when the two cannot both be true. Similar 
 under different conditions is neither. Say why in a few words. Never merge claims \
 yourself: the learner decides.
 """
+    + PLAIN_WRITING
+)
 
 
 def existing_claims(tx: Tx) -> dict[str, JSON]:
@@ -702,9 +735,10 @@ def _reuse_plan(
                 raise ValueError(REUSE_CONFLICT if conflicts else REUSE_FLAGGED)
             flagged = [p for p in k.existing if p.relation == "same"]
             reason = (
-                "conflicts with an existing claim: " + "; ".join(p.why for p in conflicts)
+                "it contradicts a statement you already have: "
+                + "; ".join(p.why for p in conflicts)
                 if conflicts
-                else "repeats a claim flagged as wrong: "
+                else "it repeats a fact you said is wrong: "
                 + existing[flagged[0].key]["dispute"]["reason"]
             )
             held[k.key] = DisputeP(
@@ -892,10 +926,11 @@ class TeachingDraft(_Strict):
     source_quotes: list[str]
 
 
-TEACH_PROTOCOL: JSON = {"name": "author-teaching", "version": 1, "parameters": {}}
+TEACH_PROTOCOL: JSON = {"name": "author-teaching", "version": 2, "parameters": {}}
 TEACH_CHECKS: JSON = {"name": "teaching-checks", "version": 1, "parameters": {}}
 
-TEACH_SYSTEM = """\
+TEACH_SYSTEM = (
+    """\
 You write one short piece of focused teaching for one learner, about a specific gap \
 that their own answers showed.
 
@@ -907,14 +942,20 @@ their answer showed and what it missed, then give a concrete explanation or work
 step for the missing part. Prefer a worked example over an abstract rule when it fits. \
 Do not quiz the learner and do not restate everything they already showed.
 
-Ground every claim: quote passages copied character for character from the source in \
-source_quotes, and put any reasoning the source does not state in derivation. If the \
-cause of the gap is uncertain, say so and teach what helps under either explanation.
+Ground every claim: quote passages copied character for character from the text in \
+source_quotes, and put any reasoning the text does not state in derivation. The learner \
+sees derivation under the heading "Not in your text", so write it as one or two \
+short sentences naming which points of your explanation are not in their text. If the \
+cause of the gap is uncertain, say so and teach what helps under either explanation. \
+You may mark a short heading with **bold**; use no other formatting.
 
 When earlier teaching on this gap did not work, use a different approach (for example \
 a worked example instead of a rule, a contrast with a near miss, or the missing \
-connection step by step) and name the approach in a few words.
+connection step by step) and name the approach in a few words the learner can read, \
+such as "a worked example".
 """
+    + PLAIN_WRITING
+)
 
 
 def teaching_request(  # noqa: PLR0913 - one keyword per packet part
@@ -1061,10 +1102,11 @@ class VariantDraft(_Strict):
     old_answer_insufficient: str
 
 
-VARIANT_PROTOCOL: JSON = {"name": "author-variant", "version": 1, "parameters": {}}
+VARIANT_PROTOCOL: JSON = {"name": "author-variant", "version": 2, "parameters": {}}
 VARIANT_CHECKS: JSON = {"name": "variant-checks", "version": 1, "parameters": {}}
 
-VARIANT_SYSTEM = """\
+VARIANT_SYSTEM = (
+    """\
 You write one fresh version of a learning task, to check whether a learner can now use \
 what they were just taught, without help.
 
@@ -1085,6 +1127,8 @@ point toward one criterion without giving it away, realistic expected seconds, t
 variation kind, what changed, what was held fixed, and why the earlier answer cannot \
 satisfy this task.
 """
+    + PLAIN_WRITING
+)
 
 
 def _variant_targets(tx: Tx, original: JSON) -> dict[str, JSON]:
@@ -1698,12 +1742,12 @@ def target_hold(tx: Tx, target: JSON) -> Hold | None:
     """Say why an exact goal revision cannot be practised now, or None when it can."""
     current = tx.require("target", target["id"], by=OWNER)
     if current.revision != target["revision"]:
-        return Hold("stale", "replaced by a newer version")
+        return Hold("stale", "a newer version replaced it")
     if current.payload["status"] != "accepted":
         return Hold("status", f"this goal is {current.payload['status']}")
     disputed = _disputed(tx, current.payload["content"])
     if disputed is not None:
-        return Hold("disputed", f"rests on material flagged as wrong: {disputed['statement']}")
+        return Hold("disputed", f"it uses a fact you said is wrong: {disputed['statement']}")
     return None
 
 
@@ -1718,7 +1762,8 @@ def exercise_hold(tx: Tx, exercise: JSON) -> Hold | None:
         hold = target_hold(tx, t)
         if hold is not None and hold.kind == "stale":
             return Hold(
-                "stale", f"written for an earlier version of: {definition(tx, t)['action']}"
+                "stale",
+                f"it was written for an older version of the goal: {definition(tx, t)['action']}",
             )
         if hold is not None:
             return hold

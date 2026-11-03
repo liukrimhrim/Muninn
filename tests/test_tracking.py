@@ -94,7 +94,7 @@ def test_tracking_freezes_its_population_and_assigns_ordinary_checks_before_answ
     clock.advance(days=8)  # window 2 closed with no ordinary check offered in it
     second = report(app, cohort["id"])["windows"][1]
     assert [(e["raw"], e["reason"]) for e in second["endpoints"]] == [
-        ("M", "no ordinary check was offered in this window"),
+        ("M", "no regular check came up this week"),
     ] * 2
     effort = report(app, cohort["id"])["cost"]
     assert effort["membership_rule"]["name"] == "cost-membership"

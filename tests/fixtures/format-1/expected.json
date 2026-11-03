@@ -249,7 +249,7 @@
               "revision": 1
             },
             "unstarted",
-            "rests on material flagged as wrong: Binary search requires a sorted array."
+            "it uses a fact you said is wrong: Binary search requires a sorted array."
           ],
           [
             {
@@ -268,7 +268,7 @@
               "id": "4a060469-737e-44a5-b90a-5475c9ccf266",
               "revision": 1
             },
-            "rests on material flagged as wrong: Binary search requires a sorted array."
+            "it uses a fact you said is wrong: Binary search requires a sorted array."
           ],
           [
             {
@@ -276,7 +276,7 @@
               "id": "19abf902-43f9-4f0b-8b6b-15853480d76b",
               "revision": 1
             },
-            "written for an earlier version of: State how linear search proceeds"
+            "it was written for an older version of the goal: State how linear search proceeds"
           ]
         ]
       }

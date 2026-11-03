@@ -77,7 +77,10 @@ def test_corrections_keep_history_and_leave_unrelated_work_usable(browser, clock
         reason="the goal should cover unsorted input",
     )
     edited = b.get(f"/curricula/{curriculum}")
-    assert edited["exercises"][0]["hold"] == f"written for an earlier version of: {CONNECTION}"
+    assert (
+        edited["exercises"][0]["hold"]
+        == f"it was written for an older version of the goal: {CONNECTION}"
+    )
     later = b.post(f"/curricula/{curriculum}/sessions")["session"]
     assert b.post(f"/sessions/{later['id']}/next")["kind"] == "none"
 

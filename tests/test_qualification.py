@@ -254,7 +254,7 @@ def test_a_frozen_plan_keeps_its_goals_anchors_and_windows_whatever_changes_late
     first, second = report["windows"][:2]
     assert first["mature"]
     assert [(e["raw"], e["reason"]) for e in first["endpoints"]] == [
-        ("M", "no ordinary check was offered in this window"),
+        ("M", "no regular check came up this week"),
     ] * 2
     assigned = [(e["target"], bool(e["assigned_attempt"])) for e in second["endpoints"]]
     assert assigned == [(t1, True), (t2, False)]  # the edited goal's checks are not its endpoint
@@ -337,7 +337,7 @@ def test_a_real_later_check_keeps_its_week_when_an_earlier_success_is_corrected(
     schedule = app.read(practice.schedule_view, t2)
     assert (schedule["due_at"], schedule["reason"]) == (
         "2026-11-08T12:00:00.000Z",  # B's own answer + 7 days: it still stands
-        "reanchored from a real later check",
+        "rescheduled from a later check you passed",
     )
     assert [e["disposition"] for e in schedule["check_effects"]] == ["reanchored"]
 
@@ -759,7 +759,7 @@ def test_the_harness_reports_every_finding_and_never_a_percentage(tmp_path):
     assert "- H3-c c1: reference not_shown, model cannot_judge (scripted)" in findings
     assert "- H3-c: a question was expected; the model proposed none" in findings
     assert "**Substantive errors the checks found (0):**" in findings
-    assert "assess-answer` v5" in text  # the prompt versions are named
+    assert "assess-answer` v6" in text  # the prompt versions are named
 
 
 def test_held_out_text_in_any_drafting_request_is_caught(tmp_path):
@@ -794,10 +794,14 @@ def test_a_session_summary_says_when_later_checks_were_met(make_app, clock):
     first = practise(app, curriculum, EXPLANATION)["session"]
     clock.advance(hours=25)
     later = practise(app, curriculum, EXPLANATION)["session"]  # the on-time later check, met
-    headline = [app.read(workflows.summary_view, s["id"])["headline"] for s in (first, later)]
+    empty = app.start_session(rid(), curriculum_id=curriculum)["session"]
+    headline = [
+        app.read(workflows.summary_view, s["id"])["headline"] for s in (first, later, empty)
+    ]
     assert headline == [
-        "Practiced today; later recall not checked yet.",
-        "Later checks in this session: 1 answered, 1 met on time.",
+        "You practised today. We haven't checked yet whether it stuck.",
+        "Later checks this session: 1 answered, 1 passed on time.",
+        "You didn't answer anything this session.",  # never "practised" with no answer
     ]
 
 
@@ -811,7 +815,7 @@ def test_a_session_summary_counts_a_later_check_answered_with_a_mistake(make_app
     clock.advance(hours=25)
     failed = practise(app, curriculum_id(op), EXPLANATION)["session"]
     assert app.read(workflows.summary_view, failed["id"])["headline"] == (
-        "Later checks in this session: 1 answered, 0 met on time."
+        "Later checks this session: 1 answered, 0 passed on time."
     )
 
 

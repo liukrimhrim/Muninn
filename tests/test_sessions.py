@@ -102,7 +102,7 @@ def test_an_overrun_stops_offering_keeps_the_answer_and_more_time_continues(make
     spent = app.next_exercise(rid(), session_id=session["id"])
     assert spent["kind"] == "budget_spent"
     assert [(x["target"], x["reason"]) for x in spent["left"]] == [
-        (v_goal, "the session's time ran out")
+        (v_goal, "the session ran out of time")
     ]
     assert app.read(workflows.feedback_view, first["attempt"]["id"])["explanation"]  # kept
     assert app.read(practice.schedule_view, e_goal)["due_at"] == "2026-11-01T11:08:00.000Z"

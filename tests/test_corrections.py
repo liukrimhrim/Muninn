@@ -65,8 +65,8 @@ def test_a_changed_condition_holds_the_exercise_written_for_the_old_goal(make_ap
     assert [t["ref"] for t in view["targets"]] == [t1, new_t2]
     (exercise,) = view["exercises"]
     assert exercise["hold"] == (
-        "written for an earlier version of: Explain why binary search needs only about "
-        "log2(n) comparisons"
+        "it was written for an older version of the goal: "
+        "Explain why binary search needs only about log2(n) comparisons"
     )
     assert set(view["without_exercise"]) == {t1["id"], t2["id"]}
 
@@ -147,7 +147,7 @@ def test_flagged_material_holds_what_rests_on_it_and_unrelated_material_stays_us
     )
     assert flagged["knowledge"]["revision"] == sorted_claim["ref"]["revision"] + 1
     view = app.read(workflows.outline_view, curriculum_id(op))
-    held = "rests on material flagged as wrong: Binary search only works on a sorted array."
+    held = "it uses a fact you said is wrong: Binary search only works on a sorted array."
     assert [t["hold"] for t in view["targets"]] == [held, held]  # t2 builds on it
     assert [e["hold"] for e in view["exercises"]] == [held]
     claim = claims(app, op)["Binary search only works on a sorted array."]
@@ -195,7 +195,9 @@ def test_correcting_a_claim_versions_the_claims_and_goals_that_build_on_it(make_
     view = app.read(workflows.outline_view, curriculum_id(op))
     assert [t["ref"] for t in view["targets"]] == [{**t1, "revision": 2}, {**t2, "revision": 2}]
     assert [t["hold"] for t in view["targets"]] == [None, None]
-    assert view["exercises"][0]["hold"].startswith("written for an earlier version of")
+    assert view["exercises"][0]["hold"].startswith(
+        "it was written for an older version of the goal"
+    )
     statements = {k["statement"] for t in view["targets"] for k in t["knowledge"]}
     assert "Binary search needs a sorted array with random access." in statements
     # the relation built on the claim got a new revision citing the corrected one
@@ -268,7 +270,7 @@ def test_a_flagged_claim_cannot_be_cleared_by_reusing_it_for_new_material(make_a
     assert by_form["fact"]["status"] == "disputed"
     assert by_form["fact"]["dispute"]["related"] == [claims(app, op)[SORTED]["ref"]]
     assert claims(app, op)[SORTED]["status"] == "disputed"
-    assert explain["hold"].startswith("rests on material flagged as wrong")
+    assert explain["hold"].startswith("it uses a fact you said is wrong")
     assert linear["hold"] is None  # unrelated new material is usable
     session = app.start_session(rid(), curriculum_id=curriculum)["session"]
     delivered = app.next_exercise(rid(), session_id=session["id"])
@@ -289,7 +291,7 @@ def test_a_conflicting_claim_is_kept_separate_and_held(make_app):
     explain, linear = app.read(workflows.outline_view, accepted["curriculum"]["id"])["targets"]
     relation = next(k for k in explain["knowledge"] if k["form"] == "relation")
     assert relation["status"] == "disputed"
-    assert relation["dispute"]["reason"].startswith("conflicts with an existing claim")
+    assert relation["dispute"]["reason"].startswith("it contradicts a statement you already have")
     assert explain["hold"] is not None
     assert linear["hold"] is None
 
@@ -532,7 +534,7 @@ def test_a_later_real_check_reanchors_when_an_earlier_success_is_corrected(make_
         "independent_check",
         "2026-10-26T11:00:00.000Z",  # B's own answer + 24 h
     )
-    assert schedule["reason"] == "reanchored from a real later check"
+    assert schedule["reason"] == "rescheduled from a later check you passed"
     (effect,) = schedule["check_effects"]
     assert effect["disposition"] == "reanchored"
     history = app.read(practice.schedule_history, t1)
@@ -554,7 +556,7 @@ def test_a_later_answer_still_being_assessed_holds_the_corrected_schedule(make_a
     schedule = app.read(practice.schedule_view, t1)
     assert (schedule["need"], schedule["hold_reason"]) == (
         "held",
-        "earlier history changed; this answer is still being assessed",
+        "an earlier result changed, and this answer is still being graded",
     )
     assert [e["disposition"] for e in schedule["check_effects"]] == ["pending"]
 

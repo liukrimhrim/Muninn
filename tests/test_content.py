@@ -193,3 +193,16 @@ def test_proposals_must_name_listed_claims_and_one_match_at_most():
 def test_only_a_match_with_an_unflagged_claim_can_be_reused(relation, status, choices):
     proposal = DraftExisting(key="E1", relation=relation, why="because")
     assert reuse_choices([proposal], {"E1": {"status": status}}) == choices
+
+
+def test_every_prompt_the_learner_reads_asks_for_plain_english():
+    from muninn import content, evidence
+
+    for system in (
+        content.DRAFT_SYSTEM,
+        content.TEACH_SYSTEM,
+        content.VARIANT_SYSTEM,
+        evidence.ASSESS_SYSTEM,
+        evidence.REASSESS_SYSTEM,
+    ):
+        assert content.PLAIN_WRITING in system
